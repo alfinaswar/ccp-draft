@@ -125,7 +125,6 @@ class FeasibilityStudyController extends Controller
      */
     public function store(Request $request)
     {
-
         $rules = [
             'idPengajuan' => 'required',
             'idPengajuanItem' => 'required',
@@ -233,6 +232,7 @@ class FeasibilityStudyController extends Controller
                 $detailData
             );
         }
+
         $Form = MasterForm::with([
             'getApproval' => function ($q) use ($header) {
                 $q->where('KodePerusahaan', $header->KodePerusahaan);
@@ -277,6 +277,7 @@ class FeasibilityStudyController extends Controller
             'JenisFormId' => $header->JenisForm,
             'DokumenId' => $header->id,
         ])->orderBy('Urutan', 'asc')->get();
+
         $approval2 = DokumenApproval::with('getUser', 'getJabatan', 'getDepartemen')
             ->where('JenisFormId', $header->JenisForm)
             ->where('DokumenId', $header->id)
@@ -301,16 +302,51 @@ class FeasibilityStudyController extends Controller
             ->where('IdPengajuan', $idPengajuan)
             ->where('PengajuanItemId', $idPengajuanItem)
             ->firstOrFail();
-        // dd($data222);
+
         $Pengajuan = PengajuanPembelian::find($idPengajuan);
-        // Kirim Email
-        foreach ($approval2 as $penilai) {
+
+        // Mulai logika pengiriman email sesuai instruksi
+        $emailsToSend = [];
+
+        // Cek urutan 1 dari approval2
+        $approval1 = $approval2->where('Urutan', 1)->first();
+
+        if ($approval1) {
             if (
-                empty($penilai->Email) || $penilai->Email == '-' || $penilai->UserId == 2 ||
-                $penilai->Status == 'Approved'
+                !empty($approval1->Email) && $approval1->Email != '-' && $approval1->UserId != 2
             ) {
-                continue;
+                if ($approval1->Status == 'Pending') {
+                    $emailsToSend[] = $approval1;
+                } else if ($approval1->Status == 'Approved') {
+                    // Cari urutan ke-2
+                    $approval2second = $approval2->where('Urutan', 2)->first();
+                    if (
+                        $approval2second &&
+                        !empty($approval2second->Email) &&
+                        $approval2second->Email != '-' &&
+                        $approval2second->UserId != 2 &&
+                        $approval2second->Status != 'Approved'
+                    ) {
+                        $emailsToSend[] = $approval2second;
+                    }
+                }
             }
+        }
+
+        // Kalau tidak ada urutan 1, fallback ke existing logic (kirim ke semua yang bukan approved)
+        if (empty($emailsToSend)) {
+            foreach ($approval2 as $penilai) {
+                if (
+                    empty($penilai->Email) || $penilai->Email == '-' || $penilai->UserId == 2 ||
+                    $penilai->Status == 'Approved'
+                ) {
+                    continue;
+                }
+                $emailsToSend[] = $penilai;
+            }
+        }
+
+        foreach ($emailsToSend as $penilai) {
             Mail::to($penilai->Email)
                 ->send(new NotifFs(
                     $header,
@@ -320,6 +356,7 @@ class FeasibilityStudyController extends Controller
                     $Pengajuan
                 ));
         }
+
         // Untuk FS
         if (function_exists('activity')) {
             activity()
@@ -425,28 +462,10 @@ class FeasibilityStudyController extends Controller
 
     public function approve($token)
     {
-        // dd($token);
         $penilai = DokumenApproval::with('getUser')->where('ApprovalToken', $token)->firstOrFail();
         if ($penilai->Status !== 'Pending') {
             return view('emails.setelah-approval', compact('penilai'))->with([
                 'message' => 'Persetujuan sudah diproses sebelumnya.',
-            ]);
-        }
-        if ($penilai->Status === 'Approved') {
-            $pengajuan = null;
-            $kodePengajuan = null;
-            if ($penilai->DokumenId ?? false) {
-                $fs = FeasibilityStudy::find($penilai->DokumenId);
-                if ($fs) {
-                    $pengajuan = PengajuanPembelian::find($fs->IdPengajuan);
-                    $kodePengajuan = $pengajuan ? $pengajuan->KodePengajuan : ($fs->Nomor ?? $fs->id);
-                }
-            }
-            AktivitasPengajuan::create([
-                'KodePengajuan' => $kodePengajuan,
-                'Jenis' => 'Feasibility Study',
-                'Keterangan' => ($penilai->Nama ?? '-') . ' telah menyetujui Feasibility Study',
-                'UserCreate' => $penilai->Nama ?? '-',
             ]);
         }
         $penilai->update([
@@ -454,7 +473,93 @@ class FeasibilityStudyController extends Controller
             'TanggalApprove' => Carbon::now(),
         ]);
 
-        return redirect()->back()->with('success', 'Terima kasih, persetujuan Anda berhasil dicatat.');
+        $pengajuan = null;
+        $kodePengajuan = null;
+        $fs = null;
+
+        if ($penilai->DokumenId ?? false) {
+            $fs = FeasibilityStudy::find($penilai->DokumenId);
+            if ($fs) {
+                $pengajuan = PengajuanPembelian::find($fs->IdPengajuan);
+                $kodePengajuan = $pengajuan ? $pengajuan->KodePengajuan : ($fs->Nomor ?? $fs->id);
+            }
+        }
+
+        AktivitasPengajuan::create([
+            'KodePengajuan' => $kodePengajuan,
+            'Jenis' => 'Feasibility Study',
+            'Keterangan' => ($penilai->Nama ?? '-') . ' telah menyetujui Feasibility Study',
+            'UserCreate' => $penilai->Nama ?? '-',
+        ]);
+
+        // === CEK APPROVAL SELANJUTNYA ===
+        $nextApproval = DokumenApproval::where('DokumenId', $penilai->DokumenId)
+            ->where('JenisFormId', $penilai->JenisFormId)
+            ->where('Urutan', '>', $penilai->Urutan)
+            ->orderBy('Urutan', 'asc')
+            ->first();
+        // && $nextApproval->UserId != 2
+        if ($nextApproval) {
+            if (!empty($nextApproval->Email) && $nextApproval->Email != '-') {
+                $approval2 = DokumenApproval::with('getUser', 'getJabatan', 'getDepartemen')
+                    ->where('JenisFormId', $penilai->JenisFormId)
+                    ->where('DokumenId', $penilai->DokumenId)
+                    ->orderBy('Urutan', 'asc')
+                    ->get();
+
+                $dataFs = FeasibilityStudy::with('getFsDetail', 'getBarang', 'getPerusahaan')
+                    ->where('id', $penilai->DokumenId)
+                    ->first();
+
+                // Generate QR Code jika diperlukan (sesuai logic store)
+                foreach ($approval2 as $item) {
+                    if ($item->Status == 'Approved') {
+                        $qrCode = QrCode::create(route('approval.validasi', $item->ApprovalToken))
+                            ->setSize(300)
+                            ->setMargin(10);
+                        $writer = new PngWriter();
+                        $result = $writer->write($qrCode);
+                        $item->qrCode = base64_encode($result->getString());
+                    }
+                }
+
+                try {
+                    Mail::to($nextApproval->Email)
+                        ->send(new NotifFs(
+                            $fs,
+                            $nextApproval,
+                            $approval2,
+                            $dataFs,
+                            $pengajuan
+                        ));
+
+                    $nextApproval->StatusEmail = 'Terkirim';
+                    $nextApproval->save();
+
+                } catch (\Exception $e) {
+                    $nextApproval->StatusEmail = 'Gagal Kirim';
+                    $nextApproval->save();
+                }
+            }
+        } else {
+            if ($fs) {
+                $fs->update([
+                    'Status' => 'Final',
+                    'UserUpdate' => auth()->user()->name ?? null,
+                ]);
+                // Log aktivitas final approval
+                AktivitasPengajuan::create([
+                    'KodePengajuan' => $kodePengajuan,
+                    'Jenis' => 'Feasibility Study',
+                    'Keterangan' => 'Feasibility Study ' . ($kodePengajuan ?? $fs->id) . ' telah selesai disetujui seluruh approver',
+                    'UserCreate' => 'System',
+                ]);
+            }
+        }
+
+        return view('emails.setelah-approval', compact('penilai'))->with([
+            'message' => 'Terima kasih, persetujuan Anda berhasil dicatat.'
+        ]);
     }
 
     /**

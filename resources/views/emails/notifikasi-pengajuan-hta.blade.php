@@ -75,7 +75,7 @@
                     </tr>
                     <tr>
                         <td align="center" style="padding:16px 32px;">
-                            <a href="{{ route('htagpa.approve', $penilai->ApprovalToken) }}"
+                            <a href="{{ route('htagpa.sebelum-approve', $penilai->ApprovalToken) }}"
                                 style="
                                     display:inline-block;
                                     background:#198754;
@@ -89,7 +89,7 @@
                                     letter-spacing:1px;
                                     transition:background 0.3s;
                                 ">
-                                SETUJUI HTA / GPA
+                                Klik Untuk Membuka Halaman Setujui
                             </a>
                         </td>
                     </tr>
@@ -99,9 +99,10 @@
                                 Apabila tombol di atas tidak dapat diakses, silakan salin dan buka tautan berikut pada
                                 browser Anda:<br>
                                 <a style="color:#198754;word-break:break-all;"
-                                    href="{{ route('htagpa.approve', $penilai->ApprovalToken) }}">{{ route('htagpa.approve', $penilai->ApprovalToken) }}</a>
+                                    href="{{ route('htagpa.sebelum-approve', $penilai->ApprovalToken) }}">{{ route('htagpa.sebelum-approve', $penilai->ApprovalToken) }}</a>
                             </p>
                         </td>
+
                     </tr>
                     <tr>
                         <td style="padding:10px 32px 24px 32px;">

@@ -73,4 +73,8 @@ class HtaDanGpa extends Model
     {
         return $this->hasMany(HtaDanGpaDetail::class, 'IdHtaGpa', 'id');
     }
+    public function getPengajuan()
+    {
+        return $this->belongsTo(PengajuanPembelian::class, 'IdPengajuan', 'id');
+    }
 }

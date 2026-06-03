@@ -356,11 +356,12 @@ class UsulanInvestasiController extends Controller
             }
         }
 
-        // dd($approval2);
+        // note: sudah simpan penilai ke dokumen approvals pada bagian atas, tidak perlu kirim email
+
         $idPengajuan = $request->IdPengajuan;
         $idPengajuanItem = $request->PengajuanItemId;
+
         $dataRekom = Rekomendasi::with('getRekomedasiDetail.getBarang', 'getRekomedasiDetail.getNamaVendor')->where('IdPengajuan', $idPengajuan)->first();
-        // dd($dataRekom);
         $VendorAcc = Rekomendasi::with([
             'getRekomedasiDetail' => function ($query2) {
                 $query2->where('Rekomendasi', 1);
@@ -370,9 +371,8 @@ class UsulanInvestasiController extends Controller
             ->where('PengajuanItemId', $barang)
             ->first();
         $CariPengajuanItem = PengajuanItem::with('getRekomendasi')->find($barang);
-        $Acc = $VendorAcc->getRekomedasiDetail[0]->IdVendor;
-        $NamaBarangAcc = $VendorAcc->getRekomedasiDetail[0]->NamaPermintaan;
-        // dd($NamaBarangAcc);
+        $Acc = $VendorAcc->getRekomedasiDetail[0]->IdVendor ?? null;
+        $NamaBarangAcc = $VendorAcc->getRekomedasiDetail[0]->NamaPermintaan ?? null;
         $data2 = PengajuanPembelian::with([
             'getVendor' => function ($query2) use ($Acc) {
                 $query2->where('NamaVendor', $Acc);
@@ -388,31 +388,16 @@ class UsulanInvestasiController extends Controller
                 ]);
             }
         ])->find($request->IdPengajuan);
-        // pastikan email tidak terkirim ke user id 81
-        // Komen Kirim Email
-        foreach ($approval2 as $penilai) {
-            // Jangan kirim ke user id 81
-            if (empty($penilai->Email) || $penilai->UserId == 81 || $penilai->UserId == 2) {
-                continue;
-            }
 
-            Mail::to($penilai->Email)
-                ->send(new NotifFui(
-                    $usulan,
-                    $VendorAcc,
-                    $penilai,
-                    $approval2,
-                    $dataRekom,
-                    $data2,
-                    $cekjenis
-                ));
-        }
+        // Tidak kirim email ke penilai di sini, hanya membuat dokumen approvals
+        // $approval2 sudah berisi penilai, tidak perlu kirim email NotifFui di sini
+
         $pengajuan = PengajuanPembelian::find($idPengajuan);
         $kodePengajuan = $pengajuan ? $pengajuan->KodePengajuan : null;
         AktivitasPengajuan::create([
             'KodePengajuan' => $kodePengajuan ?? null,
             'Jenis' => 'FUI',
-            'Keterangan' => 'Pembuatan Form Usulan Investasi (FUI) untuk nomor pengajuan ' . ($kodePengajuan ?? '-') . ' sudah dibuat dan dikirim ke email',
+            'Keterangan' => 'Pembuatan Form Usulan Investasi (FUI) untuk nomor pengajuan ' . ($kodePengajuan ?? '-') . ' sudah dibuat',
             'UserCreate' => auth()->user()->name,
         ]);
         activity('usulan_investasi')

@@ -34,4 +34,8 @@ class DokumenApproval extends Model
     {
         return $this->belongsTo(MasterDepartemen::class, 'DepartemenId', 'id');
     }
+    public function getDokumenHTAGPA()
+    {
+        return $this->belongsTo(HtaDanGpa::class, 'DokumenId', 'id');
+    }
 }

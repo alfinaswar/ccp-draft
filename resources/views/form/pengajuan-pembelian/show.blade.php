@@ -634,9 +634,8 @@
                                             <th>Nama Barang</th>
                                             <th class="text-center">Rekomendasi</th>
                                             <th class="text-center">HTA / GPA</th>
-                                            <th class="text-center">Usulan Investasi</th>
-                                            <th class="text-center">Lembar Disposisi</th>
                                             <th class="text-center">Feasibility Study</th>
+                                            <th class="text-center">Usulan Investasi</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -647,6 +646,7 @@
                                                     <td>
                                                         {{ $item->getBarang->Nama ?? '-' }}
                                                     </td>
+                                                    <!-- Rekomendasi -->
                                                     <td class="text-center">
 
                                                         @php
@@ -682,6 +682,7 @@
                                                             @endif
                                                         @endif
                                                     </td>
+                                                    <!-- HTA / GPA -->
                                                     <td class="text-center">
                                                         @php
                                                             $hasHta = $item->getHtaGpa ? true : false;
@@ -712,97 +713,7 @@
                                                             </a>
                                                         @endif
                                                     </td>
-                                                    <td class="text-center">
-                                                        @php
-                                                            $adaFui = $item->getFui ? true : false;
-                                                            $adaRekomendasi = $item->getRekomendasi ? true : false;
-                                                        @endphp
-                                                        @if ($adaRekomendasi)
-                                                            @if (!$adaFui)
-                                                                @if ($data->Status == 'Draft' || $data->Status == 'Selesai Review' || $data->Status == 'Ditolak')
-                                                                    <a href="{{ route('usulan-investasi.create', [encrypt($data->id), encrypt($item->id)]) }}"
-                                                                        class="btn btn-warning">
-                                                                        <i class="fa fa-lightbulb"></i> Lengkapi
-                                                                    </a>
-                                                                @endif
-                                                            @else
-                                                                @if (optional($item->getFui)->SudahRkap2 === null &&
-                                                                        ($data->Status == 'Draft' || $data->Status == 'Selesai Review' || $data->Status == 'Ditolak'))
-                                                                    <a href="{{ route('usulan-investasi.create', [encrypt($data->id), encrypt($item->id)]) }}"
-                                                                        class="btn btn-warning">
-                                                                        <i class="fa fa-edit"></i> Lengkapi
-                                                                    </a>
-                                                                @endif
-                                                                <a href="{{ route('usulan-investasi.show', [$data->id, $item->id]) }}"
-                                                                    class="btn btn-success">
-                                                                    <i class="fa fa-eye"></i>
-                                                                    Lihat
-                                                                </a>
-                                                                <a href="{{ route('usulan-investasi.print', [$data->id, $item->id]) }}"
-                                                                    class="btn btn-info" target="_blank">
-                                                                    <i class="fa fa-print"></i>
-                                                                    Cetak
-                                                                </a>
-                                                            @endif
-                                                        @else
-                                                            <div class="alert alert-danger mt-1" role="alert">
-                                                                Mohon maaf, Formulir Usulan Investasi dapat diisi<br>
-                                                                setelah rekomendasi dikeluarkan oleh CCP.
-                                                            </div>
-                                                        @endif
-                                                    </td>
-
-                                                    <td class="text-center">
-                                                        @php
-                                                            $adaRekomendasi = $item->getRekomendasi ? true : false;
-                                                            $adaLembarDisposisi = $item->getDisposisi ? true : false;
-                                                        @endphp
-                                                        @if (!$adaRekomendasi)
-                                                            <div class="alert alert-danger p-2 m-0"
-                                                                style="font-size: 90%;">
-                                                                Lembar Disposisi dapat dibuat setelah rekomendasi
-                                                                dikeluarkan oleh CCP.
-                                                            </div>
-                                                        @else
-                                                            @if ($data->Status == 'Draft' || $data->Status == 'Selesai Review' || $data->Status == 'Ditolak')
-                                                                @if ($adaLembarDisposisi)
-                                                                    <a href="{{ route('lembar-disposisi.edit', [encrypt($data->id), encrypt($item->id)]) }}"
-                                                                        class="btn btn-primary">
-                                                                        <i class="fa fa-edit"></i>
-                                                                        Ubah
-                                                                    </a>
-                                                                    <a href="{{ route('lembar-disposisi.print', [$data->id, $item->id]) }}"
-                                                                        class="btn btn-info ms-2" target="_blank">
-                                                                        <i class="fa fa-print"></i> Cetak
-                                                                    </a>
-                                                                    <a href="{{ route('lembar-disposisi.show', [$data->id, $item->id]) }}"
-                                                                        class="btn btn-success">
-                                                                        <i class="fa fa-eye"></i>
-                                                                        Lihat
-                                                                    </a>
-                                                                @else
-                                                                    <a href="{{ route('lembar-disposisi.create', [encrypt($data->id), encrypt($item->id)]) }}"
-                                                                        class="btn btn-primary">
-                                                                        <i class="fa fa-edit"></i>
-                                                                        Isi Lembar Disposisi
-                                                                    </a>
-                                                                @endif
-                                                            @else
-                                                                @if ($adaLembarDisposisi)
-                                                                    <a href="{{ route('lembar-disposisi.print', [$data->id, $item->id]) }}"
-                                                                        class="btn btn-info ms-2" target="_blank">
-                                                                        <i class="fa fa-print"></i> Cetak
-                                                                    </a>
-                                                                    <a href="{{ route('lembar-disposisi.show', [$data->id, $item->id]) }}"
-                                                                        class="btn btn-success">
-                                                                        <i class="fa fa-eye"></i>
-                                                                        Lihat
-                                                                    </a>
-                                                                @endif
-                                                            @endif
-                                                        @endif
-                                                    </td>
-
+                                                    <!-- Feasibility Study -->
                                                     <td class="text-center">
                                                         @php
                                                             $adaRekomendasi = $item->getRekomendasi ? true : false;
@@ -861,9 +772,46 @@
                                                             @endif
                                                         @endif
                                                     </td>
-
-
-
+                                                    <!-- Usulan Investasi -->
+                                                    <td class="text-center">
+                                                        @php
+                                                            $adaFui = $item->getFui ? true : false;
+                                                            $adaRekomendasi = $item->getRekomendasi ? true : false;
+                                                        @endphp
+                                                        @if ($adaRekomendasi)
+                                                            @if (!$adaFui)
+                                                                @if ($data->Status == 'Draft' || $data->Status == 'Selesai Review' || $data->Status == 'Ditolak')
+                                                                    <a href="{{ route('usulan-investasi.create', [encrypt($data->id), encrypt($item->id)]) }}"
+                                                                        class="btn btn-warning">
+                                                                        <i class="fa fa-lightbulb"></i> Lengkapi
+                                                                    </a>
+                                                                @endif
+                                                            @else
+                                                                @if (optional($item->getFui)->SudahRkap2 === null &&
+                                                                        ($data->Status == 'Draft' || $data->Status == 'Selesai Review' || $data->Status == 'Ditolak'))
+                                                                    <a href="{{ route('usulan-investasi.create', [encrypt($data->id), encrypt($item->id)]) }}"
+                                                                        class="btn btn-warning">
+                                                                        <i class="fa fa-edit"></i> Lengkapi
+                                                                    </a>
+                                                                @endif
+                                                                <a href="{{ route('usulan-investasi.show', [$data->id, $item->id]) }}"
+                                                                    class="btn btn-success">
+                                                                    <i class="fa fa-eye"></i>
+                                                                    Lihat
+                                                                </a>
+                                                                <a href="{{ route('usulan-investasi.print', [$data->id, $item->id]) }}"
+                                                                    class="btn btn-info" target="_blank">
+                                                                    <i class="fa fa-print"></i>
+                                                                    Cetak
+                                                                </a>
+                                                            @endif
+                                                        @else
+                                                            <div class="alert alert-danger mt-1" role="alert">
+                                                                Mohon maaf, Formulir Usulan Investasi dapat diisi<br>
+                                                                setelah rekomendasi dikeluarkan oleh CCP.
+                                                            </div>
+                                                        @endif
+                                                    </td>
                                                 </tr>
                                             @endforeach
                                         @else
@@ -873,6 +821,8 @@
                                         @endif
                                     </tbody>
                                 </table>
+
+
                             </div>
                         </div>
                     </div>

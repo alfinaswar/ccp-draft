@@ -403,6 +403,7 @@ class HtaDanGpaController extends Controller
             'JenisFormId' => $cariHTA->JenisForm,
             'DokumenId' => $cariHTA->id,
         ])->orderBy('Urutan', 'asc')->get();
+
         $approval2 = DokumenApproval::with('getUser', 'getJabatan', 'getDepartemen')
             ->where('JenisFormId', $cariHTA->JenisForm)
             ->where('DokumenId', $cariHTA->id)
@@ -433,6 +434,7 @@ class HtaDanGpaController extends Controller
                 'UserUpdate' => auth()->user()->name,
             ]);
         }
+
         $idPengajuan = $request->IdPengajuan;
         $idPengajuanItem = $request->PengajuanItemId;
 
@@ -448,10 +450,8 @@ class HtaDanGpaController extends Controller
         ])->find($idPengajuan);
 
         $parameter = MasterParameter::get();
-        foreach ($approvalDocs as $penilai) {
-            if (empty($penilai->Email) || $penilai->UserId == 2)
-                continue;
-
+        $firstApprover = $approvalDocs->first();
+        if ($firstApprover && !empty($firstApprover->Email) && $firstApprover->UserId != 2) {
             $fileLampiran = [];
             if ($cariHTA->JenisForm == '2' || $cariHTA->JenisForm == '16') {
                 foreach ($cariHTA->getDetailHta as $detail) {
@@ -461,19 +461,18 @@ class HtaDanGpaController extends Controller
                 }
             }
 
-            // dd($fileLampiran);
-            Mail::to($penilai->Email)
+            Mail::to($firstApprover->Email)
                 ->send(new NotifikasiPengajuanMail(
                     $pengajuan,
                     $cariHTA,
                     $parameter,
-                    $penilai,
+                    $firstApprover,
                     $approval2,
                     $fileLampiran
                 ));
         }
-        $kodePengajuan = null;
 
+        $kodePengajuan = null;
         $pengajuan = PengajuanPembelian::find($cariHTA->IdPengajuan);
         $kodePengajuan = $pengajuan ? $pengajuan->KodePengajuan : ($cariHTA->Nomor ?? $cariHTA->id);
 
@@ -483,6 +482,7 @@ class HtaDanGpaController extends Controller
             'Keterangan' => 'HTA/GPA dengan nomor ' . $kodePengajuan . ' telah dikirim ke email daftar approval',
             'UserCreate' => auth()->user()->name,
         ]);
+
         return redirect()->back()->with('success', 'Data berhasil disimpan & email notifikasi terkirim.');
     }
 
@@ -712,6 +712,7 @@ class HtaDanGpaController extends Controller
     public function approve($token)
     {
         $penilai = DokumenApproval::with('getUser')->where('ApprovalToken', $token)->firstOrFail();
+
         if ($penilai->Status !== 'Pending') {
             return view('emails.setelah-approval', compact('penilai'))->with([
                 'message' => 'Persetujuan sudah diproses sebelumnya.'
@@ -722,23 +723,77 @@ class HtaDanGpaController extends Controller
             'Status' => 'Approved',
             'TanggalApprove' => Carbon::now(),
         ]);
-        if ($penilai->Status === 'Approved') {
-            $pengajuan = null;
-            $kodePengajuan = null;
-            if ($penilai->DokumenId ?? false) {
-                $hta = HtaDanGpa::find($penilai->DokumenId);
-                if ($hta) {
-                    $pengajuan = PengajuanPembelian::find($hta->IdPengajuan);
-                    $kodePengajuan = $pengajuan ? $pengajuan->KodePengajuan : ($hta->Nomor ?? $hta->id);
+
+        // Log aktivitas approval
+        $pengajuan = null;
+        $kodePengajuan = null;
+        $hta = null;
+
+        if ($penilai->DokumenId ?? false) {
+            $hta = HtaDanGpa::find($penilai->DokumenId);
+            if ($hta) {
+                $pengajuan = PengajuanPembelian::find($hta->IdPengajuan);
+                $kodePengajuan = $pengajuan ? $pengajuan->KodePengajuan : ($hta->Nomor ?? $hta->id);
+            }
+        }
+
+        AktivitasPengajuan::create([
+            'KodePengajuan' => $kodePengajuan,
+            'Jenis' => 'HTA-GPA',
+            'Keterangan' => ($penilai->Nama ?? '-') . ' telah menyetujui HTA/GPA',
+            'UserCreate' => $penilai->Nama ?? '-',
+        ]);
+
+        // Cek approval selanjutnya
+        $nextApproval = DokumenApproval::where('DokumenId', $penilai->DokumenId)
+            ->where('JenisFormId', $penilai->JenisFormId)
+            ->where('Urutan', '>', $penilai->Urutan)
+            ->orderBy('Urutan', 'asc')
+            ->first();
+
+        if ($nextApproval) {
+            if (!empty($nextApproval->Email) && $nextApproval->UserId != 2) {
+                $parameter = MasterParameter::get();
+                $approval2 = DokumenApproval::with('getUser', 'getJabatan', 'getDepartemen')
+                    ->where('JenisFormId', $penilai->JenisFormId)
+                    ->where('DokumenId', $penilai->DokumenId)
+                    ->orderBy('Urutan', 'asc')
+                    ->get();
+
+                $fileLampiran = [];
+                if ($hta && ($hta->JenisForm == '2' || $hta->JenisForm == '16')) {
+                    foreach ($hta->getDetailHta as $detail) {
+                        if (!empty($detail->File)) {
+                            $fileLampiran[] = $detail->File;
+                        }
+                    }
+                }
+
+                try {
+                    Mail::to($nextApproval->Email)
+                        ->send(new NotifikasiPengajuanMail(
+                            $pengajuan,
+                            $hta,
+                            $parameter,
+                            $nextApproval,
+                            $approval2,
+                            $fileLampiran
+                        ));
+                    $nextApproval->StatusEmail = 'Terkirim';
+                    $nextApproval->save();
+                } catch (\Exception $e) {
+                    $nextApproval->StatusEmail = 'Gagal Kirim';
+                    $nextApproval->save();
                 }
             }
-            AktivitasPengajuan::create([
-                'KodePengajuan' => $kodePengajuan,
-                'Jenis' => 'HTA-GPA',
-                'Keterangan' => ($penilai->Nama ?? '-') . ' telah menyetujui HTA/GPA',
-                'UserCreate' => $penilai->Nama ?? '-',
-            ]);
+        } else {
+            // JIKA TIDAK ADA approval selanjutnya: Update status utama
+            if ($hta) {
+                $hta->Status = 'Telah Disetujui';
+                $hta->save();
+            }
         }
+
         return view('emails.setelah-approval', compact('penilai'))->with([
             'message' => 'Terima kasih, persetujuan Anda berhasil dicatat.'
         ]);
@@ -759,6 +814,108 @@ class HtaDanGpaController extends Controller
 
         return view('emails.setelah-approval', [
             'message' => 'Penilaian telah ditolak.'
+        ]);
+    }
+    public function sebelumApprove($token)
+    {
+        $penilai = DokumenApproval::with(['getDokumenHTAGPA.getPengajuan'])
+            ->where('ApprovalToken', $token)
+            ->firstOrFail();
+        // Cek apakah sudah diapprove/direject sebelumnya
+        if ($penilai->Status !== 'Pending') {
+            return view('emails.setelah-approval', compact('penilai'))->with([
+                'message' => 'Persetujuan sudah diproses sebelumnya dengan status: ' . $penilai->Status
+            ]);
+        }
+
+        return view('emails.sebelum-approve', compact('penilai'));
+    }
+    public function submitJustifikasi(Request $request, $token)
+    {
+        $penilai = DokumenApproval::with('getDokumenHTAGPA')->where('ApprovalToken', $token)->firstOrFail();
+
+        if ($penilai->Status !== 'Pending') {
+            return redirect()->back()->with('error', 'Approval sudah diproses sebelumnya.');
+        }
+
+        // Simpan Justifikasi, status & waktu approve
+        $penilai->update([
+            'Justifikasi' => $request->justifikasi,
+            'Status' => 'Approved',
+            'TanggalApprove' => Carbon::now(),
+        ]);
+
+        // Ambil data HTA/GPA & pengajuan untuk keperluan selanjutnya
+        $hta = null;
+        $pengajuan = null;
+        $kodePengajuan = null;
+
+        if ($penilai->DokumenId ?? false) {
+            $hta = HtaDanGpa::find($penilai->DokumenId);
+            if ($hta) {
+                $pengajuan = PengajuanPembelian::find($hta->IdPengajuan);
+                $kodePengajuan = $pengajuan ? $pengajuan->KodePengajuan : ($hta->Nomor ?? $hta->id);
+            }
+        }
+
+        // Log aktivitas
+        AktivitasPengajuan::create([
+            'KodePengajuan' => $kodePengajuan ?? null,
+            'Jenis' => 'HTA-GPA',
+            'Keterangan' => ($penilai->Nama ?? '-') . ' telah menyetujui HTA/GPA',
+            'UserCreate' => $penilai->Nama ?? '-',
+        ]);
+
+        // --- Kirim email ke approval selanjutnya mirip logic pada approve() ---
+        $nextApproval = DokumenApproval::where('DokumenId', $penilai->DokumenId)
+            ->where('JenisFormId', $penilai->JenisFormId)
+            ->where('Urutan', '>', $penilai->Urutan)
+            ->orderBy('Urutan', 'asc')
+            ->first();
+
+        if ($nextApproval) {
+            if (!empty($nextApproval->Email) && $nextApproval->UserId != 2) {
+                $parameter = MasterParameter::get();
+                $approval2 = DokumenApproval::with('getUser', 'getJabatan', 'getDepartemen')
+                    ->where('JenisFormId', $penilai->JenisFormId)
+                    ->where('DokumenId', $penilai->DokumenId)
+                    ->orderBy('Urutan', 'asc')
+                    ->get();
+                $fileLampiran = [];
+                if ($hta && ($hta->JenisForm == '2' || $hta->JenisForm == '16')) {
+                    foreach ($hta->getDetailHta as $detail) {
+                        if (!empty($detail->File)) {
+                            $fileLampiran[] = $detail->File;
+                        }
+                    }
+                }
+
+                try {
+                    Mail::to($nextApproval->Email)
+                        ->send(new NotifikasiPengajuanMail(
+                            $pengajuan,
+                            $hta,
+                            $parameter,
+                            $nextApproval,
+                            $approval2,
+                            $fileLampiran
+                        ));
+                    $nextApproval->StatusEmail = 'Terkirim';
+                    $nextApproval->save();
+                } catch (\Exception $e) {
+                    $nextApproval->StatusEmail = 'Gagal Kirim';
+                    $nextApproval->save();
+                }
+            }
+        } else {
+            if ($hta) {
+                $hta->Status = 'Final';
+                $hta->save();
+            }
+        }
+
+        return view('emails.setelah-approval', compact('penilai'))->with([
+            'message' => 'Terima kasih, persetujuan Anda berhasil dicatat.'
         ]);
     }
 }

@@ -1024,12 +1024,16 @@ class PengajuanPembelianController extends Controller
             return redirect()->back()->with('success', 'Pengajuan Berhasil Ditolak, Segera Informasikan Ke Pengaju');
 
         }
+        // PENGECEKAN UNTUK MAJU PRESENTASI
         if ($request->Status === 'Siap Presentasi') {
-            // dd($data);
             $cariFUI = UsulanInvestasi::where('IdPengajuan', $data->id)->first();
+            if (is_null($cariFUI)) {
+                return redirect()->back()->with('error', 'Form Usulan Investasi belum diisi. Proses tidak dapat dilanjutkan.');
+            }
 
-            // Tentukan $jenisForm yang benar berdasarkan $cariFUI->BiayaAkhir dan $data->Jenis
             $jenisForm = null;
+
+            // === Logika penentuan JenisForm (tetap dipertahankan) ===
             switch ($data->Jenis) {
                 case 1:
                     switch (true) {
@@ -1060,27 +1064,31 @@ class PengajuanPembelianController extends Controller
                     }
                     break;
             }
-            // dd($jenisForm);
+
+            // === Logika sinkronisasi DokumenApproval (tetap dipertahankan) ===
             if ($cariFUI && $jenisForm !== null && $cariFUI->JenisForm != $jenisForm) {
                 $ApprovalBenar = MasterForm::with([
                     'getApproval' => function ($query) use ($jenisForm) {
                         $query->where('KodePerusahaan', auth()->user()->kodeperusahaan);
                     }
                 ])->find($jenisForm);
-                // dd($ApprovalBenar);
-                $approvalsBenar = $ApprovalBenar && $ApprovalBenar->getApproval ? $ApprovalBenar->getApproval->sortBy('Urutan')->values() : collect([]);
-                $currentApprovals = DokumenApproval::where('DokumenId', $cariFUI->id)->where('JenisFormId', $cariFUI->JenisForm)
+
+                $approvalsBenar = $ApprovalBenar && $ApprovalBenar->getApproval
+                    ? $ApprovalBenar->getApproval->sortBy('Urutan')->values()
+                    : collect([]);
+
+                $currentApprovals = DokumenApproval::where('DokumenId', $cariFUI->id)
+                    ->where('JenisFormId', $cariFUI->JenisForm)
                     ->orderBy('Urutan', 'asc')->get();
 
-                // dd($currentApprovals);
                 $newApprovalsIds = [];
                 $urutan = 1;
+
                 foreach ($approvalsBenar as $approvalBenar) {
                     $existing = $currentApprovals->first(function ($item) use ($approvalBenar) {
                         return $item->UserId == $approvalBenar->UserId;
                     });
                     $user = User::find($approvalBenar->UserId);
-
                     $namaUser = $user ? $user->name : $approvalBenar->Nama;
                     $emailUser = $user ? $user->email : $approvalBenar->Email;
 
@@ -1093,6 +1101,7 @@ class PengajuanPembelianController extends Controller
                         $existing->Nama = $namaUser;
                         $existing->Email = $emailUser;
                         $existing->ApprovalToken = $oldToken;
+
                         if ($existing->UserId == 81) {
                             $existing->Status = 'Pending';
                             $existing->TanggalApprove = null;
@@ -1114,7 +1123,6 @@ class PengajuanPembelianController extends Controller
                             'Nama' => $namaUser,
                             'Email' => $emailUser,
                             'Urutan' => $urutan,
-                            // Status: Approved, kecuali UserId 81
                             'Status' => $approvalBenar->UserId == 81 ? 'Pending' : 'Approved',
                             'TanggalApprove' => $approvalBenar->UserId == 81 ? null : Carbon::now(),
                             'Catatan' => null,
@@ -1125,31 +1133,34 @@ class PengajuanPembelianController extends Controller
                     }
                     $urutan++;
                 }
+
                 $userIdBenar = $approvalsBenar->pluck('UserId')->toArray();
                 foreach ($currentApprovals as $approval) {
                     if (!in_array($approval->UserId, $userIdBenar)) {
                         $approval->delete();
                     }
                 }
-            } else if ($cariFUI) {
+            } elseif ($cariFUI) {
                 $ApprovalBenar = MasterForm::with([
                     'getApproval' => function ($query) use ($jenisForm, $cariFUI) {
                         $query->where('KodePerusahaan', auth()->user()->kodeperusahaan);
                     }
                 ])->find($jenisForm ?? $cariFUI->JenisForm);
-                $approvalsBenar = $ApprovalBenar && $ApprovalBenar->getApproval ? $ApprovalBenar->getApproval->sortBy('Urutan')->values() : collect([]);
-                // $currentApprovals = DokumenApproval::where('DokumenId', $cariFUI->id)
-                //     ->orderBy('Urutan', 'asc')->get();
+
+                $approvalsBenar = $ApprovalBenar && $ApprovalBenar->getApproval
+                    ? $ApprovalBenar->getApproval->sortBy('Urutan')->values()
+                    : collect([]);
+
                 $currentApprovals = DokumenApproval::where('DokumenId', $cariFUI->id)
                     ->where('JenisFormId', $jenisForm ?? $cariFUI->JenisForm)
                     ->orderBy('Urutan', 'asc')->get();
+
                 $urutan = 1;
                 foreach ($approvalsBenar as $approvalBenar) {
                     $existing = $currentApprovals->first(function ($item) use ($approvalBenar) {
                         return $item->UserId == $approvalBenar->UserId;
                     });
                     $user = User::find($approvalBenar->UserId);
-
                     $namaUser = $user ? $user->name : $approvalBenar->Nama;
                     $emailUser = $user ? $user->email : $approvalBenar->Email;
 
@@ -1174,23 +1185,18 @@ class PengajuanPembelianController extends Controller
                 }
             }
 
-            $CekListApproveFUI = DokumenApproval::where('DokumenId', $cariFUI->id)
-                ->where('JenisFormId', $cariFUI->JenisForm)
-                ->orderBy('Urutan', 'asc')
-                ->get();
-            // dd($CekListApproveFUI . 'else');
+            // === VALIDASI UNTUK STATUS 'SIAP PRESENTASI' ===
             $cekrekom1 = $data->getRekomendasi[0]->getRekomedasiDetail->where('Rekomendasi', 1)->first();
+
             if ($data->Jenis == '1') {
-                // dd('satu');
-                $cekDisposisi = $data->getPengajuanItem[0]->getDisposisi;
                 $cekFui = $data->getPengajuanItem[0]->getFui;
                 $cek = $data->getPengajuanItem[0]->getFs;
-                // $countCek = $cek->count() > 0 ? $cek->count() : 0;
-                // dd($cek);
+
+                // 1. Cek HTA/GPA (wajib ada dan approved)
                 if (empty($data->getHtaGpa)) {
                     return back()->with('error', 'HTA / GPA belum diisi. Proses tidak dapat diteruskan.');
                 }
-                // CekApprovalHta
+
                 $approvalHTA = DokumenApproval::with('getUser', 'getJabatan', 'getDepartemen')
                     ->where('JenisFormId', $data->getHtaGpa->JenisForm)
                     ->where('DokumenId', $data->getHtaGpa->id)
@@ -1201,55 +1207,31 @@ class PengajuanPembelianController extends Controller
                     return $item->Status === 'Approved';
                 });
 
+                // 2. Cek FUI (HANYA wajib ada datanya, TIDAK perlu cek approval)
                 if (empty($cekFui)) {
                     return back()->with('error', 'FUI belum diisi. Proses tidak dapat diteruskan.');
                 }
-                // ApprovalFUI
-                $approvalFUI = DokumenApproval::with('getUser', 'getJabatan', 'getDepartemen')
-                    ->where('JenisFormId', $cekFui->JenisForm)
-                    ->where('DokumenId', $cekFui->id)
-                    ->orderBy('Urutan', 'asc')
-                    ->get();
-
-                $semuaApprovedFUI = $approvalFUI->every(function ($item) {
-                    return $item->Status === 'Approved';
-                });
-
-                if (empty($cekDisposisi)) {
-                    return back()->with('error', 'Disposisi belum diisi. Proses tidak dapat diteruskan.');
-                }
-
-                $approvalDisposisi = DokumenApproval::with('getUser', 'getJabatan', 'getDepartemen')
-                    ->where('JenisFormId', $cekDisposisi->JenisForm)
-                    ->where('DokumenId', $cekDisposisi->id)
-                    ->orderBy('Urutan', 'asc')
-                    ->get();
-
-                $semuaApprovedDisposisi = $approvalDisposisi->every(function ($item) {
-                    return $item->Status === 'Approved';
-                });
+                // ✅ Approval FUI TIDAK dicek lagi
 
                 $masterBarangId = $data->getPengajuanItem[0]->getBarang->id ?? null;
-                // if ($cekrekom1->HargaNego > 100000000 && $cek && $masterBarangId != 294) {
-                //     return back()->with('error', 'FS tidak boleh kosong sebelum dapat mengubah status menjadi Siap Presentasi untuk pengajuan di atas 100 juta.');
-                // }
                 $errors = [];
-                //KONDISI JIKA HARGA DIATAS 100 JUTA DAN FS ADA DAN BUKAN BARANG SPECIAL CASE
-                // WAJIB SEMUANYA APPROVE
+
+                // Kondisi khusus: Harga > 100 juta dan bukan barang special case
                 if ($cekrekom1->HargaNego > 100000000 && $masterBarangId != 294) {
                     if (!$cek) {
                         return back()->with('error', 'FS wajib diisi untuk pengajuan di atas 100 juta.');
                     }
+
                     $approvalFS = DokumenApproval::with('getUser', 'getJabatan', 'getDepartemen')
                         ->where('JenisFormId', $cek->JenisForm)
                         ->where('DokumenId', $cek->id)
                         ->orderBy('Urutan', 'asc')
                         ->get();
-                    // dd($approvalFS);
+
                     $semuaApprovedFS = $approvalFS->every(function ($item) {
                         return $item->Status === 'Approved';
                     });
-                    // 2. Cek Approval FS
+
                     if (!$semuaApprovedFS) {
                         $notApprovedFs = $approvalFS->filter(function ($item) {
                             return $item->Status !== 'Approved';
@@ -1267,8 +1249,7 @@ class PengajuanPembelianController extends Controller
                     }
                 }
 
-
-                // 1. Cek Approval HTA / GPA
+                // 3. Cek Approval HTA / GPA
                 if (!$semuaApprovedHTA) {
                     $notApprovedHta = $approvalHTA->filter(function ($item) {
                         return $item->Status !== 'Approved';
@@ -1285,70 +1266,22 @@ class PengajuanPembelianController extends Controller
                     }
                 }
 
-                // 3. Cek Approval FUI
-                if (!$semuaApprovedFUI) {
-                    $notApprovedFui = $approvalFUI->filter(function ($item) {
-                        return $item->Status !== 'Approved';
-                    })->values();
-                    $only81NotApproved = $notApprovedFui->every(function ($item) {
-                        return $item->UserId == 81;
-                    }) && $notApprovedFui->count() > 0;
-
-                    if ($notApprovedFui->count() > 0 && !$only81NotApproved) {
-                        $list = $notApprovedFui
-                            ->filter(function ($item) {
-                                return $item->UserId != 81;
-                            })
-                            ->values()
-                            ->map(function ($item, $idx) {
-                                $name = $item->getUser->name ?? 'Pengguna terkait';
-                                return ($idx + 1) . ". {$name}";
-                            })
-                            ->implode('<br>');
-
-                        if (!empty($list)) {
-                            $errors[] = "Daftar Nama Belum Approve FUI:<br>{$list}";
-                        } else {
-                            $errors[] = 'Dokumen <b>FUI</b> belum diapprove.';
-                        }
-                    } else if ($notApprovedFui->count() == 0) {
-                        $errors[] = 'Dokumen <b>FUI</b> belum diapprove.';
-                    }
-                }
-                // Cek Approval Disposisi
-                if (!$semuaApprovedDisposisi) {
-                    // Filter yang belum approve dan bukan user 81
-                    $notApprovedDisposisi = $approvalDisposisi->filter(function ($item) {
-                        return $item->Status !== 'Approved' && $item->UserId != 81;
-                    })->values();
-
-                    if ($notApprovedDisposisi->count() > 0) {
-                        $list = $notApprovedDisposisi->map(function ($item, $idx) {
-                            $name = $item->getUser->name ?? 'Pengguna terkait';
-                            return ($idx + 1) . ". {$name}";
-                        })->implode('<br>');
-                        $errors[] = "Daftar Nama Belum Approve Disposisi:<br>{$list}";
-                    }
-                }
+                // ✅ Disposisi: TIDAK dicek sama sekali (dihapus)
 
                 if (count($errors) > 0) {
                     $message = '<b>Mohon lengkapi persetujuan berikut sebelum lanjut:</b><br>' . implode('<br><br>', $errors);
                     return back()->with('error', $message);
                 }
+
             } elseif ($data->Jenis != 1) {
-                // dd('PJ26010185');
-                $cekDisposisi = $data->getPengajuanItem[0]->getDisposisi;
-                // dd($cekDisposisi);
                 $cekFui = $data->getPengajuanItem[0]->getFui;
                 $cek = $data->getPengajuanItem[0]->getFs;
-                // if (!$cek) {
-                //     return back()->with('error', 'FS tidak boleh kosong sebelum dapat mengubah status menjadi Siap Presentasi.');
-                // }
 
+                // 1. Cek HTA/GPA (wajib ada dan approved)
                 if (empty($data->getHtaGpa)) {
                     return back()->with('error', 'HTA / GPA belum diisi. Proses tidak dapat diteruskan.');
                 }
-                // CekApprovalHta
+
                 $approvalHTA = DokumenApproval::with('getUser', 'getJabatan', 'getDepartemen')
                     ->where('JenisFormId', $data->getHtaGpa->JenisForm)
                     ->where('DokumenId', $data->getHtaGpa->id)
@@ -1359,50 +1292,15 @@ class PengajuanPembelianController extends Controller
                     return $item->Status === 'Approved';
                 });
 
+                // 2. Cek FUI (HANYA wajib ada datanya, TIDAK perlu cek approval)
                 if (empty($cekFui)) {
                     return back()->with('error', 'FUI belum diisi. Proses tidak dapat diteruskan.');
                 }
-                // ApprovalFUI
-                $approvalFUI = DokumenApproval::with('getUser', 'getJabatan', 'getDepartemen')
-                    ->where('JenisFormId', $cekFui->JenisForm)
-                    ->where('DokumenId', $cekFui->id)
-                    ->orderBy('Urutan', 'asc')
-                    ->get();
-
-                $semuaApprovedFUI = $approvalFUI->every(function ($item) {
-                    return $item->Status === 'Approved';
-                });
-
-                if (empty($cekDisposisi)) {
-                    return back()->with('error', 'Disposisi belum diisi. Proses tidak dapat diteruskan.');
-                }
-
-                $approvalDisposisi = DokumenApproval::with('getUser', 'getJabatan', 'getDepartemen')
-                    ->where('JenisFormId', $cekDisposisi->JenisForm)
-                    ->where('DokumenId', $cekDisposisi->id)
-                    ->orderBy('Urutan', 'asc')
-                    ->get();
-
-                $semuaApprovedDisposisi = $approvalDisposisi->every(function ($item) {
-                    return $item->Status === 'Approved';
-                });
-
-                // if (empty($cek)) {
-                //     return back()->with('error', 'Disposisi belum diisi. Proses tidak dapat diteruskan.');
-                // }
-                // // ApprovalFS
-                // $approvalFS = DokumenApproval::with('getUser', 'getJabatan', 'getDepartemen')
-                //     ->where('JenisFormId', $cek->JenisForm)
-                //     ->where('DokumenId', $cek->id)
-                //     ->orderBy('Urutan', 'asc')
-                //     ->get();
-
-                // $semuaApprovedFS = $approvalFS->every(function ($item) {
-                //     return $item->Status === 'Approved';
-                // });
+                // ✅ Approval FUI TIDAK dicek lagi
 
                 $errors = [];
-                // 1. Cek Approval HTA / GPA
+
+                // 3. Cek Approval HTA / GPA
                 if (!$semuaApprovedHTA) {
                     $notApprovedHta = $approvalHTA->filter(function ($item) {
                         return $item->Status !== 'Approved';
@@ -1419,74 +1317,15 @@ class PengajuanPembelianController extends Controller
                     }
                 }
 
-                // 2. Cek Approval FS
-                // if (!$semuaApprovedFS) {
-                //     $notApprovedFs = $approvalFS->filter(function ($item) {
-                //         return $item->Status !== 'Approved';
-                //     })->values();
-
-                //     if ($notApprovedFs->count() > 0) {
-                //         $list = $notApprovedFs->map(function ($item, $idx) {
-                //             $name = $item->getUser->name ?? 'Pengguna terkait';
-                //             return ($idx + 1) . ". {$name}";
-                //         })->implode('<br>');
-                //         $errors[] = "Daftar Nama Belum Approve FS:<br>{$list}";
-                //     } else {
-                //         $errors[] = "Dokumen <b>FS</b> belum diapprove.";
-                //     }
-                // }
-
-                // 3. Cek Approval FUI
-                if (!$semuaApprovedFUI) {
-                    $notApprovedFui = $approvalFUI->filter(function ($item) {
-                        return $item->Status !== 'Approved';
-                    })->values();
-                    $only81NotApproved = $notApprovedFui->every(function ($item) {
-                        return $item->UserId == 81;
-                    }) && $notApprovedFui->count() > 0;
-
-                    if ($notApprovedFui->count() > 0 && !$only81NotApproved) {
-                        $list = $notApprovedFui
-                            ->filter(function ($item) {
-                                return $item->UserId != 81;
-                            })
-                            ->values()
-                            ->map(function ($item, $idx) {
-                                $name = $item->getUser->name ?? 'Pengguna terkait';
-                                return ($idx + 1) . ". {$name}";
-                            })
-                            ->implode('<br>');
-
-                        if (!empty($list)) {
-                            $errors[] = "Daftar Nama Belum Approve FUI:<br>{$list}";
-                        } else {
-                            $errors[] = 'Dokumen <b>FUI</b> belum diapprove.';
-                        }
-                    } else if ($notApprovedFui->count() == 0) {
-                        $errors[] = 'Dokumen <b>FUI</b> belum diapprove.';
-                    }
-                }
-                // Cek Approval Disposisi
-                if (!$semuaApprovedDisposisi) {
-                    // Filter yang belum approve dan bukan user 81
-                    $notApprovedDisposisi = $approvalDisposisi->filter(function ($item) {
-                        return $item->Status !== 'Approved' && $item->UserId != 81;
-                    })->values();
-
-                    if ($notApprovedDisposisi->count() > 0) {
-                        $list = $notApprovedDisposisi->map(function ($item, $idx) {
-                            $name = $item->getUser->name ?? 'Pengguna terkait';
-                            return ($idx + 1) . ". {$name}";
-                        })->implode('<br>');
-                        $errors[] = "Daftar Nama Belum Approve Disposisi:<br>{$list}";
-                    }
-                }
+                // ✅ Disposisi: TIDAK dicek sama sekali (dihapus)
 
                 if (count($errors) > 0) {
                     $message = '<b>Mohon lengkapi persetujuan berikut sebelum lanjut:</b><br>' . implode('<br><br>', $errors);
                     return back()->with('error', $message);
                 }
             }
+
+            // Log aktivitas
             AktivitasPengajuan::create([
                 'KodePengajuan' => $data->KodePengajuan,
                 'Jenis' => 'Pengajuan Pembelian',

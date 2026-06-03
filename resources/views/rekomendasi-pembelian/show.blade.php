@@ -22,9 +22,21 @@
     <div class="row">
         <div class="col-s2">
             <div class="card mb-4">
-                <div class="card-header">
-                    <h4 class="card-title mb-0">Detail Pengajuan Pembelian</h4>
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h4 class="card-title mb-0">
+                        Detail Pengajuan Pembelian -
+                        <span style="font-size: 0.92em;">
+                            {{ $data->KodePengajuan ?? '-' }}
+                        </span>
+                    </h4>
+                    <div>
+                        <span class="badge text-dark" style="font-size: 1em;">
+                            {{ $data->Status ?? '-' }}
+                        </span>
+                    </div>
                 </div>
+
+
                 <div class="card-body">
                     <div class="row g-3 mb-4">
                         <div class="col-md-4">
@@ -406,9 +418,8 @@
                                             <th>Nama Barang</th>
                                             <th class="text-center">Rekomendasi</th>
                                             <th class="text-center">HTA / GPA</th>
-                                            <th class="text-center">Usulan Investasi</th>
-                                            <th class="text-center">Lembar Disposisi</th>
                                             <th class="text-center">Feasibility Study</th>
+                                            <th class="text-center">Usulan Investasi</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -420,12 +431,10 @@
                                                         {{ $item->getBarang->Nama ?? '-' }}
                                                     </td>
                                                     <td class="text-center">
-                                                        {{-- @if ($data->Status != 'Menunggu Rekomendasi GH' && $data->Status != 'Selesai Review') --}}
                                                         <a href="{{ route('rekomendasi.create', [encrypt($data->id), encrypt($item->id)]) }}"
                                                             class="btn btn-primary">
                                                             <i class="fa fa-pen"></i> Buat Rekomendasi
                                                         </a>
-                                                        {{-- @endif --}}
                                                         @php
                                                             $adaRekomendasi = $item->getRekomendasi ? true : false;
                                                         @endphp
@@ -458,11 +467,6 @@
                                                                 <span class="fw-semibold">Dokumen HTA/GPA belum tersedia.
                                                                     Dokumen akan diisi Logum atau SMI.</span>
                                                             </div>
-                                                            {{-- <a href="{{ route('htagpa.form-hta', [$data->id, $item->id]) }}"
-                                                                class="btn btn-warning">
-                                                                <i class="fa fa-exclamation-circle"></i>
-                                                                Silakan Lengkapi Dokumen HTA
-                                                            </a> --}}
                                                         @else
                                                             <a href="{{ route('htagpa.show', [$data->id, $item->id]) }}"
                                                                 class="btn btn-success">
@@ -470,61 +474,6 @@
                                                                 Lihat Dokumen HTA
                                                             </a>
                                                         @endif
-                                                    </td>
-                                                    <td class="text-center">
-                                                        @php
-                                                            $adaFui = $item->getFui ? true : false;
-                                                        @endphp
-                                                        @if (!$adaFui)
-                                                            <div class="mb-0 p-2 text-center"
-                                                                style="font-size: 0.95rem; border: 1px solid #ffc107; border-radius: 0.25rem;">
-                                                                <i class="fa fa-info-circle me-1"
-                                                                    style="color: #ffc107;"></i>
-                                                                <span class="fw-semibold">FUI</span> akan diisi oleh <span
-                                                                    class="fw-semibold">Logum / SMI</span> setelah
-                                                                rekomendasi diterbitkan.
-                                                            </div>
-                                                        @else
-                                                            <a href="{{ route('usulan-investasi.print', [$data->id, $item->id]) }}"
-                                                                class="btn btn-info">
-                                                                <i class="fa fa-print"></i>
-                                                                Cetak FUI
-                                                            </a>
-                                                            <a href="{{ route('usulan-investasi.show', [$data->id, $item->id]) }}"
-                                                                class="btn btn-success">
-                                                                <i class="fa fa-eye"></i>
-                                                                Lihat FUI
-                                                            </a>
-                                                        @endif
-                                                    </td>
-                                                    <td class="text-center">
-                                                        @php
-                                                            $adaRekomendasi = $item->getRekomendasi ? true : false;
-                                                            $adaLembarDisposisi = $item->getDisposisi ? true : false;
-                                                        @endphp
-                                                        @if (!$adaRekomendasi)
-                                                            <div class="alert alert-danger p-2 m-0"
-                                                                style="font-size: 90%;">
-                                                                Lembar Disposisi akan dibuat oleh SMI setelah rekomendasi
-                                                                dikeluarkan.
-                                                            </div>
-                                                        @else
-                                                            @if ($adaLembarDisposisi)
-                                                                <a href="{{ route('lembar-disposisi.show', [$data->id, $item->id]) }}"
-                                                                    class="btn btn-success">
-                                                                    <i class="fa fa-eye"></i>
-                                                                    Lihat Lembar Disposisi
-                                                                </a>
-                                                            @else
-                                                                <div class="alert alert-danger p-2 m-0"
-                                                                    style="font-size: 90%;">
-                                                                    Lembar Disposisi akan dibuat oleh SMI setelah
-                                                                    rekomendasi
-                                                                    dikeluarkan.
-                                                                </div>
-                                                            @endif
-                                                        @endif
-
                                                     </td>
                                                     <td class="text-center">
                                                         @php
@@ -553,8 +502,32 @@
                                                             @endif
                                                         @endif
                                                     </td>
-
-
+                                                    <td class="text-center">
+                                                        @php
+                                                            $adaFui = $item->getFui ? true : false;
+                                                        @endphp
+                                                        @if (!$adaFui)
+                                                            <div class="mb-0 p-2 text-center"
+                                                                style="font-size: 0.95rem; border: 1px solid #ffc107; border-radius: 0.25rem;">
+                                                                <i class="fa fa-info-circle me-1"
+                                                                    style="color: #ffc107;"></i>
+                                                                <span class="fw-semibold">FUI</span> akan diisi oleh <span
+                                                                    class="fw-semibold">Logum / SMI</span> setelah
+                                                                rekomendasi diterbitkan.
+                                                            </div>
+                                                        @else
+                                                            <a href="{{ route('usulan-investasi.print', [$data->id, $item->id]) }}"
+                                                                class="btn btn-info">
+                                                                <i class="fa fa-print"></i>
+                                                                Cetak FUI
+                                                            </a>
+                                                            <a href="{{ route('usulan-investasi.show', [$data->id, $item->id]) }}"
+                                                                class="btn btn-success">
+                                                                <i class="fa fa-eye"></i>
+                                                                Lihat FUI
+                                                            </a>
+                                                        @endif
+                                                    </td>
                                                 </tr>
                                             @endforeach
                                         @else
@@ -564,6 +537,7 @@
                                         @endif
                                     </tbody>
                                 </table>
+
                             </div>
                         </div>
                     </div>

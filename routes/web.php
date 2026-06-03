@@ -63,8 +63,13 @@ Route::post('/ai/rapikan', [AiController::class, 'rapikan'])->name('ai.rapikan')
 Route::get('/home', [HomeController::class, 'index'])->name('home');
 Route::get('/getJadwalImsak', [HomeController::class, 'getJadwalImsak'])->name('jadwaimsak');
 Route::get('/getJadwalImsakSinta', [JadwalImsak::class, 'getJadwalImsak'])->name('jadwaimsaksinta');
+//Approval HTA dan GPA
+Route::post('/justifikasi/{token}', [HtaDanGpaController::class, 'submitJustifikasi'])->name('htagpa.submitJustifikasi');
+Route::get('/approval/hta-gpa/{token}/sebelum-approve', [HtaDanGpaController::class, 'sebelumApprove'])->name('htagpa.sebelum-approve');
 Route::get('/approval/hta-gpa/{token}/approve', [HtaDanGpaController::class, 'approve'])->name('htagpa.approve');
 Route::get('/approval/hta-gpa/{token}/reject', [HtaDanGpaController::class, 'reject'])->name('htagpa.reject');
+//End HTA dan GPA
+
 Route::get('/approval/usulan-investasi/{token}/approve', [UsulanInvestasiController::class, 'approve'])->name('usulan-investasi.approve');
 Route::get('/approval/usulan-investasi/{token}/reject', [UsulanInvestasiController::class, 'reject'])->name('usulan-investasi.reject');
 // Route::get('/approval/fisibility-studi/{token}/approve', [FeasibilityStudyController::class, 'approve'])->name('fs.approve');
