@@ -5,7 +5,7 @@ namespace App\Mail;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
-use PDF; // Make sure you have 'barryvdh/laravel-dompdf' installed to use PDF
+use PDF;  // Make sure you have 'barryvdh/laravel-dompdf' installed to use PDF
 
 class NotifApprovalPresentasi extends Mailable
 {
@@ -32,6 +32,7 @@ class NotifApprovalPresentasi extends Mailable
     public $datafs;
     public $approvalfS;
     public $dataRekom;
+    public $valueTesting;
 
     /**
      * Create a new message instance.
@@ -40,10 +41,10 @@ class NotifApprovalPresentasi extends Mailable
      */
     public function __construct(
         $rekomendasi,
-        $disposisi,
-        $fui,
+        $disposisi = null,  // Default to null, disposisi tidak wajib
+        $fui = null,
         $user,
-        $approvalDispo,
+        $approvalDispo = null,
         $approvalFui = null,
         $rekomendasiLampiran = null,
         $data = null,
@@ -59,7 +60,8 @@ class NotifApprovalPresentasi extends Mailable
         $parameter = null,
         $datafs = null,
         $approvalfS = null,
-        $dataRekom = null
+        $dataRekom = null,
+        $valueTesting = null,
     ) {
         $this->rekomendasi = $rekomendasi;
         $this->disposisi = $disposisi;
@@ -82,6 +84,7 @@ class NotifApprovalPresentasi extends Mailable
         $this->datafs = $datafs;
         $this->approvalfS = $approvalfS;
         $this->dataRekom = $dataRekom;
+        $this->valueTesting = $valueTesting;
     }
 
     /**
@@ -96,15 +99,22 @@ class NotifApprovalPresentasi extends Mailable
             'email' => $this->user->email,
             'tanggalPresentasi' => $this->rekomendasi->TanggalPresentasi,
             'noPengajuan' => $this->rekomendasi->NoPengajuan ?? '-',
-            'approvalDispo' => [
+            'approvalDispo' => null,
+            'approvalFui' => null,
+            'hasFui' => false,
+            'valueTesting' => $this->valueTesting,
+        ];
+
+        // Set approvalDispo only if available (disposisi tidak wajib)
+        if ($this->approvalDispo) {
+            $data['approvalDispo'] = [
                 'token' => $this->approvalDispo->ApprovalToken,
                 'dokumenId' => $this->approvalDispo->DokumenId,
                 'jenisFormId' => $this->approvalDispo->JenisFormId,
                 'namaDokumen' => 'Lembar Disposisi',
-            ],
-            'approvalFui' => null,
-            'hasFui' => false,
-        ];
+            ];
+        }
+
         if ($this->approvalFui) {
             $data['approvalFui'] = [
                 'token' => $this->approvalFui->ApprovalToken,
@@ -137,11 +147,13 @@ class NotifApprovalPresentasi extends Mailable
             'datafs' => $this->datafs,
             'approvalfS' => $this->approvalfS,
             'dataRekom' => $this->dataRekom,
+            'valueTesting' => $this->valueTesting,
         ])->setOptions([
-                    'isRemoteEnabled' => true,
-                ]);
+            'isRemoteEnabled' => true,
+        ]);
 
-        return $this->subject('Persetujuan ' . ($data['hasFui'] ? 'Lembar Disposisi dan Form Usulan Investasi' : 'Lembar Disposisi'))
+        return $this
+            ->subject('Persetujuan UsulanInvestasi')
             ->view('emails.notif-approval-presentasi')
             ->with($data)
             ->attachData($pdf->output(), 'Lampiran-Presentasi.pdf', [

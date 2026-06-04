@@ -14,12 +14,18 @@
     @endif
     <div style="page-break-after: always;"></div>
 
+    {{-- Disposisi boleh tidak ada --}}
     @if ($permintaan->Jenis == 1)
-        @include('rekomendasi-pembelian.rekap.hasil-disposisi')
+        @if (!empty($disposisi))
+            @include('rekomendasi-pembelian.rekap.hasil-disposisi')
+        @endif
     @else
-        @include('rekomendasi-pembelian.rekap.hasil-disposisi-umum')
+        @if (!empty($disposisi))
+            @include('rekomendasi-pembelian.rekap.hasil-disposisi-umum')
+        @endif
     @endif
     <div style="page-break-after: always;"></div>
+
     @if ($permintaan->Jenis == 1)
         @include('rekomendasi-pembelian.rekap.hasil-hta-gpa')
         <div style="page-break-after: always;"></div>

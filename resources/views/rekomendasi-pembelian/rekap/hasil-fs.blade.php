@@ -212,27 +212,34 @@
             $details = $datafs->getFsDetail->keyBy(function ($item) {
                 return (int) $item->TahunKe;
             });
-            function fsDetailVal($details, $tahun, $field, $decimal = 0)
-            {
-                if (!empty($details[$tahun]) && isset($details[$tahun]->$field) && $details[$tahun]->$field !== null) {
-                    if (is_numeric($details[$tahun]->$field)) {
-                        return number_format((float) $details[$tahun]->$field, $decimal, ',', '.');
+            // Avoid "Cannot redeclare fsDetailVal()" by checking if function exists
+            if (!function_exists('fsDetailVal')) {
+                function fsDetailVal($details, $tahun, $field, $decimal = 0)
+                {
+                    if (
+                        !empty($details[$tahun]) &&
+                        isset($details[$tahun]->$field) &&
+                        $details[$tahun]->$field !== null
+                    ) {
+                        if (is_numeric($details[$tahun]->$field)) {
+                            return number_format((float) $details[$tahun]->$field, $decimal, ',', '.');
+                        }
+                        return $details[$tahun]->$field;
+                    } else {
+                        // Untuk nilai number, default Rp 0
+                        $fieldsRp = [
+                            'TarifUmum',
+                            'TarifBpjs',
+                            'Revenue',
+                            'Biaya',
+                            'BiayaTetap',
+                            'BiayaVariable',
+                            'NetProfit',
+                            'Ebitda',
+                            'AkumulasiEbitda',
+                        ];
+                        return in_array($field, $fieldsRp) ? '0' : '-';
                     }
-                    return $details[$tahun]->$field;
-                } else {
-                    // Untuk nilai number, default Rp 0
-                    $fieldsRp = [
-                        'TarifUmum',
-                        'TarifBpjs',
-                        'Revenue',
-                        'Biaya',
-                        'BiayaTetap',
-                        'BiayaVariable',
-                        'NetProfit',
-                        'Ebitda',
-                        'AkumulasiEbitda',
-                    ];
-                    return in_array($field, $fieldsRp) ? '0' : '-';
                 }
             }
         @endphp

@@ -60,25 +60,23 @@ class RekomendasiController extends Controller
                 ->when(
                     $request->tanggalPresentasi,
                     fn($q) =>
-                    $q->whereDate('TanggalPresentasi', $request->tanggalPresentasi)
+                        $q->whereDate('TanggalPresentasi', $request->tanggalPresentasi)
                 )
                 ->when(
                     $request->perusahaan,
                     fn($q) =>
-                    $q->where('KodePerusahaan', $request->perusahaan)
+                        $q->where('KodePerusahaan', $request->perusahaan)
                 )
                 ->when(
                     $request->status,
                     fn($q) =>
-                    $q->where('Status', $request->status),
+                        $q->where('Status', $request->status),
                     function ($q) use ($hiddenStatuses) {
                         // Kecualikan status-status yang dimaksud jika TIDAK difilter
                         $q->whereNotIn('Status', $hiddenStatuses);
                     }
                 )
                 ->latest();
-
-
 
             return DataTables::of($data)
                 ->addIndexColumn()
@@ -87,7 +85,8 @@ class RekomendasiController extends Controller
                         $search = $request->input('search.value');
                         // Search pada kolom KodePengajuan, Status, relasi Nama Perusahaan, Nama Barang, dsb
                         $query->where(function ($q) use ($search) {
-                            $q->where('KodePengajuan', 'like', "%{$search}%")
+                            $q
+                                ->where('KodePengajuan', 'like', "%{$search}%")
                                 ->orWhere('Status', 'like', "%{$search}%")
                                 ->orWhereHas('getPerusahaan', function ($sub) use ($search) {
                                     $sub->where('Nama', 'like', "%{$search}%");
@@ -96,7 +95,8 @@ class RekomendasiController extends Controller
                                     $sub->where('Nama', 'like', "%{$search}%");
                                 })
                                 ->orWhereHas('getPengajuanItem.getBarang', function ($sub) use ($search) {
-                                    $sub->where('Nama', 'like', "%{$search}%")
+                                    $sub
+                                        ->where('Nama', 'like', "%{$search}%")
                                         ->orWhere('Tipe', 'like', "%{$search}%");
                                 })
                                 ->orWhereHas('getPengajuanItem.getBarang.getMerk', function ($sub) use ($search) {
@@ -217,18 +217,17 @@ class RekomendasiController extends Controller
                 })
                 ->addColumn('LokasiPenempatan', function ($row) {
                     if (
-                        isset($row->getPermintaan)
-                        && isset($row->getPermintaan->getDetail)
-                        && is_array($row->getPermintaan->getDetail)
-                        && isset($row->getPermintaan->getDetail[0])
-                        && isset($row->getPermintaan->getDetail[0]->RencanaPenempatan)
+                        isset($row->getPermintaan) &&
+                        isset($row->getPermintaan->getDetail) &&
+                        is_array($row->getPermintaan->getDetail) &&
+                        isset($row->getPermintaan->getDetail[0]) &&
+                        isset($row->getPermintaan->getDetail[0]->RencanaPenempatan)
                     ) {
                         return $row->getPermintaan->getDetail[0]->RencanaPenempatan;
                     } else {
                         return '-';
                     }
                 })
-
                 ->addColumn('TanggalPresentasi', function ($row) {
                     if ($row->TanggalPresentasi) {
                         return Carbon::parse($row->TanggalPresentasi)->translatedFormat('d M Y');
@@ -274,7 +273,6 @@ class RekomendasiController extends Controller
                 })
                 ->orderByDesc('TanggalPresentasi');
 
-
             return DataTables::of($data)
                 ->addIndexColumn()
                 ->filter(function ($query) use ($request) {
@@ -282,7 +280,8 @@ class RekomendasiController extends Controller
                         $search = $request->input('search.value');
                         // Search pada kolom KodePengajuan, Status, relasi Nama Perusahaan, Nama Barang, dsb
                         $query->where(function ($q) use ($search) {
-                            $q->where('KodePengajuan', 'like', "%{$search}%")
+                            $q
+                                ->where('KodePengajuan', 'like', "%{$search}%")
                                 ->orWhere('Status', 'like', "%{$search}%")
                                 ->orWhereHas('getPerusahaan', function ($sub) use ($search) {
                                     $sub->where('Nama', 'like', "%{$search}%");
@@ -291,7 +290,8 @@ class RekomendasiController extends Controller
                                     $sub->where('Nama', 'like', "%{$search}%");
                                 })
                                 ->orWhereHas('getPengajuanItem.getBarang', function ($sub) use ($search) {
-                                    $sub->where('Nama', 'like', "%{$search}%")
+                                    $sub
+                                        ->where('Nama', 'like', "%{$search}%")
                                         ->orWhere('Tipe', 'like', "%{$search}%");
                                 })
                                 ->orWhereHas('getPengajuanItem.getBarang.getMerk', function ($sub) use ($search) {
@@ -340,7 +340,6 @@ class RekomendasiController extends Controller
                         </a>
                     ';
                     return $buttonReview . ' ' . $buttonRekap . ' ' . $buttonTracking;
-
                 })
                 ->addColumn('Status', function ($row) {
                     switch ($row->Status) {
@@ -1758,79 +1757,73 @@ class RekomendasiController extends Controller
             return redirect()->back()->with('error', 'Rekomendasi tidak ditemukan.');
         }
 
+        // Lembar Disposisi tidak wajib, jadi tidak perlu error jika tidak ada
         $cariDispo = LembarDisposisi::where('IdPengajuan', $rekomendasi->id)->first();
-        // dd($cariDispo);
-        if (!$cariDispo) {
-            return redirect()->back()->with('error', 'Lembar disposisi tidak ditemukan.');
-        }
 
-        // Tentukan jenis form untuk disposisi
-        if ($rekomendasi->Jenis == '1') {
-            $jenisDispo = 9;
-        } else {
-            $jenisDispo = 10;
+        $approvalDispo = null;
+        $jenisDispo = null;
+        if ($cariDispo) {
+            if ($rekomendasi->Jenis == '1') {
+                $jenisDispo = 9;
+            } else {
+                $jenisDispo = 10;
+            }
+            $approvalDispo = DokumenApproval::where('JenisFormId', $jenisDispo)
+                ->where('DokumenId', $cariDispo->id)
+                ->where('UserId', 81)
+                ->where('Status', 'Pending')
+                ->first();
         }
-        $approvalDispo = DokumenApproval::where('JenisFormId', $jenisDispo)
-            ->where('DokumenId', $cariDispo->id)
-            ->where('UserId', 81)
-            ->where('Status', 'Pending')
-            ->first();
-        if (empty($approvalDispo)) {
-            return redirect()->back()->with('error', 'Approval Disposisi tidak ditemukan atau telah disetujui CEO.');
-        }
-        // dd($approvalDispo);
 
         // ========== AMBIL DATA FUI (OPTIONAL) ==========
         $fui = UsulanInvestasi::where('IdPengajuan', $rekomendasi->id)->first();
 
         $approvalFui = null;
         $jenisFormFui = null;
-        $dataRekom = Rekomendasi::with('getRekomedasiDetail.getBarang', 'getRekomedasiDetail.getNamaVendor')->where('IdPengajuan', $fui->IdPengajuan)->first();
+        $dataRekom = null;
+        if ($fui) {
+            $dataRekom = Rekomendasi::with('getRekomedasiDetail.getBarang', 'getRekomedasiDetail.getNamaVendor')->where('IdPengajuan', $fui->IdPengajuan)->first();
 
-        // Hanya proses FUI jika ada
-        if ($fui && $fui->BiayaAkhir !== null && $fui->BiayaAkhir !== '') {
-            if ($rekomendasi->Jenis == 1) {
-                // Untuk Jenis Disposisi 1 Medis
-                if ($fui->BiayaAkhir < 50000000) {
-                    $jenisFormFui = '7';
-                } elseif ($fui->BiayaAkhir >= 50000000 && $fui->BiayaAkhir <= 100000000) {
-                    $jenisFormFui = '11';
-                } elseif ($fui->BiayaAkhir > 100000000) {
-                    $jenisFormFui = '12';
+            // Hanya proses FUI jika ada
+            if ($fui->BiayaAkhir !== null && $fui->BiayaAkhir !== '') {
+                if ($rekomendasi->Jenis == 1) {
+                    // Untuk Jenis Disposisi 1 Medis
+                    if ($fui->BiayaAkhir < 50000000) {
+                        $jenisFormFui = '7';
+                    } elseif ($fui->BiayaAkhir >= 50000000 && $fui->BiayaAkhir <= 100000000) {
+                        $jenisFormFui = '11';
+                    } elseif ($fui->BiayaAkhir > 100000000) {
+                        $jenisFormFui = '12';
+                    }
+                } else {
+                    // Umum
+                    if ($fui->BiayaAkhir < 50000000) {
+                        $jenisFormFui = '14';
+                    } elseif ($fui->BiayaAkhir >= 50000000 && $fui->BiayaAkhir <= 100000000) {
+                        $jenisFormFui = '15';
+                    } elseif ($fui->BiayaAkhir > 100000000) {
+                        $jenisFormFui = '13';
+                    }
                 }
-            } else {
-                //Umum
-                if ($fui->BiayaAkhir < 50000000) {
-                    $jenisFormFui = '14';
-                } elseif ($fui->BiayaAkhir >= 50000000 && $fui->BiayaAkhir <= 100000000) {
-                    $jenisFormFui = '15';
-                } elseif ($fui->BiayaAkhir > 100000000) {
-                    $jenisFormFui = '13';
-                }
-            }
-            // dd($fui);
-            if ($jenisFormFui) {
-                $approvalFui = DokumenApproval::where('JenisFormId', $jenisFormFui ?? $fui->JenisForm)
-                    ->where('DokumenId', $fui->id)
-                    ->where('UserId', 81)
-                    ->where('Status', 'Pending')
-                    ->first();
-                if (is_null($approvalFui) && !empty($fui->JenisForm) && $jenisFormFui != $fui->JenisForm) {
-                    $approvalFui = DokumenApproval::where('JenisFormId', $fui->JenisForm)
+                if ($jenisFormFui) {
+                    $approvalFui = DokumenApproval::where('JenisFormId', $jenisFormFui ?? $fui->JenisForm)
                         ->where('DokumenId', $fui->id)
                         ->where('UserId', 81)
                         ->where('Status', 'Pending')
                         ->first();
+                    if (is_null($approvalFui) && !empty($fui->JenisForm) && $jenisFormFui != $fui->JenisForm) {
+                        $approvalFui = DokumenApproval::where('JenisFormId', $fui->JenisForm)
+                            ->where('DokumenId', $fui->id)
+                            ->where('UserId', 81)
+                            ->where('Status', 'Pending')
+                            ->first();
+                    }
                 }
-
-                // dd($approvalFui);
-
             }
         }
 
         // ========== AMBIL DATA USER (EMAIL & NAMA) ==========
         $user = User::find(81);
-        // dd($user);
         if (!$user) {
             return redirect()->back()->with('error', 'User approver tidak ditemukan.');
         }
@@ -1845,7 +1838,7 @@ class RekomendasiController extends Controller
         $idPengajuanItem = $cekdata->PengajuanItemId;
         // UNTUK LAMPIRAN EMAIL
         $rekomendasiLampiran = Rekomendasi::with('getRekomedasiDetail.getPerusahaan', 'getRekomedasiDetail.getBarang', 'getRekomedasiDetail.getNegara')->where('PengajuanItemId', $cekdata->PengajuanItemId)->first();
-        if ($rekomendasiLampiran->UserNego !== null) {
+        if ($rekomendasiLampiran && $rekomendasiLampiran->UserNego !== null) {
             $qrCode = QrCode::create($rekomendasiLampiran->id)
                 ->setSize(300)
                 ->setMargin(10);
@@ -1856,7 +1849,7 @@ class RekomendasiController extends Controller
             $rekomendasiLampiran->qrCodeNego = base64_encode($result->getString());
         }
 
-        if ($rekomendasiLampiran->DisetujuiOleh !== null) {
+        if ($rekomendasiLampiran && $rekomendasiLampiran->DisetujuiOleh !== null) {
             $qrCode = QrCode::create($rekomendasiLampiran->id ?? '')
                 ->setSize(300)
                 ->setMargin(10);
@@ -1867,43 +1860,45 @@ class RekomendasiController extends Controller
             $rekomendasiLampiran->qrCodeApprove = base64_encode($result->getString());
         }
 
-        // DISPOSISI
+        // DISPOSISI TIDAK WAJIB
         $lembarDisposisi = LembarDisposisi::with(['getDetail', 'getBarang'])
             ->where('IdPengajuan', $idPengajuan)
             ->where('PengajuanItemId', $idPengajuanItem)
             ->first();
 
-        if (!$lembarDisposisi) {
-            return redirect()->back()->with('error', 'Lembar Disposisi Belum Diajukan / Dibuat, Mohon Lengkapi');
-        }
-
-        $approval = DokumenApproval::with('getUser', 'getJabatan', 'getDepartemen')
-            ->where('JenisFormId', $lembarDisposisi->JenisForm)
-            ->where('DokumenId', $lembarDisposisi->id)
-            ->orderBy('Urutan', 'asc')
-            ->get();
-
-        foreach ($approval as $item) {
-            if ($item->Status == 'Approved') {
-                $qrCode = QrCode::create(route('approval.validasi', $item->ApprovalToken))
-                    ->setSize(300)
-                    ->setMargin(10);
-
-                $writer = new PngWriter();
-                $result = $writer->write($qrCode);
-
-                $item->qrCode = base64_encode($result->getString());
-            }
-        }
+        $approval = collect();
         $data = [
             'lembarDisposisi' => $lembarDisposisi,
-            'namaBarang' => $lembarDisposisi->getBarang->Nama,
-            'harga' => $lembarDisposisi->Harga,
-            'rencanaVendor' => $lembarDisposisi->getVendor->Nama,
-            'tujuanPenempatan' => $lembarDisposisi->TujuanPenempatan,
-            'formPermintaan' => $lembarDisposisi->FormPermintaanUser,
-            'approval' => $approval,
+            'namaBarang' => $lembarDisposisi && $lembarDisposisi->getBarang ? $lembarDisposisi->getBarang->Nama : null,
+            'harga' => $lembarDisposisi ? $lembarDisposisi->Harga : null,
+            'rencanaVendor' => $lembarDisposisi && $lembarDisposisi->getVendor ? $lembarDisposisi->getVendor->Nama : null,
+            'tujuanPenempatan' => $lembarDisposisi ? $lembarDisposisi->TujuanPenempatan : null,
+            'formPermintaan' => $lembarDisposisi ? $lembarDisposisi->FormPermintaanUser : null,
+            'approval' => collect(),  // Kosong jika tidak ada disposisi
         ];
+
+        if ($lembarDisposisi) {
+            $approval = DokumenApproval::with('getUser', 'getJabatan', 'getDepartemen')
+                ->where('JenisFormId', $lembarDisposisi->JenisForm)
+                ->where('DokumenId', $lembarDisposisi->id)
+                ->orderBy('Urutan', 'asc')
+                ->get();
+
+            foreach ($approval as $item) {
+                if ($item->Status == 'Approved') {
+                    $qrCode = QrCode::create(route('approval.validasi', $item->ApprovalToken))
+                        ->setSize(300)
+                        ->setMargin(10);
+
+                    $writer = new PngWriter();
+                    $result = $writer->write($qrCode);
+
+                    $item->qrCode = base64_encode($result->getString());
+                }
+            }
+            $data['approval'] = $approval;
+        }
+
         // HTA
         $dataHta = PengajuanPembelian::with([
             'getVendor.getVendorDetail',
@@ -1924,60 +1919,73 @@ class RekomendasiController extends Controller
                 $query->where('id', $idPengajuanItem)->with('getBarang.getMerk');
             }
         ])->find($idPengajuan);
-        // dd($dataHta);
-        $approvalHta = DokumenApproval::with('getUser', 'getJabatan', 'getDepartemen')
-            ->where('JenisFormId', $dataHta->getHtaGpa->JenisForm)
-            ->where('DokumenId', $dataHta->getHtaGpa->id)
-            ->orderBy('Urutan', 'asc')
-            ->get();
 
-        foreach ($approvalHta as $itemHta) {
-            if ($itemHta->Status == 'Approved') {
-                $qrCode = QrCode::create(route('approval.validasi', $itemHta->ApprovalToken ?? '0'))
-                    ->setSize(300)
-                    ->setMargin(10);
+        $approvalHta = collect();
+        if ($dataHta && $dataHta->getHtaGpa) {
+            $approvalHta = DokumenApproval::with('getUser', 'getJabatan', 'getDepartemen')
+                ->where('JenisFormId', $dataHta->getHtaGpa->JenisForm)
+                ->where('DokumenId', $dataHta->getHtaGpa->id)
+                ->orderBy('Urutan', 'asc')
+                ->get();
 
-                $writer = new PngWriter();
-                $result = $writer->write($qrCode);
+            foreach ($approvalHta as $itemHta) {
+                if ($itemHta->Status == 'Approved') {
+                    $qrCode = QrCode::create(route('approval.validasi', $itemHta->ApprovalToken ?? '0'))
+                        ->setSize(300)
+                        ->setMargin(10);
 
-                $itemHta->qrCode = base64_encode($result->getString());
+                    $writer = new PngWriter();
+                    $result = $writer->write($qrCode);
+
+                    $itemHta->qrCode = base64_encode($result->getString());
+                }
             }
         }
 
         $parameter = MasterParameter::get();
+
         // FUI
         $usulan = UsulanInvestasi::with('getFuiDetail.getVendor', 'getBarang', 'getVendor', 'getAccDirektur', 'getAccKadiv', 'getDepartemen', 'getDepartemen2', 'getNamaForm')
             ->where('IdPengajuan', $idPengajuan)
             ->where('PengajuanItemId', $idPengajuanItem)
             ->first();
-        // dd($usulan);
-        $VendorAcc = Rekomendasi::with([
-            'getRekomedasiDetail' => function ($query2) {
-                $query2->where('Rekomendasi', 1);
-            },
-            'getRekomedasiDetail.getNamaVendor'
-        ])
-            ->where('PengajuanItemId', $idPengajuanItem)
-            ->first();
-        $approval2 = DokumenApproval::with('getUser', 'getJabatan', 'getDepartemen')
-            ->where('JenisFormId', $usulan->JenisForm)
-            ->where('DokumenId', $usulan->id)
-            ->orderBy('Urutan', 'asc')
-            ->get();
-        foreach ($approval2 as $item) {
-            if ($item->Status == 'Approved') {
-                $qrCode = QrCode::create(route('approval.validasi', $item->ApprovalToken))
-                    ->setSize(300)
-                    ->setMargin(10);
 
-                $writer = new PngWriter();
-                $result = $writer->write($qrCode);
+        $VendorAcc = null;
+        if ($idPengajuanItem) {
+            $VendorAcc = Rekomendasi::with([
+                'getRekomedasiDetail' => function ($query2) {
+                    $query2->where('Rekomendasi', 1);
+                },
+                'getRekomedasiDetail.getNamaVendor'
+            ])
+                ->where('PengajuanItemId', $idPengajuanItem)
+                ->first();
+        }
 
-                $item->qrCode = base64_encode($result->getString());
+        $approval2 = collect();
+        if ($usulan) {
+            $approval2 = DokumenApproval::with('getUser', 'getJabatan', 'getDepartemen')
+                ->where('JenisFormId', $usulan->JenisForm)
+                ->where('DokumenId', $usulan->id)
+                ->orderBy('Urutan', 'asc')
+                ->get();
+
+            foreach ($approval2 as $item) {
+                if ($item->Status == 'Approved') {
+                    $qrCode = QrCode::create(route('approval.validasi', $item->ApprovalToken))
+                        ->setSize(300)
+                        ->setMargin(10);
+
+                    $writer = new PngWriter();
+                    $result = $writer->write($qrCode);
+
+                    $item->qrCode = base64_encode($result->getString());
+                }
             }
         }
-        $Acc = $VendorAcc->getRekomedasiDetail[0]->IdVendor;
-        $NamaBarangAcc = $VendorAcc->getRekomedasiDetail[0]->NamaPermintaan;
+        $Acc = $VendorAcc && isset($VendorAcc->getRekomedasiDetail[0]) ? $VendorAcc->getRekomedasiDetail[0]->IdVendor : null;
+        $NamaBarangAcc = $VendorAcc && isset($VendorAcc->getRekomedasiDetail[0]) ? $VendorAcc->getRekomedasiDetail[0]->NamaPermintaan : null;
+
         $data2 = PengajuanPembelian::with([
             'getVendor' => function ($query2) use ($Acc) {
                 $query2->where('NamaVendor', $Acc);
@@ -1993,13 +2001,13 @@ class RekomendasiController extends Controller
                 ]);
             }
         ])->find($idPengajuan);
-        // END FUI
+
         // FS
         $datafs = FeasibilityStudy::with('getFsDetail', 'getBarang')
             ->where('IdPengajuan', $idPengajuan)
             ->where('PengajuanItemId', $idPengajuanItem)
             ->first();
-        // dd($datafs);
+
         $approvalfS = collect();  // Default to empty collection
 
         if (!is_null($datafs)) {
@@ -2030,51 +2038,66 @@ class RekomendasiController extends Controller
             'getDiajukanOleh',
             'getDetail.getBarang.getSatuan'
         ])->find($rekomendasi->IdPermintaan);
-        // dd($permintaan);
-        $approval3 = DokumenApproval::with('getUser', 'getJabatan', 'getDepartemen')
-            ->where('JenisFormId', $permintaan->JenisForm)
-            ->where('DokumenId', $permintaan->id)
-            ->orderBy('Urutan', 'asc')
-            ->get();
 
-        // Generate QR code untuk setiap approval
-        foreach ($approval3 as $item) {
-            if ($item->Status == 'Approved') {
-                $qrCode = QrCode::create(route('approval.validasi', $item->ApprovalToken))
-                    ->setSize(80)
-                    ->setMargin(10);
+        $approval3 = collect();
+        if ($permintaan) {
+            $approval3 = DokumenApproval::with('getUser', 'getJabatan', 'getDepartemen')
+                ->where('JenisFormId', $permintaan->JenisForm)
+                ->where('DokumenId', $permintaan->id)
+                ->orderBy('Urutan', 'asc')
+                ->get();
 
-                $writer = new PngWriter();
-                $result = $writer->write($qrCode);
+            // Generate QR code untuk setiap approval
+            foreach ($approval3 as $item) {
+                if ($item->Status == 'Approved') {
+                    $qrCode = QrCode::create(route('approval.validasi', $item->ApprovalToken))
+                        ->setSize(80)
+                        ->setMargin(10);
 
-                $item->qrCode = base64_encode($result->getString());
+                    $writer = new PngWriter();
+                    $result = $writer->write($qrCode);
+
+                    $item->qrCode = base64_encode($result->getString());
+                }
             }
         }
+        $approvalFUITesting = DokumenApproval::with('getUser', 'getJabatan', 'getDepartemen')
+            ->where('JenisFormId', $usulan->JenisForm)
+            ->where('DokumenId', $usulan->id)
+            ->where('Status', 'Pending')
+            ->orderBy('Urutan', 'asc')
+            ->get();
+        // dd($approvalFUITesting);
         // ========== KIRIM EMAIL ==========
-        Mail::to($user->email)
-            ->send(new NotifApprovalPresentasi(
-                $rekomendasi,
-                $cariDispo,
-                $fui,
-                $user,
-                $approvalDispo,
-                $approvalFui,
-                $rekomendasiLampiran,
-                $data,
-                $data2,
-                $usulan,
-                $approval,
-                $VendorAcc,
-                $approval2,
-                $permintaan,
-                $approval3,
-                $dataHta,
-                $approvalHta,
-                $parameter,
-                $datafs,
-                $approvalfS,
-                $dataRekom,
-            ));
+        foreach ($approvalFUITesting as $key => $valueTesting) {
+            // dd($valueTesting);
+            Mail::to($valueTesting->Email)
+                ->send(new NotifApprovalPresentasi(
+                    $rekomendasi,
+                    $cariDispo,
+                    $fui,
+                    $user,
+                    $approvalDispo,
+                    $approvalFui,
+                    $rekomendasiLampiran,
+                    $data,
+                    $data2,
+                    $usulan,
+                    $approval,
+                    $VendorAcc,
+                    $approval2,
+                    $permintaan,
+                    $approval3,
+                    $dataHta,
+                    $approvalHta,
+                    $parameter,
+                    $datafs,
+                    $approvalfS,
+                    $dataRekom,
+                    $valueTesting,
+                ));
+        }
+
         if ($rekomendasi) {
             $rekomendasi->Status = 'Selesai';
             $rekomendasi->save();
@@ -2117,7 +2140,6 @@ class RekomendasiController extends Controller
                 'TanggalApprove' => Carbon::now(),
             ]);
             $approvedTokens[] = $token;
-
         }
 
         AktivitasPengajuan::create([
@@ -2178,6 +2200,7 @@ class RekomendasiController extends Controller
     {
         //
     }
+
     /**
      * Menampilkan halaman tracking progres rekomendasi.
      *
@@ -2202,15 +2225,16 @@ class RekomendasiController extends Controller
         ])->findOrFail($pengajuanId);
         // dd($pengajuan);
 
-
         return view('rekomendasi-pembelian.tracking', compact('pengajuan'));
     }
+
     public function laporan()
     {
         $perusahaan = MasterPerusahaan::get();
         $namaBarang = MasterBarang::get();
         return view('rekomendasi-pembelian.laporan', compact('perusahaan', 'namaBarang'));
     }
+
     public function preview(Request $request)
     {
         $query = Rekomendasi::with(['getRekomedasiDetail', 'getPengajuan', 'getPerusahaan'])
@@ -2220,11 +2244,11 @@ class RekomendasiController extends Controller
             ->when($request->perusahaan, fn($q) => $q->where('KodePerusahaan', $request->perusahaan))
             ->when($request->namaBarang, function ($q) use ($request) {
                 $q->whereHas('getRekomedasiDetail', function ($sub) use ($request) {
-                    $sub->whereIn('NamaPermintaan', $request->namaBarang)
+                    $sub
+                        ->whereIn('NamaPermintaan', $request->namaBarang)
                         ->where('Rekomendasi', 1);
                 });
             });
-
 
         $collection = $query->get();
 
@@ -2280,7 +2304,7 @@ class RekomendasiController extends Controller
         if (!empty($filters['namaBarang']) && is_array($filters['namaBarang']) && count($filters['namaBarang']) === 1) {
             $alat = MasterBarang::find($filters['namaBarang'][0]);
             if ($alat) {
-                $namaAlatLabel = "_" . str_replace(' ', '_', $alat->Nama);
+                $namaAlatLabel = '_' . str_replace(' ', '_', $alat->Nama);
             }
         }
 

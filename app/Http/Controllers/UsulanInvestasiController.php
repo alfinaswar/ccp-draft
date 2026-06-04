@@ -149,7 +149,6 @@ class UsulanInvestasiController extends Controller
             ->orderBy('Urutan', 'asc')
             ->get();
         foreach ($approval as $penilai) {
-
             try {
                 if (!filter_var($penilai->Email, FILTER_VALIDATE_EMAIL)) {
                     continue;

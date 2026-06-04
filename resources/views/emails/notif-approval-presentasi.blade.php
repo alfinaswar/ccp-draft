@@ -1,4 +1,3 @@
-{{-- File: resources/views/emails/notif-approval-presentasi.blade.php --}}
 <!DOCTYPE html>
 <html lang="id">
 
@@ -32,9 +31,6 @@
         }
     }
 @endphp
-{{-- @php
-    dd($hasFui);
-@endphp --}}
 
 <body style="margin:0;padding:0;background:#f4f6fa;font-family:Arial,sans-serif;">
     <table width="100%" bgcolor="#f4f6fa" cellpadding="0" cellspacing="0">
@@ -52,18 +48,42 @@
                     <tr>
                         <td style="padding:32px 32px 0 32px;color:#222;">
                             <p style="font-size:17px;margin:0 0 10px 0;">
-                                <b>Yth. Bapak {{ $nama ?? 'Penerima Persetujuan' }},</b>
+                                <b>Yth. Bapak / Ibu {{ $valueTesting->Nama ?? 'Penerima Persetujuan' }},</b>
                             </p>
                             <p style="font-size:15px;line-height:1.7;margin:0 0 18px 0;">
                                 Dengan hormat,<br>
                                 Melalui email ini kami sampaikan bahwa terdapat permohonan <b>Persetujuan Pembelian</b>
                                 yang membutuhkan tindak lanjut dari Bapak/Ibu.<br>
                                 <br>
-                                <b>Nomor Pengajuan:</b> {{ $rekomendasi->KodePengajuan }}<br>
-                                <b>Jumlah Dokumen:</b>
-                                {{ $hasFui ? '2 (dua)' : '1 (satu)' }} dokumen
-                                <br><br>
-                                <b>Catatan:</b> Mohon pelajari dokumen terkait sebelum memberikan persetujuan pembelian.
+                            <table style="font-size:15px; border-collapse:collapse; margin:0 0 18px 0;">
+                                <tr>
+                                    <td style="font-weight:bold;width:160px;padding:4px 0;vertical-align:top;">Kode
+                                        Pengajuan</td>
+                                    <td style="padding:4px 0 4px 16px;vertical-align:top;">:
+                                        {{ $data2->KodePengajuan ?? '-' }}</td>
+                                </tr>
+                                <tr>
+                                    <td style="font-weight:bold;width:160px;padding:4px 0;vertical-align:top;">
+                                        Rumah Sakit / Cisco</td>
+                                    <td style="padding:4px 0 4px 16px;vertical-align:top;">:
+                                        {{ $data2->getPerusahaan->NamaLengkap ?? '-' }}</td>
+                                </tr>
+                                <tr>
+                                    <td style="font-weight:bold;width:160px;padding:4px 0;vertical-align:top;">
+                                        Nama Permintaan</td>
+                                    <td style="padding:4px 0 4px 16px;vertical-align:top;">:
+                                        {{ $data2->getPermintaan->getDetail[0]->getBarang->Nama ?? '-' }}</td>
+                                </tr>
+                                <tr>
+                                    <td style="font-weight:bold;width:160px;padding:4px 0;vertical-align:top;">
+                                        Rencana Penempatan</td>
+                                    <td style="padding:4px 0 4px 16px;vertical-align:top;">:
+                                        {{ $data2->getPermintaan->getDetail[0]->RencanaPenempatan ?? '-' }}</td>
+                                </tr>
+
+
+                            </table>
+
                             </p>
                             <div
                                 style="background: #fff3cd; color:#856404; padding:16px 18px;border-radius:6px; margin-bottom:24px;font-size:14px; border: 1px solid #ffe08a;">
@@ -78,47 +98,14 @@
                     <tr>
                         <td align="center" style="padding:16px 32px;">
                             <div style="display: flex; justify-content: center; gap: 18px;">
-                                @if ($hasFui)
-                                    <a href="{{ route('approval.bulk-approve', [$approvalDispo->ApprovalToken . ',' . $approvalFui->ApprovalToken, 'kode_pengajuan' => $rekomendasi->KodePengajuan]) }}"
-                                        style="display:inline-block;background:#198754;color:#fff;padding:14px 30px;border-radius:7px;font-size:16px;font-weight:bold;text-decoration:none;letter-spacing:1px;box-shadow:0 4px 16px rgba(25,135,84,0.12);">
-                                        ✓ Setujui Lembar Disposisi / FUI
-                                    </a>
-                                    <a href="{{ route('approval.bulk-reject', [$approvalDispo->ApprovalToken . ',' . $approvalFui->ApprovalToken, 'kode_pengajuan' => $rekomendasi->KodePengajuan]) }}"
-                                        style="display:inline-block;background:#dc3545;color:#fff;padding:12px 26px;border-radius:7px;font-size:16px;font-weight:bold;text-decoration:none;letter-spacing:1px;box-shadow:0 4px 16px rgba(220,53,69,0.11);">
-                                        ✗ Tolak Lembar Disposisi / FUI
-                                    </a>
-                                @else
-                                    <a href="{{ route('lembar-disposisi.approve', ['token' => $approvalDispo->ApprovalToken, 'kode_pengajuan' => $rekomendasi->KodePengajuan]) }}"
-                                        style="display:inline-block;background:#198754;color:#fff;padding:16px 36px;border-radius:7px;font-size:17px;font-weight:bold;text-decoration:none;letter-spacing:1px;box-shadow:0 4px 16px rgba(25,135,84,0.14);">
-                                        ✓ Setujui Lembar Disposisi
-                                    </a>
-                                    <a href="{{ route('approval.bulk-reject', [$approvalDispo->ApprovalToken, 'kode_pengajuan' => $rekomendasi->KodePengajuan]) }}"
-                                        style="display:inline-block;background:#dc3545;color:#fff;padding:14px 34px;border-radius:7px;font-size:17px;font-weight:bold;text-decoration:none;letter-spacing:1px;box-shadow:0 4px 16px rgba(220,53,69,0.11);">
-                                        ✗ Tolak Lembar Disposisi
-                                    </a>
-                                @endif
+                                <a href="{{ route('usulan-investasi.approve', $valueTesting->ApprovalToken) }}"
+                                    style="display:inline-block;background:#198754;color:#fff;padding:16px 36px;border-radius:7px;font-size:17px;font-weight:bold;text-decoration:none;letter-spacing:1px;box-shadow:0 4px 16px rgba(25,135,84,0.14);">
+                                    ✓ Setujui
+                                </a>
                             </div>
                         </td>
                     </tr>
-                    {{-- <tr>
-                        <td style="padding:10px 32px 0px 32px;">
-                            <p style="font-size:13px;color:#666;background:#f2f4f7;padding:16px;border-radius:7px;">
-                                Apabila tombol di atas tidak dapat diakses, silakan salin dan buka tautan berikut pada
-                                browser Anda:<br>
-                                @if ($hasFui)
-                                    <a style="color:#198754;word-break:break-all;"
-                                        href="{{ url('/approval/bulk-approve?tokens=' . $approvalDispo->ApprovalToken . ',' . $approvalFui->ApprovalToken) }}">
-                                        {{ url('/approval/bulk-approve?tokens=' . $approvalDispo->ApprovalToken . ',' . $approvalFui->ApprovalToken) }}
-                                    </a>
-                                @else
-                                    <a style="color:#198754;word-break:break-all;"
-                                        href="{{ url('/approval/approve/' . $approvalDispo->ApprovalToken) }}">
-                                        {{ url('/approval/approve/' . $approvalFui->ApprovalToken) }}
-                                    </a>
-                                @endif
-                            </p>
-                        </td>
-                    </tr> --}}
+
                     <tr>
                         <td style="padding:10px 32px 24px 32px;">
                             <p style="font-size:15px;margin:24px 0 4px 0;">
