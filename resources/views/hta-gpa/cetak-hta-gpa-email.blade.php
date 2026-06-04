@@ -1,265 +1,428 @@
-<style>
-    body,
-    .cetak-hta-gpa-global {
-        font-family: Arial, Helvetica, sans-serif;
-        font-size: 9pt;
-    }
+<div class="HTA">
 
-    table.cetak-hta {
-        font-size: 9pt;
-        width: 100%;
-        border-collapse: collapse;
-        margin-bottom: 20px;
-    }
+    <style>
+        body,
+        .cetak-hta-gpa-global {
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 9pt;
+        }
 
-    table.cetak-hta th,
-    table.cetak-hta td {
-        border: 1px solid #222;
-        padding: 5px;
-    }
+        table.cetak-hta {
+            font-size: 9pt;
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
 
-    table.cetak-hta tr {
-        line-height: 0.9;
-    }
+        table.cetak-hta th,
+        table.cetak-hta td {
+            border: 1px solid #222;
+            padding: 5px;
+        }
 
-    .cetak-hta-caption {
-        border: none !important;
-    }
+        table.cetak-hta tr {
+            line-height: 0.9;
+        }
 
-    .cetak-hta-caption th,
-    .cetak-hta-caption td {
-        border: none !important;
-        padding-bottom: 3px;
-    }
+        .cetak-hta-caption {
+            border: none !important;
+        }
 
-    /* Make parameter and sub total a bit smaller */
-    .col-parameter {
-        font-size: 9pt !important;
-        min-width: 110px;
-        max-width: 180px;
-        width: 140px;
-        vertical-align: middle;
-        text-align: center;
-    }
+        .cetak-hta-caption th,
+        .cetak-hta-caption td {
+            border: none !important;
+            padding-bottom: 3px;
+        }
 
-    .col-subtotal {
-        font-size: 9pt !important;
-        min-width: 40px;
-        width: 40px;
-        text-align: center;
-        vertical-align: middle;
-        font-weight: 700;
-        background: #f4f4f4;
-    }
-</style>
-<div class="cetak-hta-gpa-global">
-    <h2 style="text-align:center; margin-bottom:20px;">PENILAIAN HTA / GPA</h2>
-    <table class="cetak-hta cetak-hta-caption">
-        <tr>
-            <th>Nama Barang</th>
-            <td colspan="{{ count($data->getVendor) }}">
-                {{ $data->getPengajuanItem[0]->getBarang->Nama ?? '-' }}
-            </td>
-        </tr>
-        <tr>
-            <th>Merek</th>
-            <td colspan="{{ count($data->getVendor) }}">
-                {{ $data->getPengajuanItem[0]->getBarang->getMerk->Nama ?? '-' }}
-            </td>
-        </tr>
+        /* Make parameter and sub total a bit smaller */
+        .col-parameter {
+            font-size: 9pt !important;
+            min-width: 110px;
+            max-width: 180px;
+            width: 140px;
+            vertical-align: middle;
+            text-align: center;
+        }
+
+        .col-subtotal {
+            font-size: 9pt !important;
+            min-width: 40px;
+            width: 40px;
+            text-align: center;
+            vertical-align: middle;
+            font-weight: 700;
+            background: #f4f4f4;
+        }
+    </style>
+    <div class="cetak-hta-gpa-global">
+        <h2 style="text-align:center; margin-bottom:20px;">PENILAIAN HTA / GPA</h2>
+        <table class="cetak-hta cetak-hta-caption">
+            <tr>
+                <th>Nama Barang</th>
+                <td colspan="{{ count($data->getVendor) }}">
+                    {{ $data->getPengajuanItem[0]->getBarang->Nama ?? '-' }}
+                </td>
+            </tr>
+            <tr>
+                <th>Merek</th>
+                <td colspan="{{ count($data->getVendor) }}">
+                    {{ $data->getPengajuanItem[0]->getBarang->getMerk->Nama ?? '-' }}
+                </td>
+            </tr>
+        </table>
+
+        {{-- Table HEAD: No | Parameter | Vendor 1 (Deskripsi, Nilai 1-5, Subtotal) | Vendor 2 (Deskripsi, Nilai 1-5, Subtotal) ... --}}
+        <table class="cetak-hta">
+            <thead>
+                <tr>
+                    <th rowspan="2" style="min-width: 30px; width: 35px;">No</th>
+                    <th rowspan="2" class="col-parameter">Parameter</th>
+                    @foreach ($data->getVendor as $vIdx => $Vendor)
+                        <th colspan="7" style="text-align:center; min-width:310px;">
+                            {{ $Vendor->getNamaVendor->Nama ?? 'Vendor ' . ($vIdx + 1) }}
+                        </th>
+                    @endforeach
+                </tr>
+                <tr>
+                    @foreach ($data->getVendor as $vIdx => $Vendor)
+                        <th style="min-width:110px;max-width:200px;">Deskripsi</th>
+                        <th>1</th>
+                        <th>2</th>
+                        <th>3</th>
+                        <th>4</th>
+                        <th>5</th>
+                        <th class="col-subtotal">Sub Total</th>
+                    @endforeach
+                </tr>
+            </thead>
+            <tbody>
+                @php $no = 1; @endphp
+                @foreach ($data->getJenisPermintaan->getForm->Parameter as $key => $pm)
+                    @php
+                        $paramObj = is_object($pm) ? $pm : $parameter[$pm - 1] ?? null;
+                        $paramId = is_object($paramObj) ? $paramObj->id : $pm;
+                    @endphp
+                    @if ($paramId == 11)
+                        @continue
+                    @endif
+                    <tr>
+                        <td style="text-align:center;">{{ $no++ }}</td>
+                        <td class="col-parameter">{{ $parameter[$pm - 1]->Nama ?? '-' }}</td>
+                        @foreach ($data->getVendor as $vIdx => $Vendor)
+                            <td>
+                                {!! isset($data->getHtaGpa->getDetailHta[$vIdx]->Deskripsi[$key])
+                                    ? $data->getHtaGpa->getDetailHta[$vIdx]->Deskripsi[$key]
+                                    : '-' !!}
+                            </td>
+                            <td style="width:20px;text-align:center;">
+                                {{ $data->getHtaGpa->getDetailHta[$vIdx]->Nilai1[$key] ?? '' }}</td>
+                            <td style="width:20px;text-align:center;">
+                                {{ $data->getHtaGpa->getDetailHta[$vIdx]->Nilai2[$key] ?? '' }}</td>
+                            <td style="width:20px;text-align:center;">
+                                {{ $data->getHtaGpa->getDetailHta[$vIdx]->Nilai3[$key] ?? '' }}</td>
+                            <td style="width:20px;text-align:center;">
+                                {{ $data->getHtaGpa->getDetailHta[$vIdx]->Nilai4[$key] ?? '' }}</td>
+                            <td style="width:20px;text-align:center;">
+                                {{ $data->getHtaGpa->getDetailHta[$vIdx]->Nilai5[$key] ?? '' }}</td>
+                            <td class="col-subtotal">
+                                {{ $data->getHtaGpa->getDetailHta[$vIdx]->SubTotal[$key] ?? '' }}
+                            </td>
+                        @endforeach
+                    </tr>
+                @endforeach
+            </tbody>
+            <tfoot>
+                <tr>
+                    <th colspan="2" style="text-align:right;">Grand Total</th>
+                    @foreach ($data->getVendor as $vIdx => $Vendor)
+                        @php
+                            $grandTotal = 0;
+                            if (
+                                isset($data->getHtaGpa->getDetailHta[$vIdx]->SubTotal) &&
+                                is_array($data->getHtaGpa->getDetailHta[$vIdx]->SubTotal)
+                            ) {
+                                foreach ($data->getHtaGpa->getDetailHta[$vIdx]->SubTotal as $sub) {
+                                    $grandTotal += is_numeric($sub) ? $sub : 0;
+                                }
+                            }
+                        @endphp
+                        <th colspan="7" style="text-align:right; background: #f4f4f4; font-weight:700;">
+                            {{ $grandTotal }}
+                        </th>
+                    @endforeach
+                </tr>
+            </tfoot>
+        </table>
+
+        {{-- Table Perbandingan Ekonomi --}}
+        <table class="cetak-hta">
+            <thead>
+                <tr>
+                    <th class="col-parameter">Parameter</th>
+                    @foreach ($data->getVendor as $vIdx => $Vendor)
+                        <th>{{ $Vendor->getNamaVendor->Nama ?? 'Vendor ' . ($vIdx + 1) }}</th>
+                    @endforeach
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <th class="col-parameter">Umur Ekonomis</th>
+                    @foreach ($data->getVendor as $vIdx => $Vendor)
+                        <td>{{ $data->getHtaGpa->getDetailHta[$vIdx]->UmurEkonomis ?? '-' }}</td>
+                    @endforeach
+                </tr>
+                <tr>
+                    <th class="col-parameter">Buyback Period</th>
+                    @foreach ($data->getVendor as $vIdx => $Vendor)
+                        <td>{{ $data->getHtaGpa->getDetailHta[$vIdx]->BuybackPeriod ?? '-' }}</td>
+                    @endforeach
+                </tr>
+                {{-- <tr>
+                <th class="col-parameter">Tarif Diusulkan</th>
+                @foreach ($data->getVendor as $vIdx => $Vendor)
+                <td>{{ $data->getHtaGpa->getDetailHta[$vIdx]->TarifDiusulkan ?? '-' }}</td>
+                @endforeach
+            </tr> --}}
+                <tr>
+                    <th class="col-parameter">Target Pemakaian Bulanan</th>
+                    @foreach ($data->getVendor as $vIdx => $Vendor)
+                        <td>{{ $data->getHtaGpa->getDetailHta[$vIdx]->TargetPemakaianBulanan ?? '-' }}</td>
+                    @endforeach
+                </tr>
+                <tr>
+                    <th class="col-parameter">Keterangan</th>
+                    @foreach ($data->getVendor as $vIdx => $Vendor)
+                        <td>{!! $data->getHtaGpa->getDetailHta[$vIdx]->Keterangan ?? '-' !!}</td>
+                    @endforeach
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <h5 class="text-center mb-4"><strong>Persetujuan Permintaan Pembelian</strong></h5>
+    <!-- Untuk cetak PDF tanda tangan approval -->
+    <table style="width:100%; margin: 0 auto; border:none;">
+        <colgroup>
+            @if (!empty($approval2))
+                @foreach ($approval2 as $item)
+                    <col style="width: {{ 100 / count($approval2) }}%;">
+                @endforeach
+            @endif
+        </colgroup>
+        <tbody>
+            <tr>
+                @php
+                    $jabatanList = [
+                        'Kepala KSM Rumah Sakit',
+                        'Ketua Tim HTA Rumah Sakit',
+                        'Direktur Rumah Sakit',
+                        'Group Head Medik',
+                        'Group Head Penunjang Medis',
+                    ];
+                @endphp
+                @foreach ($approval2 as $idx => $item)
+                    <td style="font-weight:600; vertical-align:bottom;">
+                        {{ $jabatanList[$idx] ?? '-' }}
+                    </td>
+                @endforeach
+            </tr>
+            <tr>
+                @foreach ($approval2 as $item)
+                    <td class="text-center align-bottom" style="height: 20px; border:none;">
+                        {{-- Tempat kosong untuk tanda tangan basah di cetak PDF --}}
+                    </td>
+                @endforeach
+            </tr>
+            <tr>
+                @foreach ($approval2 as $item)
+                    <td class="text-center" style="height:80px; vertical-align: top;">
+                        @if ($item->Status == 'Approved' && isset($item->qrCode))
+                            <img src="data:image/png;base64,{{ $item->qrCode }}" alt="QR Code"
+                                style="width:80px; height:80px;"><br>
+                        @endif
+                    </td>
+                @endforeach
+            </tr>
+            <tr>
+                @foreach ($approval2 as $item)
+                    <td class="text-center" style="padding-bottom:0; border:none;">
+                        <hr style="width: 70%; margin:0 auto 3px auto;border-top:2px solid #000;">
+                    </td>
+                @endforeach
+            </tr>
+            <tr>
+                @foreach ($approval2 as $item)
+                    <td class="text-center align-top" style="border:none;">
+                        <span style="font-weight:600; display: block; text-align: center;">
+                            {{ $item->Nama ?? '-' }}
+                        </span>
+                        <div style="display: block; text-align: center;">
+                            <small style="display: inline-block;">{{ $item->Status ?? '-' }}</small>
+
+                        </div>
+                    </td>
+                @endforeach
+            </tr>
+        </tbody>
     </table>
 
-    {{-- Table HEAD: No | Parameter | Vendor 1 (Deskripsi, Nilai 1-5, Subtotal) | Vendor 2 (Deskripsi, Nilai 1-5, Subtotal) ... --}}
-    <table class="cetak-hta">
-        <thead>
+</div>
+<div class="permintaam">
+    {{-- hta-gpa/cetak-permintaan-email.blade.php --}}
+    <!DOCTYPE html>
+    <html lang="id">
+
+    <head>
+        <meta charset="UTF-8">
+        <title>Permintaan Pembelian - {{ $data->KodePengajuan ?? '-' }}</title>
+        <style>
+            @page {
+                margin: 1cm;
+            }
+
+            body {
+                font-family: Arial, sans-serif;
+                font-size: 11pt;
+            }
+
+            .prp-table {
+                border-collapse: collapse;
+                width: 100%;
+            }
+
+            .prp-th,
+            .prp-td {
+                border: 1px solid #000;
+                padding: 6px;
+                font-size: 10pt;
+            }
+
+            .prp-th {
+                text-align: center;
+                font-weight: bold;
+                background: #f9f9f9;
+            }
+
+            .prp-header {
+                text-align: center;
+                margin-bottom: 20px;
+            }
+
+            .prp-header h2 {
+                margin: 0 0 5px 0;
+                font-size: 16pt;
+            }
+
+            .prp-signature-section td {
+                border: none !important;
+                text-align: center;
+                vertical-align: top;
+                padding: 5px;
+            }
+
+            .prp-signature-section hr {
+                width: 70%;
+                border: none;
+                border-top: 2px solid #000;
+                margin: 8px auto 3px;
+            }
+
+            .prp-footer {
+                position: fixed;
+                bottom: 1cm;
+                left: 1cm;
+                font-size: 9pt;
+                color: #666;
+            }
+        </style>
+    </head>
+
+    <body>
+        <div class="prp-header">
+            <h2>PERMINTAAN PEMBELIAN</h2>
+            <p>PURCHASE REQUISITION</p>
+        </div>
+
+        @php $permintaan = $data->getPermintaan; @endphp
+
+        <table style="border:none; width:100%; margin-bottom:15px;">
             <tr>
-                <th rowspan="2" style="min-width: 30px; width: 35px;">No</th>
-                <th rowspan="2" class="col-parameter">Parameter</th>
-                @foreach ($data->getVendor as $vIdx => $Vendor)
-                    <th colspan="7" style="text-align:center; min-width:310px;">
-                        {{ $Vendor->getNamaVendor->Nama ?? 'Vendor ' . ($vIdx + 1) }}
-                    </th>
-                @endforeach
+                <td style="border:none; width:100px;">Unit</td>
+                <td style="border:none;">: {{ $permintaan->getDepartemen->Nama ?? '-' }}</td>
             </tr>
             <tr>
-                @foreach ($data->getVendor as $vIdx => $Vendor)
-                    <th style="min-width:110px;max-width:200px;">Deskripsi</th>
-                    <th>1</th>
-                    <th>2</th>
-                    <th>3</th>
-                    <th>4</th>
-                    <th>5</th>
-                    <th class="col-subtotal">Sub Total</th>
-                @endforeach
+                <td style="border:none;">Tanggal</td>
+                <td style="border:none;">:
+                    {{ $permintaan->Tanggal ? \Carbon\Carbon::parse($permintaan->Tanggal)->format('d-m-Y') : '-' }}
+                </td>
             </tr>
-        </thead>
-        <tbody>
-            @php $no = 1; @endphp
-            @foreach ($data->getJenisPermintaan->getForm->Parameter as $key => $pm)
-                @php
-                    $paramObj = is_object($pm) ? $pm : $parameter[$pm - 1] ?? null;
-                    $paramId = is_object($paramObj) ? $paramObj->id : $pm;
-                @endphp
-                @if ($paramId == 11)
-                    @continue
-                @endif
+            <tr>
+                <td style="border:none;">No.</td>
+                <td style="border:none;">: {{ $permintaan->NomorPermintaan ?? '-' }}</td>
+            </tr>
+        </table>
+
+        <table class="prp-table">
+            <thead>
                 <tr>
-                    <td style="text-align:center;">{{ $no++ }}</td>
-                    <td class="col-parameter">{{ $parameter[$pm - 1]->Nama ?? '-' }}</td>
-                    @foreach ($data->getVendor as $vIdx => $Vendor)
-                        <td>
-                            {!! isset($data->getHtaGpa->getDetailHta[$vIdx]->Deskripsi[$key])
-                                ? $data->getHtaGpa->getDetailHta[$vIdx]->Deskripsi[$key]
-                                : '-' !!}
-                        </td>
-                        <td style="width:20px;text-align:center;">
-                            {{ $data->getHtaGpa->getDetailHta[$vIdx]->Nilai1[$key] ?? '' }}</td>
-                        <td style="width:20px;text-align:center;">
-                            {{ $data->getHtaGpa->getDetailHta[$vIdx]->Nilai2[$key] ?? '' }}</td>
-                        <td style="width:20px;text-align:center;">
-                            {{ $data->getHtaGpa->getDetailHta[$vIdx]->Nilai3[$key] ?? '' }}</td>
-                        <td style="width:20px;text-align:center;">
-                            {{ $data->getHtaGpa->getDetailHta[$vIdx]->Nilai4[$key] ?? '' }}</td>
-                        <td style="width:20px;text-align:center;">
-                            {{ $data->getHtaGpa->getDetailHta[$vIdx]->Nilai5[$key] ?? '' }}</td>
-                        <td class="col-subtotal">
-                            {{ $data->getHtaGpa->getDetailHta[$vIdx]->SubTotal[$key] ?? '' }}
+                    <th class="prp-th" style="width:5%">No</th>
+                    <th class="prp-th" style="width:30%">Nama Barang</th>
+                    <th class="prp-th" style="width:10%">Jumlah</th>
+                    <th class="prp-th" style="width:10%">Satuan</th>
+                    <th class="prp-th" style="width:20%">User</th>
+                    <th class="prp-th" style="width:15%">Pemanfaatan</th>
+                    <th class="prp-th" style="width:10%">Ket.</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach ($permintaan->getDetail as $i => $detail)
+                    <tr>
+                        <td class="prp-td">{{ $i + 1 }}</td>
+                        <td class="prp-td">{{ $detail->getBarang->Nama ?? '-' }}</td>
+                        <td class="prp-td">{{ number_format($detail->Jumlah ?? 0, 0, ',', '.') }}</td>
+                        <td class="prp-td">{{ $detail->getBarang->getSatuan->NamaSatuan ?? '-' }}</td>
+                        <td class="prp-td">{{ $permintaan->getDiajukanOleh->name ?? '-' }}</td>
+                        <td class="prp-td">{{ $detail->RencanaPenempatan ?? '-' }}</td>
+                        <td class="prp-td">{{ $detail->Keterangan ?? '-' }}</td>
+                    </tr>
+                @endforeach
+            </tbody>
+        </table>
+
+        {{-- Signature --}}
+        <div class="prp-signature-section" style="margin-top:30px;">
+            <table style="width:100%; border:none;">
+                <tr>
+                    @foreach (array_slice($approval3 ?? [], 0, 2) as $idx => $item)
+                        <td style="width:50%; border:none; vertical-align:top;">
+                            <div style="font-weight:bold; font-size:10pt;">
+                                {{ $item->getJabatan->Nama ?? '-' }}<br>
+                                <small>{{ $item->getDepartemen->Nama ?? '' }}</small>
+                            </div>
+                            <div
+                                style="min-height:90px; margin:10px 0; display:flex; flex-direction:column; align-items:center;">
+                                @if ($item->Status == 'Approved' && !empty($item->qrCode))
+                                    <img src="data:image/png;base64,{{ $item->qrCode }}"
+                                        style="width:70px; height:70px;">
+                                @else
+                                    <div style="height:70px;"></div>
+                                @endif
+                                <hr>
+                            </div>
+                            <div style="font-weight:bold;">{{ $item->Nama ?? '-' }}</div>
+                            <small>{{ $item->Status ?? '-' }}</small>
                         </td>
                     @endforeach
                 </tr>
-            @endforeach
-        </tbody>
-        <tfoot>
-            <tr>
-                <th colspan="2" style="text-align:right;">Grand Total</th>
-                @foreach ($data->getVendor as $vIdx => $Vendor)
-                    @php
-                        $grandTotal = 0;
-                        if (
-                            isset($data->getHtaGpa->getDetailHta[$vIdx]->SubTotal) &&
-                            is_array($data->getHtaGpa->getDetailHta[$vIdx]->SubTotal)
-                        ) {
-                            foreach ($data->getHtaGpa->getDetailHta[$vIdx]->SubTotal as $sub) {
-                                $grandTotal += is_numeric($sub) ? $sub : 0;
-                            }
-                        }
-                    @endphp
-                    <th colspan="7" style="text-align:right; background: #f4f4f4; font-weight:700;">
-                        {{ $grandTotal }}
-                    </th>
-                @endforeach
-            </tr>
-        </tfoot>
-    </table>
+            </table>
+        </div>
 
-    {{-- Table Perbandingan Ekonomi --}}
-    <table class="cetak-hta">
-        <thead>
-            <tr>
-                <th class="col-parameter">Parameter</th>
-                @foreach ($data->getVendor as $vIdx => $Vendor)
-                    <th>{{ $Vendor->getNamaVendor->Nama ?? 'Vendor ' . ($vIdx + 1) }}</th>
-                @endforeach
-            </tr>
-        </thead>
-        <tbody>
-            <tr>
-                <th class="col-parameter">Umur Ekonomis</th>
-                @foreach ($data->getVendor as $vIdx => $Vendor)
-                    <td>{{ $data->getHtaGpa->getDetailHta[$vIdx]->UmurEkonomis ?? '-' }}</td>
-                @endforeach
-            </tr>
-            <tr>
-                <th class="col-parameter">Buyback Period</th>
-                @foreach ($data->getVendor as $vIdx => $Vendor)
-                    <td>{{ $data->getHtaGpa->getDetailHta[$vIdx]->BuybackPeriod ?? '-' }}</td>
-                @endforeach
-            </tr>
-            {{-- <tr>
-                <th class="col-parameter">Tarif Diusulkan</th>
-                @foreach ($data->getVendor as $vIdx => $Vendor)
-                    <td>{{ $data->getHtaGpa->getDetailHta[$vIdx]->TarifDiusulkan ?? '-' }}</td>
-                @endforeach
-            </tr> --}}
-            <tr>
-                <th class="col-parameter">Target Pemakaian Bulanan</th>
-                @foreach ($data->getVendor as $vIdx => $Vendor)
-                    <td>{{ $data->getHtaGpa->getDetailHta[$vIdx]->TargetPemakaianBulanan ?? '-' }}</td>
-                @endforeach
-            </tr>
-            <tr>
-                <th class="col-parameter">Keterangan</th>
-                @foreach ($data->getVendor as $vIdx => $Vendor)
-                    <td>{!! $data->getHtaGpa->getDetailHta[$vIdx]->Keterangan ?? '-' !!}</td>
-                @endforeach
-            </tr>
-        </tbody>
-    </table>
+        <div class="prp-footer">
+            Dicetak: {{ \Carbon\Carbon::now()->format('d-m-Y H:i:s') }} |
+            Oleh: {{ auth()->user()->name ?? 'System' }}
+        </div>
+    </body>
+
+    </html>
+
 </div>
-
-<h5 class="text-center mb-4"><strong>Persetujuan Permintaan Pembelian</strong></h5>
-<!-- Untuk cetak PDF tanda tangan approval -->
-<table style="width:100%; margin: 0 auto; border:none;">
-    <colgroup>
-        @if (!empty($approval2))
-            @foreach ($approval2 as $item)
-                <col style="width: {{ 100 / count($approval2) }}%;">
-            @endforeach
-        @endif
-    </colgroup>
-    <tbody>
-        <tr>
-            @php
-                $jabatanList = [
-                    'Kepala KSM Rumah Sakit',
-                    'Ketua Tim HTA Rumah Sakit',
-                    'Direktur Rumah Sakit',
-                    'Group Head Medik',
-                    'Group Head Penunjang Medis',
-                ];
-            @endphp
-            @foreach ($approval2 as $idx => $item)
-                <td style="font-weight:600; vertical-align:bottom;">
-                    {{ $jabatanList[$idx] ?? '-' }}
-                </td>
-            @endforeach
-        </tr>
-        <tr>
-            @foreach ($approval2 as $item)
-                <td class="text-center align-bottom" style="height: 20px; border:none;">
-                    {{-- Tempat kosong untuk tanda tangan basah di cetak PDF --}}
-                </td>
-            @endforeach
-        </tr>
-        <tr>
-            @foreach ($approval2 as $item)
-                <td class="text-center" style="height:80px; vertical-align: top;">
-                    @if ($item->Status == 'Approved' && isset($item->qrCode))
-                        <img src="data:image/png;base64,{{ $item->qrCode }}" alt="QR Code"
-                            style="width:80px; height:80px;"><br>
-                    @endif
-                </td>
-            @endforeach
-        </tr>
-        <tr>
-            @foreach ($approval2 as $item)
-                <td class="text-center" style="padding-bottom:0; border:none;">
-                    <hr style="width: 70%; margin:0 auto 3px auto;border-top:2px solid #000;">
-                </td>
-            @endforeach
-        </tr>
-        <tr>
-            @foreach ($approval2 as $item)
-                <td class="text-center align-top" style="border:none;">
-                    <span style="font-weight:600; display: block; text-align: center;">
-                        {{ $item->Nama ?? '-' }}
-                    </span>
-                    <div style="display: block; text-align: center;">
-                        <small style="display: inline-block;">{{ $item->Status ?? '-' }}</small>
-
-                    </div>
-                </td>
-            @endforeach
-        </tr>
-    </tbody>
-</table>

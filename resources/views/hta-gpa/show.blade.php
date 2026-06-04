@@ -298,10 +298,29 @@
                                     </a>
                                 @endif
                             @endforeach
-                        </div>
-                    </div>
 
+                        </div>
+                        @if (isset($approval) && count($approval) > 0)
+                            <div class="mt-4">
+                                <dl>
+                                    @php $nomor = 1; @endphp
+                                    @foreach ($approval as $item)
+                                        @if (!empty($item->Justifikasi))
+                                            <dt>
+                                                <strong>{{ $nomor++ }}.
+                                                    Justifikasi{{ $item->Nama ? ' oleh ' . $item->Nama : '' }}:</strong>
+                                            </dt>
+                                            <dd class="text-muted" style="margin-bottom:10px;">
+                                                {{ $item->Justifikasi }}
+                                            </dd>
+                                        @endif
+                                    @endforeach
+                                </dl>
+                            </div>
+                        @endif
+                    </div>
                 </div>
+
             </div>
         </div>
     </div>

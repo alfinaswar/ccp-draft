@@ -46,6 +46,7 @@ class PengajuanPembelianController extends Controller
         if ($request->ajax()) {
             $kodePerusahaan = auth()->user()->kodeperusahaan;
             $user = auth()->user();
+            $hiddenStatuses = ['Selesai', 'Ditolak CEO', 'Disetujui CEO'];
             if ($user->hasRole('Admin') || $user->hasRole('CCP') || $user->hasRole('CEO') || $user->hasRole('Group Head')) {
                 $data = PengajuanPembelian::with(['getPerusahaan', 'getJenisPermintaan', 'getPengajuanItem', 'getPermintaan'])
                     ->orderBy('id', 'desc');
@@ -57,6 +58,8 @@ class PengajuanPembelianController extends Controller
                 }
                 if ($request->filled('status')) {
                     $data->where('Status', $request->status);
+                } else {
+                    $data->whereNotIn('Status', $hiddenStatuses);
                 }
             } elseif ($user->hasRole('SMI')) {
                 $data = PengajuanPembelian::with(['getPerusahaan', 'getJenisPermintaan', 'getPengajuanItem', 'getPermintaan'])
@@ -65,6 +68,8 @@ class PengajuanPembelianController extends Controller
                     ->orderBy('id', 'desc');
                 if ($request->filled('status')) {
                     $data->where('Status', $request->status);
+                } else {
+                    $data->whereNotIn('Status', $hiddenStatuses);
                 }
             } elseif ($user->hasRole('LOGUM')) {
                 $data = PengajuanPembelian::with(['getPerusahaan', 'getJenisPermintaan', 'getPengajuanItem', 'getPermintaan'])
@@ -74,6 +79,8 @@ class PengajuanPembelianController extends Controller
 
                 if ($request->filled('status')) {
                     $data->where('Status', $request->status);
+                } else {
+                    $data->whereNotIn('Status', $hiddenStatuses);
                 }
             } else {
                 $data = PengajuanPembelian::with(['getPerusahaan', 'getJenisPermintaan', 'getPengajuanItem', 'getPermintaan'])
@@ -84,8 +91,11 @@ class PengajuanPembelianController extends Controller
                 }
                 if ($request->filled('status')) {
                     $data->where('Status', $request->status);
+                } else {
+                    $data->whereNotIn('Status', $hiddenStatuses);
                 }
             }
+
             return DataTables::of($data)
                 ->addIndexColumn()
                 // contoh penerapan pencarian di kolom realasi/virtual (supaya search datatable bisa)

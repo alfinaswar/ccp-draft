@@ -10,8 +10,6 @@
             margin: 0;
         }
 
-
-
         .prp-watermark {
             position: fixed;
             inset: 0;

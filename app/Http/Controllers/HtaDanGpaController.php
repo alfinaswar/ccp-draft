@@ -437,7 +437,7 @@ class HtaDanGpaController extends Controller
 
         $idPengajuan = $request->IdPengajuan;
         $idPengajuanItem = $request->PengajuanItemId;
-
+        // $permintaan =
         $pengajuan = PengajuanPembelian::with([
             'getVendor.getVendorDetail',
             'getHtaGpa' => function ($query) use ($idPengajuanItem) {
@@ -468,7 +468,8 @@ class HtaDanGpaController extends Controller
                     $parameter,
                     $firstApprover,
                     $approval2,
-                    $fileLampiran
+                    $fileLampiran,
+                    // $permintaan,
                 ));
         }
 
@@ -874,7 +875,7 @@ class HtaDanGpaController extends Controller
             ->first();
 
         if ($nextApproval) {
-            if (!empty($nextApproval->Email) && $nextApproval->UserId != 2) {
+            if (!empty($nextApproval->Email) && $nextApproval->UserId != 5) {
                 $parameter = MasterParameter::get();
                 $approval2 = DokumenApproval::with('getUser', 'getJabatan', 'getDepartemen')
                     ->where('JenisFormId', $penilai->JenisFormId)

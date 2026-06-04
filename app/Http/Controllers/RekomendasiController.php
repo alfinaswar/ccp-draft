@@ -42,19 +42,20 @@ class RekomendasiController extends Controller
     {
         if ($request->ajax()) {
             // dd($request->tanggalPresentasi);
+            $hiddenStatuses = ['Selesai', 'Ditolak CEO', 'Disetujui CEO'];
             $data = PengajuanPembelian::with([
                 'getPerusahaan',
                 'getPermintaan',
                 'getJenisPermintaan',
                 'getPengajuanItem.getBarang.getMerk'
             ])
-                ->whereIn('Status', [
-                    'Diajukan',
-                    'Selesai Review',
-                    'Menunggu Rekomendasi GH',
-                    'Siap Presentasi',
-                    'Dalam Review'
-                ])
+                // ->whereIn('Status', [
+                //     'Diajukan',
+                //     'Selesai Review',
+                //     'Menunggu Rekomendasi GH',
+                //     'Siap Presentasi',
+                //     'Dalam Review'
+                // ])
                 ->when($request->jenis, fn($q) => $q->where('Jenis', $request->jenis))
                 ->when(
                     $request->tanggalPresentasi,
@@ -69,9 +70,14 @@ class RekomendasiController extends Controller
                 ->when(
                     $request->status,
                     fn($q) =>
-                    $q->where('Status', $request->status)
+                    $q->where('Status', $request->status),
+                    function ($q) use ($hiddenStatuses) {
+                        // Kecualikan status-status yang dimaksud jika TIDAK difilter
+                        $q->whereNotIn('Status', $hiddenStatuses);
+                    }
                 )
                 ->latest();
+
 
 
             return DataTables::of($data)
@@ -210,8 +216,19 @@ class RekomendasiController extends Controller
                         : '-';
                 })
                 ->addColumn('LokasiPenempatan', function ($row) {
-                    return $row->getPermintaan->getDetail[0]->RencanaPenempatan;
+                    if (
+                        isset($row->getPermintaan)
+                        && isset($row->getPermintaan->getDetail)
+                        && is_array($row->getPermintaan->getDetail)
+                        && isset($row->getPermintaan->getDetail[0])
+                        && isset($row->getPermintaan->getDetail[0]->RencanaPenempatan)
+                    ) {
+                        return $row->getPermintaan->getDetail[0]->RencanaPenempatan;
+                    } else {
+                        return '-';
+                    }
                 })
+
                 ->addColumn('TanggalPresentasi', function ($row) {
                     if ($row->TanggalPresentasi) {
                         return Carbon::parse($row->TanggalPresentasi)->translatedFormat('d M Y');

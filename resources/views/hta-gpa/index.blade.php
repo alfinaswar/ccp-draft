@@ -484,7 +484,6 @@
                                 </div>
 
 
-
                                 <table class="table align-middle">
                                     <thead class="table-light">
                                         <tr>
@@ -500,6 +499,9 @@
                                     </thead>
                                     <tbody>
                                         @if ($approval && count($approval) > 0)
+                                            @php
+                                                $canCopy = true;
+                                            @endphp
                                             @foreach ($approval as $key => $item)
                                                 <tr>
                                                     <td>{{ $key + 1 }}</td>
@@ -509,10 +511,10 @@
                                                     <td>
                                                         <span
                                                             class="badge
-                                            @if ($item->Status == 'Approved') bg-success
-                                            @elseif($item->Status == 'Pending') bg-warning text-dark
-                                            @elseif($item->Status == 'Rejected') bg-danger
-                                            @else bg-secondary @endif">
+                                                            @if ($item->Status == 'Approved') bg-success
+                                                            @elseif($item->Status == 'Pending') bg-warning text-dark
+                                                            @elseif($item->Status == 'Rejected') bg-danger
+                                                            @else bg-secondary @endif">
                                                             {{ $item->Status }}
                                                         </span>
                                                     </td>
@@ -521,7 +523,7 @@
                                                         {{ $item->TanggalApprove ? \Carbon\Carbon::parse($item->TanggalApprove)->format('d-m-Y H:i') : '-' }}
                                                     </td>
                                                     <td>
-                                                        {{-- Button Salin Link Approval --}}
+                                                        {{-- Button Salin Link Approval: hanya bisa jika urutan sebelum ini sudah "Approved" --}}
                                                         @php
                                                             // Generate approval link sesuai dengan route yang benar
                                                             $approvalUrl = route(
@@ -529,13 +531,25 @@
                                                                 $item->ApprovalToken ?? '',
                                                             );
                                                         @endphp
-                                                        <button type="button" class="btn btn-outline-primary btn-sm"
-                                                            onclick="navigator.clipboard.writeText('{{ $approvalUrl }}'); Swal.fire('Disalin!','Link approval telah disalin ke clipboard!','success')">
-                                                            <i class="fa fa-copy"></i> Salin Link Approval
-                                                        </button>
+                                                        @if ($canCopy)
+                                                            <button type="button" class="btn btn-outline-primary btn-sm"
+                                                                onclick="navigator.clipboard.writeText('{{ $approvalUrl }}'); Swal.fire('Disalin!','Link approval telah disalin ke clipboard!','success')">
+                                                                <i class="fa fa-copy"></i> Salin Link Approval
+                                                            </button>
+                                                        @else
+                                                            <button type="button"
+                                                                class="btn btn-outline-secondary btn-sm" disabled
+                                                                title="Urutan sebelumnya belum Approve">
+                                                                <i class="fa fa-copy"></i> Salin Link Approval
+                                                            </button>
+                                                        @endif
                                                     </td>
-
                                                 </tr>
+                                                @if ($item->Status !== 'Approved')
+                                                    @php
+                                                        $canCopy = false;
+                                                    @endphp
+                                                @endif
                                             @endforeach
                                         @else
                                             <tr>
@@ -544,6 +558,7 @@
                                         @endif
                                     </tbody>
                                 </table>
+
 
                             </div>
 
