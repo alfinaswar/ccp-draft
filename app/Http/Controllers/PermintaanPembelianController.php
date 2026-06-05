@@ -23,7 +23,7 @@ use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use Endroid\QrCode\QrCode;
 use Endroid\QrCode\Writer\PngWriter;
-
+use Illuminate\Support\Facades\Storage;
 use Yajra\DataTables\Facades\DataTables;
 
 class PermintaanPembelianController extends Controller
@@ -427,11 +427,14 @@ class PermintaanPembelianController extends Controller
                 $nextApproval->save();
             }
         } else {
-            // JIKA TIDAK ADA approver selanjutnya: Update status utama permintaan
             if ($permintaan) {
                 $permintaan->Status = 'Telah Disetujui';
                 $permintaan->save();
             }
+            if ($permintaan) {
+                $this->savePdfToStorage(encrypt($permintaan->id));
+            }
+
         }
 
         // Log aktivitas user saat approval via email
@@ -878,5 +881,57 @@ class PermintaanPembelianController extends Controller
         }
 
         return response()->json(['status' => 200, 'message' => 'Permintaan pembelian berhasil dihapus.']);
+    }
+    private function savePdfToStorage($id)
+    {
+        $decryptedId = decrypt($id);
+
+        $data = PermintaanPembelian::with([
+            'getDetail.getBarang.getMerk',
+            'getDiajukanOleh',
+            'getDetail.getBarang.getSatuan'
+        ])->find($decryptedId);
+
+        $approval = DokumenApproval::with('getUser', 'getJabatan', 'getDepartemen')
+            ->where('JenisFormId', $data->JenisForm)
+            ->where('DokumenId', $data->id)
+            ->orderBy('Urutan', 'asc')
+            ->get();
+
+        // Generate QR code untuk setiap approval
+        foreach ($approval as $item) {
+            if ($item->Status == 'Approved') {
+                $qrCode = QrCode::create(route('approval.validasi', $item->ApprovalToken))
+                    ->setSize(80)
+                    ->setMargin(10);
+
+                $writer = new PngWriter();
+                $result = $writer->write($qrCode);
+
+                $item->qrCode = base64_encode($result->getString());
+            }
+        }
+
+        $pdf = Pdf::loadView('form.permintaan-pembelian.cetak-permintaan', compact('data', 'approval'));
+        $pdf->setOptions([
+            'isHtml5ParserEnabled' => true,
+            'isRemoteEnabled' => true,
+        ]);
+
+        $output = $pdf->output();
+
+        $pdfFileName = "permintaan_" . $decryptedId . ".pdf";
+        $storagePath = "public/rekap-file/permintaan/" . $pdfFileName;
+
+        // pastikan folder ada
+        $dirPath = storage_path('app/public/rekap-file/permintaan/');
+        if (!file_exists($dirPath)) {
+            mkdir($dirPath, 0777, true);
+        }
+
+        Storage::put($storagePath, $output);
+        $publicUrl = 'storage/rekap-file/permintaan/' . $pdfFileName;
+
+        return $publicUrl;
     }
 }

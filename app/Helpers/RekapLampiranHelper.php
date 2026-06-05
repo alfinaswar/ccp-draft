@@ -37,7 +37,7 @@ class RekapLampiranHelper
         }
 
         $idPengajuan = $pengajuan->id;
-        $itemId = $pengajuanItemId ?? $pengajuan->PengajuanItemId;
+        $itemId = $pengajuanItemId ?? $pengajuan->getPengajuanItem->id;
 
         // ========== 1. DISPOSISI ==========
         $disposisi = LembarDisposisi::with(['getDetail', 'getBarang', 'getVendor'])
