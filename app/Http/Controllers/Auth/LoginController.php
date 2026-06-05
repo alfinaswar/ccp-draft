@@ -28,12 +28,13 @@ class LoginController extends Controller
         $request->validate([
             $this->username() => 'required|string',
             'password' => 'required|string',
-            'g-recaptcha-response' => 'required',
+            // 'g-recaptcha-response' => 'required', // KOMEN CAPTCHA VALIDASI
         ], [
-            'g-recaptcha-response.required' => 'Harap centang captcha terlebih dahulu.',
+            // 'g-recaptcha-response.required' => 'Harap centang captcha terlebih dahulu.', // KOMEN CAPTCHA VALIDASI
         ]);
 
-        // Verifikasi ke Google
+        // Verifikasi ke Google (captcha)
+        /*
         $response = Http::asForm()->post('https://www.google.com/recaptcha/api/siteverify', [
             'secret' => config('services.recaptcha.secret_key'),
             'response' => $request->input('g-recaptcha-response'),
@@ -45,6 +46,7 @@ class LoginController extends Controller
                 'g-recaptcha-response' => 'Verifikasi captcha gagal. Silakan coba lagi.',
             ]);
         }
+        */
     }
 
     protected function attemptLogin(Request $request)
