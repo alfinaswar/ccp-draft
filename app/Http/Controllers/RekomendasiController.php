@@ -60,17 +60,17 @@ class RekomendasiController extends Controller
                 ->when(
                     $request->tanggalPresentasi,
                     fn($q) =>
-                        $q->whereDate('TanggalPresentasi', $request->tanggalPresentasi)
+                    $q->whereDate('TanggalPresentasi', $request->tanggalPresentasi)
                 )
                 ->when(
                     $request->perusahaan,
                     fn($q) =>
-                        $q->where('KodePerusahaan', $request->perusahaan)
+                    $q->where('KodePerusahaan', $request->perusahaan)
                 )
                 ->when(
                     $request->status,
                     fn($q) =>
-                        $q->where('Status', $request->status),
+                    $q->where('Status', $request->status),
                     function ($q) use ($hiddenStatuses) {
                         // Kecualikan status-status yang dimaksud jika TIDAK difilter
                         $q->whereNotIn('Status', $hiddenStatuses);

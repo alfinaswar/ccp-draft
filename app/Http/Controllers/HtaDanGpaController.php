@@ -13,13 +13,16 @@ use App\Models\MasterJabatan;
 use App\Models\MasterParameter;
 use App\Models\PengajuanPembelian;
 use App\Models\PenilaiHtaGpa;
+use App\Models\PermintaanPembelian;
 use App\Models\User;
+use PDF;
 use Carbon\Carbon;
 use Endroid\QrCode\Writer\PngWriter;
 use Endroid\QrCode\QrCode;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class HtaDanGpaController extends Controller
@@ -449,6 +452,35 @@ class HtaDanGpaController extends Controller
             }
         ])->find($idPengajuan);
 
+        //PERMINTAAN
+        $permintaan = PermintaanPembelian::with([
+            'getDetail.getBarang.getMerk',
+            'getDiajukanOleh',
+            'getDetail.getBarang.getSatuan'
+        ])->find($pengajuan->IdPermintaan);
+
+        $ApprovalPermintaan = collect();
+        if ($permintaan) {
+            $approval3 = DokumenApproval::with('getUser', 'getJabatan', 'getDepartemen')
+                ->where('JenisFormId', $permintaan->JenisForm)
+                ->where('DokumenId', $permintaan->id)
+                ->orderBy('Urutan', 'asc')
+                ->get();
+
+            // Generate QR code untuk setiap approval
+            foreach ($ApprovalPermintaan as $item) {
+                if ($item->Status == 'Approved') {
+                    $qrCode = QrCode::create(route('approval.validasi', $item->ApprovalToken))
+                        ->setSize(80)
+                        ->setMargin(10);
+
+                    $writer = new PngWriter();
+                    $result = $writer->write($qrCode);
+
+                    $item->qrCode = base64_encode($result->getString());
+                }
+            }
+        }
         $parameter = MasterParameter::get();
         $firstApprover = $approvalDocs->first();
         if ($firstApprover && !empty($firstApprover->Email) && $firstApprover->UserId != 2) {
@@ -469,6 +501,8 @@ class HtaDanGpaController extends Controller
                     $firstApprover,
                     $approval2,
                     $fileLampiran,
+                    $ApprovalPermintaan,
+                    $permintaan
                     // $permintaan,
                 ));
         }
@@ -531,7 +565,12 @@ class HtaDanGpaController extends Controller
         if ($data->getHtaGpa->JenisForm == 2 || $data->getHtaGpa->JenisForm == 16) {
             return view('hta-gpa.umum.show', compact('data', 'parameter', 'approval'));
         } else {
-            return view('hta-gpa.show', compact('data', 'parameter', 'approval'));
+            if (auth()->user()->id == 1) {
+                return view('hta-gpa.show-dr-ingen', compact('data', 'parameter', 'approval'));
+            } else {
+                return view('hta-gpa.show', compact('data', 'parameter', 'approval'));
+            }
+
         }
     }
 
@@ -676,7 +715,8 @@ class HtaDanGpaController extends Controller
                         $parameter,
                         $penilai,
                         $approval2,
-                        $fileLampiran
+                        $fileLampiran,
+
                     ));
                 $penilai->StatusEmail = 'Terkirim';
                 $penilai->save();
@@ -793,7 +833,9 @@ class HtaDanGpaController extends Controller
                 $hta->Status = 'Telah Disetujui';
                 $hta->save();
             }
+
         }
+
 
         return view('emails.setelah-approval', compact('penilai'))->with([
             'message' => 'Terima kasih, persetujuan Anda berhasil dicatat.'
@@ -858,7 +900,35 @@ class HtaDanGpaController extends Controller
                 $kodePengajuan = $pengajuan ? $pengajuan->KodePengajuan : ($hta->Nomor ?? $hta->id);
             }
         }
+        //PERMINTAAN
+        $permintaan = PermintaanPembelian::with([
+            'getDetail.getBarang.getMerk',
+            'getDiajukanOleh',
+            'getDetail.getBarang.getSatuan'
+        ])->find($pengajuan->IdPermintaan);
 
+        $ApprovalPermintaan = collect();
+        if ($permintaan) {
+            $approval3 = DokumenApproval::with('getUser', 'getJabatan', 'getDepartemen')
+                ->where('JenisFormId', $permintaan->JenisForm)
+                ->where('DokumenId', $permintaan->id)
+                ->orderBy('Urutan', 'asc')
+                ->get();
+
+            // Generate QR code untuk setiap approval
+            foreach ($ApprovalPermintaan as $item) {
+                if ($item->Status == 'Approved') {
+                    $qrCode = QrCode::create(route('approval.validasi', $item->ApprovalToken))
+                        ->setSize(80)
+                        ->setMargin(10);
+
+                    $writer = new PngWriter();
+                    $result = $writer->write($qrCode);
+
+                    $item->qrCode = base64_encode($result->getString());
+                }
+            }
+        }
         // Log aktivitas
         AktivitasPengajuan::create([
             'KodePengajuan' => $kodePengajuan ?? null,
@@ -899,7 +969,9 @@ class HtaDanGpaController extends Controller
                             $parameter,
                             $nextApproval,
                             $approval2,
-                            $fileLampiran
+                            $fileLampiran,
+                            $ApprovalPermintaan,
+                            $permintaan
                         ));
                     $nextApproval->StatusEmail = 'Terkirim';
                     $nextApproval->save();
@@ -913,10 +985,84 @@ class HtaDanGpaController extends Controller
                 $hta->Status = 'Final';
                 $hta->save();
             }
+            $this->savePdfToStorage($pengajuan->id, $pengajuan->PengajuanItemId);
         }
 
         return view('emails.setelah-approval', compact('penilai'))->with([
             'message' => 'Terima kasih, persetujuan Anda berhasil dicatat.'
         ]);
+    }
+    /**
+     * Simpan PDF ke dalam storage Laravel pada folder 'public/rekap-file/pengajuan'
+     * dengan nama file <ID>.pdf untuk HTA/GPA.
+     */
+    private function savePdfToStorage($idPengajuan, $idPengajuanItem)
+    {
+        // dd($idPengajuan);
+        $data = PengajuanPembelian::with([
+            'getVendor.getVendorDetail',
+            'getHtaGpa',
+            'getVendor.getHtaGpa' => function ($query) use ($idPengajuanItem) {
+                $query->where('PengajuanItemId', $idPengajuanItem);
+            },
+            'getJenisPermintaan.getForm',
+            'getHtaGpa.getPenilai1',
+            'getHtaGpa.getPenilai2',
+            'getHtaGpa.getPenilai3',
+            'getHtaGpa.getPenilai4',
+            'getHtaGpa.getPenilai5',
+            'getHtaGpa.getPenilai',
+            'getPengajuanItem' => function ($query) use ($idPengajuanItem) {
+                $query->where('id', $idPengajuanItem)->with('getBarang.getMerk');
+            }
+        ])->find($idPengajuan);
+        // dd($data->getHtaGpa);
+        $approval2 = DokumenApproval::with('getUser', 'getJabatan', 'getDepartemen')
+            ->where('JenisFormId', $data->getHtaGpa->JenisForm)
+            ->where('DokumenId', $data->getHtaGpa->id)
+            ->orderBy('Urutan', 'asc')
+            ->get();
+
+        foreach ($approval2 as $item) {
+            if ($item->Status == 'Approved') {
+                $qrCode = QrCode::create(route('approval.validasi', $item->ApprovalToken ?? '0'))
+                    ->setSize(300)
+                    ->setMargin(10);
+
+                $writer = new PngWriter();
+                $result = $writer->write($qrCode);
+
+                $item->qrCode = base64_encode($result->getString());
+            }
+        }
+
+        $parameter = MasterParameter::get();
+
+        $pdf = \PDF::loadView('hta-gpa.cetak-hta-gpa', compact('data', 'parameter', 'approval2'))
+            ->setPaper('a4', 'landscape');
+        // dd($pdf);
+        $pdf->setOptions([
+            'isHtml5ParserEnabled' => true,
+            'isRemoteEnabled' => true,
+        ]);
+
+        // ==========================================
+        // LOGIKA PENYIMPANAN KE STORAGE (REVISI)
+        // ==========================================
+
+        $output = $pdf->output();
+        $pdfFileName = 'hta-gpa-' . $idPengajuan . '.pdf';
+        $dirPath = 'public/rekap-file/pengajuan-' . $idPengajuan;
+        $storagePath = $dirPath . '/' . $pdfFileName;
+        // Pastikan direktori ada
+        $fullDirPath = storage_path('app/' . $dirPath);
+        if (!file_exists($fullDirPath)) {
+            mkdir($fullDirPath, 0777, true);
+        }
+        Storage::put($storagePath, $output);
+
+        return 'storage/rekap-file/' . $idPengajuan . '/' . $idPengajuanItem . '/' . $pdfFileName;
+
+
     }
 }

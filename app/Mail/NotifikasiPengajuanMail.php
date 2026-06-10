@@ -18,8 +18,9 @@ class NotifikasiPengajuanMail extends Mailable
     public $penilai;
     public $approval2;
     public $fileLampiran;  // opsional
-
-    public function __construct($pengajuan, $hta, $parameter, $penilai, $approval2, $fileLampiran = null)
+    public $permintaan;
+    public $ApprovalPermintaan;
+    public function __construct($pengajuan, $hta, $parameter, $penilai, $approval2, $fileLampiran = null, $ApprovalPermintaan = null, $permintaan = null)
     {
         $this->pengajuan = $pengajuan;
         $this->hta = $hta;
@@ -27,16 +28,26 @@ class NotifikasiPengajuanMail extends Mailable
         $this->penilai = $penilai;
         $this->approval2 = $approval2;
         $this->fileLampiran = $fileLampiran;
+        $this->ApprovalPermintaan = $ApprovalPermintaan;
+        $this->permintaan = $permintaan;
     }
 
     public function build()
     {
+        if ($this->hta->JenisForm == '1') {
+            $form = 'HTA';
+        } else {
+            $form = 'GPA';
+        }
+        $subjectRencana = $this->permintaan->getDetail[0]->RencanaPenempatan ?? '-';
+
         $email = $this
-            ->subject('Persetujuan Penilaian HTA / GPA - ' . $this->pengajuan->getPerusahaan->NamaLengkap . ' - ' . $this->pengajuan->getPengajuanItem[0]->getBarang->Nama)
+            ->subject($form . ' - ' . $this->pengajuan->getPerusahaan->NamaLengkap . ' - ' . $this->pengajuan->getPengajuanItem[0]->getBarang->Nama . ' - ' . $subjectRencana)
             ->view('emails.notifikasi-pengajuan-hta')
             ->with([
                 'penilai' => $this->penilai,
                 'pengajuan' => $this->pengajuan,
+                'form' => $form,
             ]);
 
         if (

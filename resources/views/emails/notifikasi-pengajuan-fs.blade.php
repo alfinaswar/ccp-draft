@@ -15,7 +15,7 @@
                     <tr>
                         <td style="background:#198754;text-align:center;padding:32px 32px 16px 32px;">
                             <h2 style="color:#fff;margin:0;font-weight:bold;font-size:2rem;letter-spacing:1px;">
-                                Notifikasi Pengajuan Form Feasibility Study
+                                Persetujuan Feasibility Study
                             </h2>
                         </td>
                     </tr>
@@ -28,9 +28,6 @@
                                 Dengan hormat,<br>
                                 Bersama email ini, kami informasikan bahwa terdapat <b>Pengajuan Form Feasibility
                                     Study</b> yang memerlukan persetujuan Anda pada sistem ABPROC.<br>
-                                <br>
-                                <b>Catatan:</b> Terdapat file lampiran terkait detail Feasibility Study pada email ini.
-                                Silakan dipelajari sebelum memberikan persetujuan.
                             </p>
                             <p style="font-size:15px;line-height:1.6;margin:0 0 18px 0;">
                                 Silakan klik tombol berikut untuk melihat detail pengajuan dan memberikan persetujuan:
@@ -65,6 +62,21 @@
                                     <td style="padding:4px 0 4px 16px;vertical-align:top;">:
                                         {{ $Pengajuan->getPermintaan->getDetail[0]->RencanaPenempatan ?? '-' }}</td>
                                 </tr>
+                                <tr>
+                                    <td style="font-weight:bold;width:160px;padding:4px 0;vertical-align:top;">
+                                        Harga Rekomendasi CCP</td>
+                                    <td style="padding:4px 0 4px 16px;vertical-align:top;">:
+                                        {{ isset($HargaRekom->HargaNego) ? 'Rp ' . number_format($HargaRekom->HargaNego, 0, ',', '.') : '-' }}
+                                    </td>
+                                </tr>
+
+                                <tr>
+                                    <td style="font-weight:bold;width:160px;padding:4px 0;vertical-align:top;">
+                                        Vendor Rekomendasi CCP</td>
+                                    <td style="padding:4px 0 4px 16px;vertical-align:top;">:
+                                        {{ $HargaRekom->getNamaVendor->Nama ?? '-' }}</td>
+                                </tr>
+
 
 
                             </table>

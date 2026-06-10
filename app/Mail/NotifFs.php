@@ -28,12 +28,16 @@ class NotifFs extends Mailable
 
     public function build()
     {
+        $HargaRekom = 0;
+        $HargaRekom = $this->Pengajuan->getRekomendasi[0]->getRekomedasiDetail()->where('Rekomendasi', '1')->first();
+        // dd($HargaRekom->getNamaVendor);
         $email = $this
-            ->subject('Persetujuan FS - ' . $this->data222->getPerusahaan->NamaLengkap . ' - ' . $this->data222->getBarang->Nama)
+            ->subject('FS - ' . $this->data222->getPerusahaan->NamaLengkap . ' - ' . $this->data222->getBarang->Nama . ' - ' . $this->Pengajuan->getPermintaan->getDetail[0]->RencanaPenempatan ?? '-')
             ->view('emails.notifikasi-pengajuan-fs')
             ->with([
                 'penilai' => $this->penilai,
                 'Pengajuan' => $this->Pengajuan,
+                'HargaRekom' => $HargaRekom,
             ]);
 
         // belum pasti

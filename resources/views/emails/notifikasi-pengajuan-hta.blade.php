@@ -17,7 +17,7 @@
                             {{-- <img src="https://id.wikipedia.org/wiki/Berkas:RS_Awal_Bros_merah.png" width="104"
                                 alt="Approval Icon"> --}}
                             <h2 style="color:#fff;margin:0;font-weight:bold;font-size:2rem;letter-spacing:1px;">
-                                Persetujuan Penilaian HTA / GPA</h2>
+                                Persetujuan {{ $form ?? 'HTA / GPA' }}</h2>
                         </td>
                     </tr>
                     <tr>
@@ -27,7 +27,8 @@
                             </p>
                             <p style="font-size:15px;line-height:1.7;margin:0 0 18px 0;">
                                 Dengan hormat,<br>
-                                Bersama email ini, kami informasikan bahwa proses penilaian <b>HTA / GPA</b> telah
+                                Bersama email ini, kami informasikan bahwa proses penilaian
+                                <b>{{ $form ?? 'HTA / GPA' }}</b> telah
                                 selesai dan membutuhkan persetujuan lebih lanjut dari Bapak/Ibu sebagai penilai terkait.
                             </p>
                             <p style="font-size:15px;line-height:1.6;margin:0 0 18px 0;">

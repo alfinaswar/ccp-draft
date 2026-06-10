@@ -264,7 +264,7 @@ Route::group(['middleware' => ['auth']], function () {
         Route::POST('/update-rekomendasi', [RekomendasiController::class, 'UpdateRekomendasi'])->name('rekomendasi.update-rekomendasi');
         Route::post('/update-tanggal-presentasi/{id}', [RekomendasiController::class, 'updateTanggalPresentasi'])->name('rekomendasi.update-tanggal-presentasi');
         Route::get('/batalkan/{id}', [RekomendasiController::class, 'batalkan'])->name('rekomendasi.batalkan');
-
+        Route::get('/hta/{idPengajuan}/{idPengajuanItem}', [RekomendasiController::class, 'Hta'])->name('rekomendasi.showHta');
     });
     Route::prefix('usulan-investasi')->group(function () {
         Route::get('/', [UsulanInvestasiController::class, 'index'])->name('usulan-investasi.index');
