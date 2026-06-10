@@ -60,17 +60,17 @@ class RekomendasiController extends Controller
                 ->when(
                     $request->tanggalPresentasi,
                     fn($q) =>
-                    $q->whereDate('TanggalPresentasi', $request->tanggalPresentasi)
+                        $q->whereDate('TanggalPresentasi', $request->tanggalPresentasi)
                 )
                 ->when(
                     $request->perusahaan,
                     fn($q) =>
-                    $q->where('KodePerusahaan', $request->perusahaan)
+                        $q->where('KodePerusahaan', $request->perusahaan)
                 )
                 ->when(
                     $request->status,
                     fn($q) =>
-                    $q->where('Status', $request->status),
+                        $q->where('Status', $request->status),
                     function ($q) use ($hiddenStatuses) {
                         // Kecualikan status-status yang dimaksud jika TIDAK difilter
                         $q->whereNotIn('Status', $hiddenStatuses);
@@ -654,10 +654,13 @@ class RekomendasiController extends Controller
             $rekomendasi->save();
         }
         $pengajuan = PengajuanPembelian::find($id);
+        // dd($rekomendasi);
         if ($pengajuan) {
             $pengajuan->Status = 'Selesai Review';
             $pengajuan->save();
         }
+        $this->savePdfToStorage($rekomendasi->IdPengajuan, $rekomendasi->PengajuanItemId);
+
         $kodePengajuan = $pengajuan ? ($pengajuan->KodePengajuan ?? $pengajuan->Nomor ?? $pengajuan->id) : null;
         AktivitasPengajuan::create([
             'KodePengajuan' => $kodePengajuan,
@@ -2311,5 +2314,150 @@ class RekomendasiController extends Controller
         $filename = 'laporan-rekomendasi' . $tanggalLabel . $namaAlatLabel . '.xlsx';
 
         return Excel::download(new RekomendasiExport($filters), $filename);
+    }
+
+    public function savePdfToStorage($idPengajuan, $idPengajuanItem)
+    {
+        // $idPengajuan = decrypt($idPengajuan);
+        // $idPengajuanItem = decrypt($idPengajuanItem);
+
+        $rekomendasi = Rekomendasi::with(
+            'getRekomedasiDetail.getPerusahaan',
+            'getRekomedasiDetail.getBarang',
+            'getRekomedasiDetail.getNegara',
+            'getUserNego',
+            'getDisetujuiOleh',
+            'getPerusahaan',
+            'getPengajuan.getVendor.getVendorDetail'
+        )
+            ->where('PengajuanItemId', $idPengajuanItem)
+            ->whereNotNull('DisetujuiOleh')
+            ->first();
+
+        if (is_null($rekomendasi)) {
+            return null;  // Atau throw exception jika ingin error
+        }
+
+        $jenis = PengajuanPembelian::find($rekomendasi->IdPengajuan);
+
+        // Generate QR Codes
+        if ($rekomendasi->UserNego !== null) {
+            $qrCode = QrCode::create($rekomendasi->id)
+                ->setSize(300)
+                ->setMargin(10);
+            $writer = new PngWriter();
+            $result = $writer->write($qrCode);
+            $rekomendasi->qrCodeNego = base64_encode($result->getString());
+        }
+
+        if ($rekomendasi->DisetujuiOleh !== null) {
+            $qrCode = QrCode::create($rekomendasi->id ?? '')
+                ->setSize(300)
+                ->setMargin(10);
+            $writer = new PngWriter();
+            $result = $writer->write($qrCode);
+            $rekomendasi->qrCodeApprove = base64_encode($result->getString());
+        }
+
+        // Tentukan path penyimpanan: simpan ke rekap-file/pengajuan_{idPengajuan}/nama_file
+        $pdfFileName = 'rekomendasi_' . $idPengajuan . '.pdf';
+        $dirPath = 'public/rekap-file/pengajuan-' . $idPengajuan;
+        $storagePath = $dirPath . '/' . $pdfFileName;
+        $fullDirPath = storage_path('app/' . $dirPath);
+
+        // Pastikan direktori ada
+        if (!file_exists($fullDirPath)) {
+            mkdir($fullDirPath, 0777, true);
+        }
+
+        // ==========================================
+        // JENIS == 1: SIMPAN PDF REVIEW SAJA
+        // ==========================================
+        if ($jenis->Jenis == 1) {
+            $pdf = Pdf::loadView('rekomendasi-pembelian.cetak-review', [
+                'rekomendasi' => $rekomendasi,
+            ]);
+            $pdf->setOptions([
+                'isHtml5ParserEnabled' => true,
+                'isRemoteEnabled' => true,
+            ]);
+
+            // Simpan PDF ke storage
+            Storage::put($storagePath, $pdf->output());
+
+            // Return path publik
+            return 'storage/rekap-file/pengajuan_' . $idPengajuan . '/' . $pdfFileName;
+        }
+        // ==========================================
+        // JENIS != 1: SIMPAN PDF + MERGE DENGAN LAMPIRAN
+        // ==========================================
+        else {
+            $pdf = Pdf::loadView('rekomendasi-pembelian.cetak-review-umum', [
+                'rekomendasi' => $rekomendasi,
+            ]);
+            $pdf->setOptions([
+                'isHtml5ParserEnabled' => true,
+                'isRemoteEnabled' => true,
+            ]);
+
+            // Cek apakah ada file lampiran
+            $hasAttachment = !empty($rekomendasi->File) &&
+                Storage::disk('public')->exists('rekomendasi_file/' . $rekomendasi->File);
+
+            // Jika tidak ada lampiran, simpan PDF saja
+            if (!$hasAttachment) {
+                Storage::put($storagePath, $pdf->output());
+                return 'storage/rekap-file/pengajuan_' . $idPengajuan . '/' . $pdfFileName;
+            }
+
+            // Path file lampiran
+            $storedFilePath = Storage::disk('public')->path('rekomendasi_file/' . $rekomendasi->File);
+            if (!file_exists($storedFilePath)) {
+                Storage::put($storagePath, $pdf->output());
+                return 'storage/rekap-file/pengajuan_' . $idPengajuan . '/' . $pdfFileName;
+            }
+
+            // ==========================================
+            // GABUNGKAN PDF REVIEW + LAMPIRAN
+            // ==========================================
+            // Simpan PDF review sementara
+            $generatedFullPath = $fullDirPath . '/temp_' . time() . '_' . uniqid() . '.pdf';
+            $pdf->save($generatedFullPath);
+
+            // Merge PDFs menggunakan FPDI
+            $fpdi = new \setasign\Fpdi\Tcpdf\Fpdi();
+
+            // 1. Tambahkan halaman dari PDF review
+            $pageCount = $fpdi->setSourceFile($generatedFullPath);
+            for ($i = 1; $i <= $pageCount; $i++) {
+                $template = $fpdi->importPage($i);
+                $size = $fpdi->getTemplateSize($template);
+                $fpdi->AddPage($size['orientation'], [$size['width'], $size['height']]);
+                $fpdi->useTemplate($template);
+            }
+
+            // 2. Tambahkan halaman dari file lampiran
+            $attachCount = $fpdi->setSourceFile($storedFilePath);
+            for ($i = 1; $i <= $attachCount; $i++) {
+                $template = $fpdi->importPage($i);
+                $size = $fpdi->getTemplateSize($template);
+                $fpdi->AddPage($size['orientation'], [$size['width'], $size['height']]);
+                $fpdi->useTemplate($template);
+            }
+
+            // 3. Output hasil merge ke buffer (hindari error path TCPDF)
+            $mergedContent = $fpdi->Output('', 'S');
+
+            // 4. Simpan hasil merge ke storage
+            Storage::put($storagePath, $mergedContent);
+
+            // 5. Hapus file temporary
+            if (file_exists($generatedFullPath)) {
+                unlink($generatedFullPath);
+            }
+
+            // Return path publik
+            return 'storage/rekap-file/pengajuan_' . $idPengajuan . '/' . $pdfFileName;
+        }
     }
 }

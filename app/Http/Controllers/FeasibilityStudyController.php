@@ -12,8 +12,8 @@ use App\Models\MasterForm;
 use App\Models\PengajuanItem;
 use App\Models\PengajuanPembelian;
 use Carbon\Carbon;
-use Endroid\QrCode\QrCode;
 use Endroid\QrCode\Writer\PngWriter;
+use Endroid\QrCode\QrCode;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
@@ -48,9 +48,9 @@ class FeasibilityStudyController extends Controller
         $barang = MasterBarang::where('id', $data->IdBarang)->first();
         return view('feasibility-study.create', compact('data', 'idPengajuan', 'idPengajuanItem', 'barang'));
     }
+
     public function edit($idPengajuan, $idPengajuanItem)
     {
-
         $fs = FeasibilityStudy::with('getFsDetail', 'getBarang')
             ->where('IdPengajuan', $idPengajuan)
             ->where('PengajuanItemId', $idPengajuanItem)
@@ -69,6 +69,7 @@ class FeasibilityStudyController extends Controller
         $barang = MasterBarang::where('id', $fs->IdBarang)->first();
         return view('feasibility-study.edit', compact('fs', 'idPengajuan', 'idPengajuanItem', 'barang', 'approval'));
     }
+
     public function kirimUlangNotifikasi($id)
     {
         // dd($id);
@@ -110,7 +111,6 @@ class FeasibilityStudyController extends Controller
             } catch (\Exception $e) {
                 $penilai->StatusEmail = 'Gagal Kirim';
                 $penilai->save();
-
             }
         }
         if (function_exists('activity')) {
@@ -122,6 +122,7 @@ class FeasibilityStudyController extends Controller
         }
         return redirect()->back()->with('success', 'Notifikasi berhasil dikirim ulang.');
     }
+
     /**
      * Store a newly created resource in storage.
      */
@@ -249,7 +250,7 @@ class FeasibilityStudyController extends Controller
 
             $status = $isAutoApprove ? 'Approved' : 'Pending';
             $tanggalApprove = $isAutoApprove ? now() : null;
-            $ttd = $isAutoApprove ? (auth()->user()->ttd ?? null) : null; // opsional, pakai field ttd dari user jika ada
+            $ttd = $isAutoApprove ? (auth()->user()->ttd ?? null) : null;  // opsional, pakai field ttd dari user jika ada
 
             DokumenApproval::updateOrCreate(
                 [
@@ -340,7 +341,9 @@ class FeasibilityStudyController extends Controller
         if (empty($emailsToSend)) {
             foreach ($approval2 as $penilai) {
                 if (
-                    empty($penilai->Email) || $penilai->Email == '-' || $penilai->UserId == 2 ||
+                    empty($penilai->Email) ||
+                    $penilai->Email == '-' ||
+                    $penilai->UserId == 2 ||
                     $penilai->Status == 'Approved'
                 ) {
                     continue;
@@ -538,7 +541,6 @@ class FeasibilityStudyController extends Controller
 
                     $nextApproval->StatusEmail = 'Terkirim';
                     $nextApproval->save();
-
                 } catch (\Exception $e) {
                     $nextApproval->StatusEmail = 'Gagal Kirim';
                     $nextApproval->save();
@@ -566,9 +568,7 @@ class FeasibilityStudyController extends Controller
         ]);
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
+    /** Show the form for editing the specified resource. */
 
     /**
      * Update the specified resource in storage.
@@ -650,6 +650,7 @@ class FeasibilityStudyController extends Controller
     {
         //
     }
+
     // private function savePdfToStorage($idPengajuan, $idPengajuanItem)
     // {
     //     $data = FeasibilityStudy::with('getFsDetail', 'getBarang')
@@ -703,7 +704,6 @@ class FeasibilityStudyController extends Controller
     //     Storage::put($storagePath, $pdf->output());
     //     return 'storage/rekap-file/' . $idPengajuan . '/' . $pdfFileName;
 
-
     // }
 
     private function savePdfToStorage($idPengajuan, $idPengajuanItem)
@@ -711,11 +711,11 @@ class FeasibilityStudyController extends Controller
         // ==========================================
         // 1. AMBIL DATA & GENERATE PDF FS
         // ==========================================
-        $data = FeasibilityStudy::with('getFsDetail', 'getBarang')
+        $data = FeasibilityStudy::with('getFsDetail', 'getBarang', 'getPengajuan')
             ->where('IdPengajuan', $idPengajuan)
             ->where('PengajuanItemId', $idPengajuanItem)
             ->firstOrFail();
-
+        // dd($data->getPengajuan);
         $approval = DokumenApproval::with('getUser', 'getJabatan', 'getDepartemen')
             ->where('JenisFormId', $data->JenisForm)
             ->where('DokumenId', $data->id)
@@ -775,7 +775,8 @@ class FeasibilityStudyController extends Controller
         }
 
         // B. PDF Permintaan
-        $idPermintaan = $data->IdPermintaan ?? $data->getPengajuan->IdPermintaan ?? null;
+        $idPermintaan = $data->getPengajuan->IdPermintaan ?? null;
+        // dd($idPermintaan);
         if ($idPermintaan) {
             $permintaanPath = storage_path('app/public/rekap-file/permintaan/permintaan_' . $idPermintaan . '.pdf');
             if (file_exists($permintaanPath)) {

@@ -33,8 +33,14 @@ class FeasibilityStudy extends Model
     {
         return $this->hasOne(MasterBarang::class, 'id', 'NamaBarang');
     }
+
     public function getPerusahaan()
     {
         return $this->hasOne(MasterPerusahaan::class, 'Kode', 'KodePerusahaan');
+    }
+
+    public function getPengajuan()
+    {
+        return $this->hasOne(PengajuanPembelian::class, 'id', 'IdPengajuan');
     }
 }

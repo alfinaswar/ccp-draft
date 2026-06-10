@@ -2,7 +2,6 @@
 
 namespace App\Mail;
 
-use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
@@ -30,9 +29,16 @@ class NotifFs extends Mailable
     {
         $HargaRekom = 0;
         $HargaRekom = $this->Pengajuan->getRekomendasi[0]->getRekomedasiDetail()->where('Rekomendasi', '1')->first();
-        // dd($HargaRekom->getNamaVendor);
+
         $email = $this
-            ->subject('FS - ' . $this->data222->getPerusahaan->NamaLengkap . ' - ' . $this->data222->getBarang->Nama . ' - ' . $this->Pengajuan->getPermintaan->getDetail[0]->RencanaPenempatan ?? '-')
+            ->subject(
+                'FS - '
+                . ($this->data222->getPerusahaan->NamaLengkap ?? '-')
+                . ' - '
+                . ($this->data222->getBarang->Nama ?? '-')
+                . ' - '
+                . ($this->Pengajuan->getPermintaan->getDetail[0]->RencanaPenempatan ?? '-')
+            )
             ->view('emails.notifikasi-pengajuan-fs')
             ->with([
                 'penilai' => $this->penilai,
@@ -40,21 +46,16 @@ class NotifFs extends Mailable
                 'HargaRekom' => $HargaRekom,
             ]);
 
-        // belum pasti
-        // $pdf = Pdf::loadView('feasibility-study.lampiran-email', [
-        //     'data' => $this->data222,
-        //     'approval' => $this->penilai,
-        //     'approval2' => $this->approval2,
-        //     'penilai' => $this->penilai,
-        // ])
-        //     ->setPaper('A4', 'portrait')
-        //     ->setOptions([
-        //         'isRemoteEnabled' => true,
-        //         'chroot' => public_path(),
-        //     ]);
-
-        // $email->attachData($pdf->output(), 'Form Feasibility Study.pdf');
-
+        // Lampirkan file pdf hasil FS (combine)
+        $idPengajuan = $this->data222->IdPengajuan ?? $this->Pengajuan->id;
+        // dd($idPengajuan);
+        $pdfPath = storage_path('app/public/rekap-file/pengajuan-' . $idPengajuan . '/fs-' . $idPengajuan . '.pdf');
+        if (file_exists($pdfPath)) {
+            $email->attach($pdfPath, [
+                'as' => 'Form Feasibility Study - Pengajuan ' . $idPengajuan . '.pdf',
+                'mime' => 'application/pdf',
+            ]);
+        }
 
         return $email;
     }

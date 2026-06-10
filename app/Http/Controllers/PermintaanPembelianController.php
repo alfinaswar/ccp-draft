@@ -17,13 +17,13 @@ use App\Models\PermintaanPembelianDetail;
 use App\Models\User;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
+use Endroid\QrCode\Writer\PngWriter;
+use Endroid\QrCode\QrCode;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Str;
-use Endroid\QrCode\QrCode;
-use Endroid\QrCode\Writer\PngWriter;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Yajra\DataTables\Facades\DataTables;
 
 class PermintaanPembelianController extends Controller
@@ -45,7 +45,8 @@ class PermintaanPembelianController extends Controller
                     'getDepartemen',
                     'getDiajukanOleh',
                     'getNotifApproval' => function ($q) use ($userId) {
-                        $q->where('UserId', $userId)
+                        $q
+                            ->where('UserId', $userId)
                             ->where('Status', 'Pending');
                     }
                 ])
@@ -67,7 +68,8 @@ class PermintaanPembelianController extends Controller
                     'getDepartemen',
                     'getDiajukanOleh',
                     'getNotifApproval' => function ($q) use ($userId) {
-                        $q->where('UserId', $userId)
+                        $q
+                            ->where('UserId', $userId)
                             ->where('Status', 'Pending');
                     }
                 ])
@@ -85,7 +87,8 @@ class PermintaanPembelianController extends Controller
                     'getDepartemen',
                     'getDiajukanOleh',
                     'getNotifApproval' => function ($q) use ($userId) {
-                        $q->where('UserId', $userId)
+                        $q
+                            ->where('UserId', $userId)
                             ->where('Status', 'Pending');
                     }
                 ])
@@ -104,7 +107,8 @@ class PermintaanPembelianController extends Controller
                     'getDepartemen',
                     'getDiajukanOleh',
                     'getNotifApproval' => function ($q) use ($userId) {
-                        $q->where('UserId', $userId)
+                        $q
+                            ->where('UserId', $userId)
                             ->where('Status', 'Pending');
                     }
                 ])
@@ -165,7 +169,6 @@ class PermintaanPembelianController extends Controller
                         </a>';
                     }
 
-
                     return $link . $button;
                 })
                 ->editColumn('KodePerusahaan', function ($row) {
@@ -178,12 +181,9 @@ class PermintaanPembelianController extends Controller
                     }
                     return '-';
                 })
-
-
                 ->addColumn('action', function ($row) {
                     $encryptedId = encrypt($row->id);
                     $actions = '';
-
 
                     if (auth()->user()->can('permintaan-hapus')) {
                         $actions .= '<button class="btn btn-sm btn-danger btn-delete me-1" data-id="' . $encryptedId . '">
@@ -245,6 +245,7 @@ class PermintaanPembelianController extends Controller
      */
     public function store(Request $request)
     {
+        // dd($request->all());
         $request->validate([
             'Tanggal' => 'required|date',
             'Departemen' => 'required',
@@ -290,7 +291,7 @@ class PermintaanPembelianController extends Controller
                 'IdPermintaan' => $permintaan->id,
                 'NamaBarang' => $item,
                 'Jumlah' => $request->Jumlah[$key],
-                'Satuan' => $request->Jumlah[$key],
+                'Satuan' => $request->Satuan[$key],
                 'RencanaPenempatan' => $request->RencanaPenempatan[$key],
                 'Keterangan' => $request->Keterangan[$key],
                 'KodePerusahaan' => auth()->user()->kodeperusahaan,
@@ -434,7 +435,6 @@ class PermintaanPembelianController extends Controller
             if ($permintaan) {
                 $this->savePdfToStorage(encrypt($permintaan->id));
             }
-
         }
 
         // Log aktivitas user saat approval via email
@@ -453,6 +453,7 @@ class PermintaanPembelianController extends Controller
             'message' => 'Terima kasih, persetujuan Anda berhasil dicatat.'
         ]);
     }
+
     public function approve(Request $request)
     {
         $userId = $request->input('UserId');
@@ -574,6 +575,7 @@ class PermintaanPembelianController extends Controller
         $user = User::with('getJabatan', 'getDepartemen')->get();
         return view('form.permintaan-pembelian.edit', compact('barang', 'departemen', 'satuan', 'data', 'jenisPengajuan', 'approval', 'user', 'jabatan'));
     }
+
     public function kirimUlangNotifikasi($id)
     {
         $permintaan = PermintaanPembelian::with('getDetail.getBarang')->find($id);
@@ -602,7 +604,6 @@ class PermintaanPembelianController extends Controller
             } catch (\Exception $e) {
                 $app->StatusEmail = 'Gagal Kirim';
                 $app->save();
-
             }
         }
         if (function_exists('activity')) {
@@ -882,6 +883,7 @@ class PermintaanPembelianController extends Controller
 
         return response()->json(['status' => 200, 'message' => 'Permintaan pembelian berhasil dihapus.']);
     }
+
     private function savePdfToStorage($id)
     {
         $decryptedId = decrypt($id);
@@ -920,8 +922,8 @@ class PermintaanPembelianController extends Controller
 
         $output = $pdf->output();
 
-        $pdfFileName = "permintaan_" . $decryptedId . ".pdf";
-        $storagePath = "public/rekap-file/permintaan/" . $pdfFileName;
+        $pdfFileName = 'permintaan_' . $decryptedId . '.pdf';
+        $storagePath = 'public/rekap-file/permintaan/' . $pdfFileName;
 
         // pastikan folder ada
         $dirPath = storage_path('app/public/rekap-file/permintaan/');

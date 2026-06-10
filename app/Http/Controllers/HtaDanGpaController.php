@@ -15,7 +15,6 @@ use App\Models\PengajuanPembelian;
 use App\Models\PenilaiHtaGpa;
 use App\Models\PermintaanPembelian;
 use App\Models\User;
-use PDF;
 use Carbon\Carbon;
 use Endroid\QrCode\Writer\PngWriter;
 use Endroid\QrCode\QrCode;
@@ -24,6 +23,7 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use PDF;
 
 class HtaDanGpaController extends Controller
 {
@@ -187,7 +187,7 @@ class HtaDanGpaController extends Controller
 
         $pengajuan = PengajuanPembelian::find($header->IdPengajuan);
         $kodePengajuan = $pengajuan ? $pengajuan->KodePengajuan : ($header->Nomor ?? $header->id);
-
+        $this->savePdfToStorage($pengajuan->id, $pengajuan->PengajuanItemId);
         AktivitasPengajuan::create([
             'KodePengajuan' => $kodePengajuan,
             'Jenis' => 'HTA-GPA',
@@ -452,7 +452,7 @@ class HtaDanGpaController extends Controller
             }
         ])->find($idPengajuan);
 
-        //PERMINTAAN
+        // PERMINTAAN
         $permintaan = PermintaanPembelian::with([
             'getDetail.getBarang.getMerk',
             'getDiajukanOleh',
@@ -570,7 +570,6 @@ class HtaDanGpaController extends Controller
             } else {
                 return view('hta-gpa.show', compact('data', 'parameter', 'approval'));
             }
-
         }
     }
 
@@ -716,14 +715,12 @@ class HtaDanGpaController extends Controller
                         $penilai,
                         $approval2,
                         $fileLampiran,
-
                     ));
                 $penilai->StatusEmail = 'Terkirim';
                 $penilai->save();
 
                 $cariHTA->Status = 'Final';
                 $cariHTA->save();
-
             } catch (\Exception $e) {
                 // dd($e);
                 $penilai->StatusEmail = 'Gagal Kirim';
@@ -833,9 +830,7 @@ class HtaDanGpaController extends Controller
                 $hta->Status = 'Telah Disetujui';
                 $hta->save();
             }
-
         }
-
 
         return view('emails.setelah-approval', compact('penilai'))->with([
             'message' => 'Terima kasih, persetujuan Anda berhasil dicatat.'
@@ -859,6 +854,7 @@ class HtaDanGpaController extends Controller
             'message' => 'Penilaian telah ditolak.'
         ]);
     }
+
     public function sebelumApprove($token)
     {
         $penilai = DokumenApproval::with(['getDokumenHTAGPA.getPengajuan'])
@@ -873,6 +869,7 @@ class HtaDanGpaController extends Controller
 
         return view('emails.sebelum-approve', compact('penilai'));
     }
+
     public function submitJustifikasi(Request $request, $token)
     {
         $penilai = DokumenApproval::with('getDokumenHTAGPA')->where('ApprovalToken', $token)->firstOrFail();
@@ -900,7 +897,7 @@ class HtaDanGpaController extends Controller
                 $kodePengajuan = $pengajuan ? $pengajuan->KodePengajuan : ($hta->Nomor ?? $hta->id);
             }
         }
-        //PERMINTAAN
+        // PERMINTAAN
         $permintaan = PermintaanPembelian::with([
             'getDetail.getBarang.getMerk',
             'getDiajukanOleh',
@@ -992,6 +989,7 @@ class HtaDanGpaController extends Controller
             'message' => 'Terima kasih, persetujuan Anda berhasil dicatat.'
         ]);
     }
+
     /**
      * Simpan PDF ke dalam storage Laravel pada folder 'public/rekap-file/pengajuan'
      * dengan nama file <ID>.pdf untuk HTA/GPA.
@@ -1062,7 +1060,5 @@ class HtaDanGpaController extends Controller
         Storage::put($storagePath, $output);
 
         return 'storage/rekap-file/' . $idPengajuan . '/' . $idPengajuanItem . '/' . $pdfFileName;
-
-
     }
 }
