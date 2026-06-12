@@ -20,6 +20,7 @@ use Endroid\QrCode\Writer\PngWriter;
 use Endroid\QrCode\QrCode;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -942,6 +943,7 @@ class HtaDanGpaController extends Controller
             ->first();
 
         if ($nextApproval) {
+            $this->savePdfToStorage($pengajuan->id, $pengajuan->PengajuanItemId);
             if (!empty($nextApproval->Email) && $nextApproval->UserId != 5) {
                 $parameter = MasterParameter::get();
                 $approval2 = DokumenApproval::with('getUser', 'getJabatan', 'getDepartemen')
@@ -982,21 +984,15 @@ class HtaDanGpaController extends Controller
                 $hta->Status = 'Final';
                 $hta->save();
             }
-            $this->savePdfToStorage($pengajuan->id, $pengajuan->PengajuanItemId);
         }
 
+        $this->savePdfToStorage($pengajuan->id, $pengajuan->PengajuanItemId);
         return view('emails.setelah-approval', compact('penilai'))->with([
             'message' => 'Terima kasih, persetujuan Anda berhasil dicatat.'
         ]);
     }
-
-    /**
-     * Simpan PDF ke dalam storage Laravel pada folder 'public/rekap-file/pengajuan'
-     * dengan nama file <ID>.pdf untuk HTA/GPA.
-     */
     private function savePdfToStorage($idPengajuan, $idPengajuanItem)
     {
-        // dd($idPengajuan);
         $data = PengajuanPembelian::with([
             'getVendor.getVendorDetail',
             'getHtaGpa',
@@ -1014,7 +1010,11 @@ class HtaDanGpaController extends Controller
                 $query->where('id', $idPengajuanItem)->with('getBarang.getMerk');
             }
         ])->find($idPengajuan);
-        // dd($data->getHtaGpa);
+
+        if (!$data || !$data->getHtaGpa) {
+            return null;
+        }
+
         $approval2 = DokumenApproval::with('getUser', 'getJabatan', 'getDepartemen')
             ->where('JenisFormId', $data->getHtaGpa->JenisForm)
             ->where('DokumenId', $data->getHtaGpa->id)
@@ -1036,29 +1036,110 @@ class HtaDanGpaController extends Controller
 
         $parameter = MasterParameter::get();
 
+        // Generate PDF HTA-GPA
         $pdf = \PDF::loadView('hta-gpa.cetak-hta-gpa', compact('data', 'parameter', 'approval2'))
             ->setPaper('a4', 'landscape');
-        // dd($pdf);
+
         $pdf->setOptions([
             'isHtml5ParserEnabled' => true,
             'isRemoteEnabled' => true,
         ]);
 
-        // ==========================================
-        // LOGIKA PENYIMPANAN KE STORAGE (REVISI)
-        // ==========================================
+        $htaGpaOutput = $pdf->output();
 
-        $output = $pdf->output();
-        $pdfFileName = 'hta-gpa-' . $idPengajuan . '.pdf';
+        // ==========================================
+        // PERSIAPAN PATH
+        // ==========================================
         $dirPath = 'public/rekap-file/pengajuan-' . $idPengajuan;
-        $storagePath = $dirPath . '/' . $pdfFileName;
-        // Pastikan direktori ada
         $fullDirPath = storage_path('app/' . $dirPath);
+
+        // Pastikan direktori ada
         if (!file_exists($fullDirPath)) {
             mkdir($fullDirPath, 0777, true);
         }
-        Storage::put($storagePath, $output);
 
-        return 'storage/rekap-file/' . $idPengajuan . '/' . $idPengajuanItem . '/' . $pdfFileName;
+        // Simpan PDF HTA-GPA sementara
+        $htaGpaTempPath = $fullDirPath . '/hta-gpa-temp-' . $idPengajuan . '.pdf';
+        file_put_contents($htaGpaTempPath, $htaGpaOutput);
+
+
+        $idPermintaan = $data->IdPermintaan ?? null;
+        $permintaanFullPath = null;
+
+        if ($idPermintaan) {
+            $permintaanFileName = 'permintaan_' . $idPermintaan . '.pdf';
+            $permintaanFullPath = storage_path('app/public/rekap-file/permintaan/' . $permintaanFileName);
+
+            if (!file_exists($permintaanFullPath)) {
+                $permintaanFullPath = null;
+            }
+        }
+
+        // ==========================================
+        // GABUNGKAN PDF (JIKA PERMINTAAN ADA)
+        // ==========================================
+        if ($permintaanFullPath) {
+            try {
+                $combinedPdf = new \setasign\Fpdi\Tcpdf\Fpdi();
+
+                // A. Tambahkan halaman dari PDF Permintaan (halaman awal)
+                $pageCount = $combinedPdf->setSourceFile($permintaanFullPath);
+                for ($i = 1; $i <= $pageCount; $i++) {
+                    $tplIdx = $combinedPdf->importPage($i);
+                    $size = $combinedPdf->getTemplateSize($tplIdx);
+                    $combinedPdf->AddPage($size['orientation'], [$size['width'], $size['height']]);
+                    $combinedPdf->useTemplate($tplIdx);
+                }
+
+                // B. Tambahkan halaman dari PDF HTA-GPA (halaman berikutnya)
+                $pageCount = $combinedPdf->setSourceFile($htaGpaTempPath);
+                for ($i = 1; $i <= $pageCount; $i++) {
+                    $tplIdx = $combinedPdf->importPage($i);
+                    $size = $combinedPdf->getTemplateSize($tplIdx);
+                    $combinedPdf->AddPage($size['orientation'], [$size['width'], $size['height']]);
+                    $combinedPdf->useTemplate($tplIdx);
+                }
+
+                // Output ke buffer (hindari error path TCPDF di Windows)
+                $combinedContent = $combinedPdf->Output('', 'S');
+
+                // Simpan hasil gabungan
+                $pdfFileName = 'hta-gpa-' . $idPengajuan . '.pdf';
+                $storagePath = $dirPath . '/' . $pdfFileName;
+                Storage::put($storagePath, $combinedContent);
+
+                // Hapus file temporary
+                if (file_exists($htaGpaTempPath)) {
+                    unlink($htaGpaTempPath);
+                }
+
+                return 'storage/rekap-file/pengajuan-' . $idPengajuan . '/' . $pdfFileName;
+
+            } catch (\Exception $e) {
+                Log::error('Error combining PDF: ' . $e->getMessage());
+
+                // Fallback: jika gagal combine, simpan PDF HTA-GPA saja
+                $pdfFileName = 'hta-gpa-' . $idPengajuan . '.pdf';
+                $storagePath = $dirPath . '/' . $pdfFileName;
+                Storage::put($storagePath, $htaGpaOutput);
+
+                if (file_exists($htaGpaTempPath)) {
+                    unlink($htaGpaTempPath);
+                }
+
+                return 'storage/rekap-file/pengajuan-' . $idPengajuan . '/' . $pdfFileName;
+            }
+        } else {
+            // Jika PDF Permintaan tidak ada, simpan PDF HTA-GPA saja
+            $pdfFileName = 'hta-gpa-' . $idPengajuan . '.pdf';
+            $storagePath = $dirPath . '/' . $pdfFileName;
+            Storage::put($storagePath, $htaGpaOutput);
+
+            if (file_exists($htaGpaTempPath)) {
+                unlink($htaGpaTempPath);
+            }
+
+            return 'storage/rekap-file/pengajuan-' . $idPengajuan . '/' . $pdfFileName;
+        }
     }
 }

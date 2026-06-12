@@ -23,7 +23,6 @@ class NotifikasiPermintaanPembelian extends Mailable
 
     public function envelope(): Envelope
     {
-        // dd($this->permintaan->getDetail[0]->getBarang->Nama);
         return new Envelope(
             subject: "Permintaan Pembelian - {$this->permintaan->getPerusahaan->NamaLengkap} - {$this->permintaan->getDetail[0]->getBarang->Nama}"
         );
@@ -31,7 +30,6 @@ class NotifikasiPermintaanPembelian extends Mailable
 
     public function content(): Content
     {
-        // dd($this->approval);
         return new Content(
             view: 'emails.notifikasi-permintaan-pembelian',
             with: [
@@ -43,6 +41,29 @@ class NotifikasiPermintaanPembelian extends Mailable
 
     public function attachments(): array
     {
-        return [];
+        // Lampirkan PDF permintaan pembelian jika file tersedia
+        $lampiran = [];
+
+        // Path file PDF sesuai logic pada PermintaanPembelianController@savePdfToStorage
+        $pdfFileName = 'permintaan_' . $this->permintaan->id . '.pdf';
+        $storagePath = storage_path('app/public/rekap-file/permintaan/' . $pdfFileName);
+
+        if (file_exists($storagePath)) {
+            $lampiran[] = [
+                'file' => $storagePath,      // Full path file
+                'options' => [
+                    'as' => $pdfFileName,   // Nama file attachment saat dikirim
+                    'mime' => 'application/pdf'
+                ]
+            ];
+        }
+
+        // Laravel expects the array of attachments as objects or string paths (for 10.x/9.x)
+        // So we transform our array for compatibility with Mailable::attach()
+        return array_map(function ($item) {
+            return \Illuminate\Mail\Mailables\Attachment::fromPath($item['file'])
+                ->as($item['options']['as'])
+                ->withMime($item['options']['mime']);
+        }, $lampiran);
     }
 }

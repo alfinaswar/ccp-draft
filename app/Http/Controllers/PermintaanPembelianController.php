@@ -712,7 +712,7 @@ class PermintaanPembelianController extends Controller
 
             $approval->update($updateData);
         }
-
+        $this->savePdfToStorage(encrypt($permintaan->id));
         // 2. Kirim email HANYA ke approver pertama yang masih berstatus 'Pending'
         $nextApprover = $approvalDocs->firstWhere('Status', 'Pending');
 
@@ -925,13 +925,15 @@ class PermintaanPembelianController extends Controller
         $pdfFileName = 'permintaan_' . $decryptedId . '.pdf';
         $storagePath = 'public/rekap-file/permintaan/' . $pdfFileName;
 
-        // pastikan folder ada
+        // Pastikan folder ada
         $dirPath = storage_path('app/public/rekap-file/permintaan/');
         if (!file_exists($dirPath)) {
             mkdir($dirPath, 0777, true);
         }
 
+        // Jika file sudah ada, selalu timpa dengan yang baru (Storage::put sudah menimpa)
         Storage::put($storagePath, $output);
+
         $publicUrl = 'storage/rekap-file/permintaan/' . $pdfFileName;
 
         return $publicUrl;

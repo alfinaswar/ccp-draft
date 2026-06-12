@@ -108,7 +108,7 @@
                                 <input type="text" name="pengajuan[perkiraan_utilitasi_bulanan]" id="perkiraan_utilisasi"
                                     class="form-control @error('pengajuan.perkiraan_utilitasi_bulanan') is-invalid @enderror"
                                     value="{{ old('pengajuan.perkiraan_utilitasi_bulanan', isset($permintaan->getPengajuanPembelian) ? $permintaan->getPengajuanPembelian->PerkiraanUtilitasiBulanan : '') }}"
-                                    placeholder="Contoh: 200 jam/bulan, 30 unit/bulan, dll">
+                                    placeholder="Contoh: 200 jam/bulan, 30 unit/bulan, dll" required>
                                 <small class="text-danger">Ketik "-" jika barang jasa / umum</small>
                                 @error('pengajuan.perkiraan_utilitasi_bulanan')
                                     <div class="text-danger mt-1">{{ $message }}</div>
@@ -154,16 +154,17 @@
                                     <div class="text-danger mt-1">{{ $message }}</div>
                                 @enderror
                             </div>
-                            <div class="col-md-2">
+                            <div class="col-md-2" style="display: none;">
                                 <label for="nominal_rkap" class="form-label"><strong>Nominal RKAP</strong></label>
                                 <input type="text" name="pengajuan[nominal_rkap]" id="nominal_rkap"
                                     class="form-control @error('pengajuan.nominal_rkap') is-invalid @enderror currency-input-global"
-                                    value="{{ old('pengajuan.nominal_rkap', isset($permintaan->getPengajuanPembelian) ? $permintaan->getPengajuanPembelian->NominalRkap : '') }}"
+                                    value="{{ old('pengajuan.nominal_rkap', isset($permintaan->getPengajuanPembelian) ? $permintaan->getPengajuanPembelian->NominalRkap : '0') }}"
                                     placeholder="Contoh: 1.000.000">
                                 @error('pengajuan.nominal_rkap')
                                     <div class="text-danger mt-1">{{ $message }}</div>
                                 @enderror
                             </div>
+
                         </div>
                         <div class="row">
                             <div class="col-xxl-12 col-xl-12">
