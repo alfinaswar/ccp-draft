@@ -288,14 +288,16 @@
                             </a>
                             @foreach ($approval as $item)
                                 @if (auth()->id() == ($item->UserId ?? null) && $item->Status != 'Approved' && !empty($item->ApprovalToken))
-                                    <a href="{{ route('htagpa.approve', $item->ApprovalToken) }}"
-                                        class="btn me-2 swal-confirm-btn"
+                                    <button type="button" class="btn btn-approve me-2"
                                         style="background-color: #28a745; color: #fff; border-color: #28a745;"
-                                        data-title="Konfirmasi"
-                                        data-text="Apakah Anda yakin ingin menyetujui sebagai {{ $item->getJabatan->Nama ?? $item->JenisUser }}?">
+                                        data-bs-toggle="modal" data-bs-target="#modalJustifikasi"
+                                        data-approval-token="{{ $item->ApprovalToken }}"
+                                        data-approval-route="{{ route('htagpa.submitJustifikasi', $item->ApprovalToken) }}"
+                                        data-jabatan="{{ $item->getJabatan->Nama ?? $item->JenisUser }}"
+                                        data-nama="{{ $item->Nama ?? 'Penilai' }}">
                                         <i class="fa fa-check"></i>
                                         Setujui
-                                    </a>
+                                    </button>
                                 @endif
                             @endforeach
 
@@ -321,6 +323,45 @@
                     </div>
                 </div>
 
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="modalJustifikasi" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-sm">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fa fa-check-circle me-2"></i>Konfirmasi Persetujuan
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                        aria-label="Close"></button>
+                </div>
+                <form id="formApprove" method="POST">
+                    @csrf
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label for="justifikasi" class="form-label fw-bold">
+                                Justifikasi Pembelian Alat <span class="text-danger">*</span>
+                            </label>
+                            <textarea class="form-control @error('justifikasi') is-invalid @enderror" id="justifikasi" name="justifikasi"
+                                rows="4" placeholder="Contoh: Spesifikasi alat sesuai kebutuhan, harga kompetitif, vendor terpercaya, dll."
+                                required></textarea>
+                            @error('justifikasi')
+                                <div class="invalid-feedback d-block">{{ $message }}</div>
+                            @enderror
+                            <small class="text-muted">Justifikasi akan tercatat dalam history persetujuan.</small>
+                        </div>
+                    </div>
+                    <div class="modal-footer border-0">
+                        <button type="button" class="btn btn-secondary btn-sm px-4" data-bs-dismiss="modal">
+                            <i class="fa fa-times me-1"></i>Batal
+                        </button>
+                        <button type="submit" class="btn btn-success btn-sm px-4">
+                            <i class="fa fa-paper-plane me-1"></i>Kirim Persetujuan
+                        </button>
+
+                    </div>
+                </form>
             </div>
         </div>
     </div>
@@ -373,5 +414,67 @@
                 }
             });
         }
+    </script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const modalJustifikasi = document.getElementById('modalJustifikasi');
+            const formApprove = document.getElementById('formApprove');
+            const inputJustifikasi = document.getElementById('justifikasi');
+            const modalJabatan = document.getElementById('modalJabatan');
+
+            // Saat modal dibuka, isi data dinamis dari tombol yang diklik
+            modalJustifikasi.addEventListener('show.bs.modal', function(event) {
+                const button = event.relatedTarget;
+
+                // Ambil data dari data-attributes
+                const token = button.getAttribute('data-approval-token');
+                const route = button.getAttribute('data-approval-route');
+                const jabatan = button.getAttribute('data-jabatan');
+
+                // Set action form & tampilkan info jabatan
+                formApprove.action = route;
+                modalJabatan.textContent = jabatan;
+
+                // Reset form & error saat modal dibuka
+                inputJustifikasi.value = '';
+                inputJustifikasi.classList.remove('is-invalid');
+                const existingFeedback = inputJustifikasi.nextElementSibling;
+                if (existingFeedback && existingFeedback.classList.contains('invalid-feedback')) {
+                    existingFeedback.remove();
+                }
+            });
+
+            // Validasi client-side sebelum submit
+            formApprove.addEventListener('submit', function(e) {
+                const justifikasi = inputJustifikasi.value.trim();
+
+                if (!justifikasi) {
+                    e.preventDefault();
+                    inputJustifikasi.classList.add('is-invalid');
+
+                    // Tambahkan pesan error jika belum ada
+                    if (!inputJustifikasi.nextElementSibling?.classList.contains('invalid-feedback')) {
+                        const errorDiv = document.createElement('div');
+                        errorDiv.className = 'invalid-feedback d-block';
+                        errorDiv.textContent = 'Justifikasi wajib diisi sebelum menyetujui';
+                        inputJustifikasi.parentNode.appendChild(errorDiv);
+                    }
+                    inputJustifikasi.focus();
+                    return false;
+                }
+                const submitBtn = this.querySelector('button[type="submit"]');
+                const originalText = submitBtn.innerHTML;
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<i class="fa fa-spinner fa-spin me-1"></i>Memproses...';
+
+            });
+
+            // Reset tombol saat modal ditutup
+            modalJustifikasi.addEventListener('hidden.bs.modal', function() {
+                const submitBtn = formApprove.querySelector('button[type="submit"]');
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fa fa-paper-plane me-1"></i>Kirim Persetujuan';
+            });
+        });
     </script>
 @endpush

@@ -873,8 +873,8 @@ class HtaDanGpaController extends Controller
 
     public function submitJustifikasi(Request $request, $token)
     {
-        $penilai = DokumenApproval::with('getDokumenHTAGPA')->where('ApprovalToken', $token)->firstOrFail();
-
+        $penilai = DokumenApproval::with('getDokumenHTAGPA')->where('ApprovalToken', $token)->first();
+        // dd($penilai);
         if ($penilai->Status !== 'Pending') {
             return redirect()->back()->with('error', 'Approval sudah diproses sebelumnya.');
         }
@@ -991,6 +991,7 @@ class HtaDanGpaController extends Controller
             'message' => 'Terima kasih, persetujuan Anda berhasil dicatat.'
         ]);
     }
+
     private function savePdfToStorage($idPengajuan, $idPengajuanItem)
     {
         $data = PengajuanPembelian::with([
@@ -1062,7 +1063,6 @@ class HtaDanGpaController extends Controller
         $htaGpaTempPath = $fullDirPath . '/hta-gpa-temp-' . $idPengajuan . '.pdf';
         file_put_contents($htaGpaTempPath, $htaGpaOutput);
 
-
         $idPermintaan = $data->IdPermintaan ?? null;
         $permintaanFullPath = null;
 
@@ -1114,7 +1114,6 @@ class HtaDanGpaController extends Controller
                 }
 
                 return 'storage/rekap-file/pengajuan-' . $idPengajuan . '/' . $pdfFileName;
-
             } catch (\Exception $e) {
                 Log::error('Error combining PDF: ' . $e->getMessage());
 

@@ -392,6 +392,8 @@ class UsulanInvestasiController extends Controller
         // $approval2 sudah berisi penilai, tidak perlu kirim email NotifFui di sini
 
         $pengajuan = PengajuanPembelian::find($idPengajuan);
+        // dd($pengajuan);
+        $this->savePdfToStorage($pengajuan->id, $pengajuan->id);
         $kodePengajuan = $pengajuan ? $pengajuan->KodePengajuan : null;
         AktivitasPengajuan::create([
             'KodePengajuan' => $kodePengajuan ?? null,
@@ -660,5 +662,151 @@ class UsulanInvestasiController extends Controller
     public function destroy(UsulanInvestasi $UsulanInvestasi)
     {
         //
+    }
+
+    private function savePdfToStorage($IdPengajuan, $barang)
+    {
+        // dd($IdPengajuan);
+        $usulan = UsulanInvestasi::with(
+            'getFuiDetail.getVendor',
+            'getBarang',
+            'getVendor',
+            'getAccDirektur',
+            'getAccKadiv',
+            'getDepartemen',
+            'getDepartemen2',
+            'getNamaForm'
+        )
+            ->where('IdPengajuan', $IdPengajuan)
+            ->first();
+
+        if (!$usulan) {
+            return null;
+        }
+        // dd($usulan);
+        $VendorAcc = Rekomendasi::with([
+            'getRekomedasiDetail' => function ($query2) {
+                $query2->where('Rekomendasi', 1);
+            },
+            'getRekomedasiDetail.getNamaVendor'
+        ])
+            ->where('PengajuanItemId', $barang)
+            ->first();
+
+        $dataRekom = Rekomendasi::with('getRekomedasiDetail.getBarang', 'getRekomedasiDetail.getNamaVendor')
+            ->where('IdPengajuan', $IdPengajuan)
+            ->first();
+
+        $approval = DokumenApproval::with('getUser', 'getJabatan', 'getDepartemen')
+            ->where('JenisFormId', $usulan->JenisForm)
+            ->where('DokumenId', $usulan->id)
+            ->orderBy('Urutan', 'asc')
+            ->get();
+
+        // Generate QR Code untuk approval yang approved
+        foreach ($approval as $item) {
+            if ($item->Status == 'Approved') {
+                $qrCode = QrCode::create(route('approval.validasi', $item->ApprovalToken))
+                    ->setSize(300)
+                    ->setMargin(10);
+
+                $writer = new PngWriter();
+                $result = $writer->write($qrCode);
+
+                $item->qrCode = base64_encode($result->getString());
+            }
+        }
+
+        $CariPengajuanItem = PengajuanItem::with('getRekomendasi')->find($barang);
+        $Acc = $VendorAcc->getRekomedasiDetail[0]->IdVendor ?? null;
+        $NamaBarangAcc = $VendorAcc->getRekomedasiDetail[0]->NamaPermintaan ?? null;
+
+        $data2 = PengajuanPembelian::with([
+            'getVendor' => function ($query2) use ($Acc) {
+                $query2->where('NamaVendor', $Acc);
+            },
+            'getVendor.getVendorDetail' => function ($query) use ($NamaBarangAcc) {
+                $query->where('NamaBarang', $NamaBarangAcc);
+            },
+            'getRekomendasi' => function ($query) {
+                $query->with([
+                    'getRekomedasiDetail' => function ($query2) {
+                        $query2->where('Rekomendasi', 1);
+                    }
+                ]);
+            }
+        ])->find($IdPengajuan);
+
+        // Generate PDF FUI
+        $pdf = \PDF::loadView('form-usulan-investari.show-pdf', compact('usulan', 'VendorAcc', 'approval', 'data2', 'dataRekom'))
+            ->setOptions([
+                'isHtml5ParserEnabled' => true,
+                'isRemoteEnabled' => true,
+                'defaultFont' => 'sans-serif',
+            ])
+            ->setPaper('a4', 'portrait');
+
+        // ==========================================
+        // 2. PERSIAPAN FOLDER & SIMPAN PDF FUI SEMENTARA
+        // ==========================================
+        $dirPath = 'public/rekap-file/pengajuan-' . $IdPengajuan;
+        $fullDirPath = storage_path('app/' . $dirPath);
+        if (!file_exists($fullDirPath)) {
+            mkdir($fullDirPath, 0777, true);
+        }
+
+        // Simpan PDF FUI sementara
+        $fuiTempPath = $fullDirPath . '/fui-temp-' . $IdPengajuan . '-' . $barang . '.pdf';
+        file_put_contents($fuiTempPath, $pdf->output());
+
+        // ==========================================
+        // 3. GABUNGKAN PDF: FS + FUI (FUI DI AKHIR)
+        // ==========================================
+        $combinedPdf = new \setasign\Fpdi\Tcpdf\Fpdi();
+
+        // Path PDF FS yang sudah ada di storage
+        $fsPath = $fullDirPath . '/fs-' . $IdPengajuan . '.pdf';
+
+        // Daftar file PDF yang akan digabungkan
+        $pdfFilesToMerge = [];
+
+        // 1. PDF FS (Halaman Awal) - jika ada
+        if (file_exists($fsPath)) {
+            $pdfFilesToMerge[] = $fsPath;
+        }
+
+        // 2. PDF FUI (Halaman Paling Akhir) - yang baru di-generate
+        $pdfFilesToMerge[] = $fuiTempPath;
+
+        // Proses penggabungan
+        foreach ($pdfFilesToMerge as $pdfFile) {
+            try {
+                $pageCount = $combinedPdf->setSourceFile($pdfFile);
+                for ($i = 1; $i <= $pageCount; $i++) {
+                    $tplIdx = $combinedPdf->importPage($i);
+                    $size = $combinedPdf->getTemplateSize($tplIdx);
+
+                    $combinedPdf->AddPage(
+                        $size['orientation'],
+                        [$size['width'], $size['height']]
+                    );
+                    $combinedPdf->useTemplate($tplIdx);
+                }
+            } catch (\Exception $e) {
+                \Log::error('Error merging PDF FUI: ' . $e->getMessage() . ' - File: ' . $pdfFile);
+            }
+        }
+
+        // ==========================================
+        // 4. SIMPAN HASIL COMBINE & CLEANUP
+        // ==========================================
+        $finalFileName = 'fui-' . $IdPengajuan . '.pdf';
+        $finalPath = $fullDirPath . '/' . $finalFileName;
+        $finalPath = str_replace('\\', '/', $finalPath);
+        $combinedPdf->Output($finalPath, 'F');
+        if (file_exists($fuiTempPath)) {
+            unlink($fuiTempPath);
+        }
+        return 'storage/rekap-file/pengajuan-' . $IdPengajuan . '/' . $finalFileName;
     }
 }

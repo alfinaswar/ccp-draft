@@ -551,12 +551,12 @@ class FeasibilityStudyController extends Controller
                 }
             }
         } else {
+            $this->savePdfToStorage($fs->IdPengajuan);
             if ($fs) {
                 $fs->update([
                     'Status' => 'Final',
                     'UserUpdate' => auth()->user()->name ?? null,
                 ]);
-                $this->savePdfToStorage($fs->IdPengajuan);
                 AktivitasPengajuan::create([
                     'KodePengajuan' => $kodePengajuan,
                     'Jenis' => 'Feasibility Study',
@@ -654,172 +654,6 @@ class FeasibilityStudyController extends Controller
         //
     }
 
-    // private function savePdfToStorage($idPengajuan, $idPengajuanItem)
-    // {
-    //     $data = FeasibilityStudy::with('getFsDetail', 'getBarang')
-    //         ->where('IdPengajuan', $idPengajuan)
-    //         ->where('PengajuanItemId', $idPengajuanItem)
-    //         ->firstOrFail();
-
-    //     $approval = DokumenApproval::with('getUser', 'getJabatan', 'getDepartemen')
-    //         ->where('JenisFormId', $data->JenisForm)
-    //         ->where('DokumenId', $data->id)
-    //         ->orderBy('Urutan', 'asc')
-    //         ->get();
-
-    //     // Generate QR code untuk setiap approval yang approved
-    //     foreach ($approval as $item) {
-    //         if ($item->Status == 'Approved') {
-    //             $qrCode = QrCode::create(route('approval.validasi', $item->ApprovalToken))
-    //                 ->setSize(300)
-    //                 ->setMargin(10);
-
-    //             $writer = new PngWriter();
-    //             $result = $writer->write($qrCode);
-
-    //             $item->qrCode = base64_encode($result->getString());
-    //         }
-    //     }
-
-    //     // Render blade view to HTML
-    //     $pdfView = view('feasibility-study.cetak', [
-    //         'data' => $data,
-    //         'approval' => $approval,
-    //         'idPengajuan' => $idPengajuan,
-    //         'idPengajuanItem' => $idPengajuanItem
-    //     ])->render();
-
-    //     // Generate PDF dari HTML view
-    //     $pdf = \PDF::loadHTML($pdfView);
-
-    //     $pdf->setOptions([
-    //         'isHtml5ParserEnabled' => true,
-    //         'isRemoteEnabled' => true,
-    //     ]);
-
-    //     $pdfFileName = 'fs-' . $idPengajuan . '.pdf';
-    //     $dirPath = 'public/rekap-file/pengajuan-' . $idPengajuan;
-    //     $storagePath = $dirPath . '/' . $pdfFileName;
-    //     $fullDirPath = storage_path('app/' . $dirPath);
-    //     if (!file_exists($fullDirPath)) {
-    //         mkdir($fullDirPath, 0777, true);
-    //     }
-    //     Storage::put($storagePath, $pdf->output());
-    //     return 'storage/rekap-file/' . $idPengajuan . '/' . $pdfFileName;
-
-    // }
-
-    // private function savePdfToStorage($idPengajuan, $idPengajuanItem)
-    // {
-    //     // ==========================================
-    //     // 1. AMBIL DATA & GENERATE PDF FS
-    //     // ==========================================
-    //     $data = FeasibilityStudy::with('getFsDetail', 'getBarang', 'getPengajuan')
-    //         ->where('IdPengajuan', $idPengajuan)
-    //         ->where('PengajuanItemId', $idPengajuanItem)
-    //         ->firstOrFail();
-
-    //     $approval = DokumenApproval::with('getUser', 'getJabatan', 'getDepartemen')
-    //         ->where('JenisFormId', $data->JenisForm)
-    //         ->where('DokumenId', $data->id)
-    //         ->orderBy('Urutan', 'asc')
-    //         ->get();
-
-    //     // Generate QR code
-    //     foreach ($approval as $item) {
-    //         if ($item->Status == 'Approved') {
-    //             $qrCode = QrCode::create(route('approval.validasi', $item->ApprovalToken))
-    //                 ->setSize(300)
-    //                 ->setMargin(10);
-
-    //             $writer = new PngWriter();
-    //             $result = $writer->write($qrCode);
-    //             $item->qrCode = base64_encode($result->getString());
-    //         }
-    //     }
-
-    //     // Render blade view to HTML
-    //     $pdfView = view('feasibility-study.cetak', [
-    //         'data' => $data,
-    //         'approval' => $approval,
-    //         'idPengajuan' => $idPengajuan,
-    //         'idPengajuanItem' => $idPengajuanItem
-    //     ])->render();
-
-    //     // Generate PDF FS
-    //     $pdfFs = \PDF::loadHTML($pdfView);
-    //     $pdfFs->setOptions([
-    //         'isHtml5ParserEnabled' => true,
-    //         'isRemoteEnabled' => true,
-    //     ]);
-
-    //     $dirPath = 'public/rekap-file/pengajuan-' . $idPengajuan;
-    //     $fullDirPath = storage_path('app/' . $dirPath);
-    //     if (!file_exists($fullDirPath)) {
-    //         mkdir($fullDirPath, 0777, true);
-    //     }
-
-    //     // Simpan PDF FS sementara
-    //     $fsTempPath = $fullDirPath . '/fs-temp-' . $idPengajuan . '.pdf';
-    //     file_put_contents($fsTempPath, $pdfFs->output());
-
-    //     // ==========================================
-    //     // 2. GABUNGKAN PDF FS + HTA-GPA
-    //     // ==========================================
-    //     $combinedPdf = new \setasign\Fpdi\Tcpdf\Fpdi();
-
-    //     // Path PDF HTA-GPA yang sudah ada di storage
-    //     $htaGpaPath = $fullDirPath . '/hta-gpa-' . $idPengajuan . '.pdf';
-
-    //     // Daftar file PDF yang akan digabungkan (urutan: FS dulu, baru HTA-GPA)
-    //     $pdfFilesToMerge = [
-    //         $fsTempPath, // 1. PDF FS (yang baru di-generate)
-    //     ];
-
-    //     // 2. PDF HTA-GPA (jika ada)
-    //     if (file_exists($htaGpaPath)) {
-    //         $pdfFilesToMerge[] = $htaGpaPath;
-    //     }
-
-    //     // Proses penggabungan
-    //     foreach ($pdfFilesToMerge as $pdfFile) {
-    //         try {
-    //             $pageCount = $combinedPdf->setSourceFile($pdfFile);
-    //             for ($i = 1; $i <= $pageCount; $i++) {
-    //                 $tplIdx = $combinedPdf->importPage($i);
-    //                 $size = $combinedPdf->getTemplateSize($tplIdx);
-
-    //                 $combinedPdf->AddPage(
-    //                     $size['orientation'],
-    //                     [$size['width'], $size['height']]
-    //                 );
-    //                 $combinedPdf->useTemplate($tplIdx);
-    //             }
-    //         } catch (\Exception $e) {
-    //             \Log::error('Error merging PDF: ' . $e->getMessage() . ' - File: ' . $pdfFile);
-    //         }
-    //     }
-
-    //     // ==========================================
-    //     // 3. SIMPAN HASIL COMBINE & CLEANUP
-    //     // ==========================================
-    //     $finalFileName = 'fs-' . $idPengajuan . '.pdf';
-    //     $finalPath = $fullDirPath . '/' . $finalFileName;
-
-    //     // Normalisasi path untuk Windows (ganti backslash dengan forward slash)
-    //     $finalPath = str_replace('\\', '/', $finalPath);
-
-    //     // Output file gabungan
-    //     $combinedPdf->Output($finalPath, 'F');
-
-    //     // Hapus file FS temporary
-    //     if (file_exists($fsTempPath)) {
-    //         unlink($fsTempPath);
-    //     }
-
-    //     // Return path publik
-    //     return 'storage/rekap-file/pengajuan-' . $idPengajuan . '/' . $finalFileName;
-    // }
     private function savePdfToStorage($idPengajuan)
     {
         // ==========================================
@@ -868,7 +702,6 @@ class FeasibilityStudyController extends Controller
             mkdir($fullDirPath, 0777, true);
         }
 
-        // Simpan PDF FS sementara
         $fsTempPath = $fullDirPath . '/fs-temp-' . $idPengajuan . '.pdf';
         file_put_contents($fsTempPath, $pdfFs->output());
 
