@@ -60,36 +60,48 @@
                                     <td style="font-weight:bold;width:160px;padding:4px 0;vertical-align:top;">Kode
                                         Pengajuan</td>
                                     <td style="padding:4px 0 4px 16px;vertical-align:top;">:
-                                        {{ $data2->KodePengajuan ?? '-' }}</td>
+                                        {{ $KodePengajuan ?? '-' }}</td>
                                 </tr>
                                 <tr>
                                     <td style="font-weight:bold;width:160px;padding:4px 0;vertical-align:top;">
                                         Rumah Sakit / Cisco</td>
                                     <td style="padding:4px 0 4px 16px;vertical-align:top;">:
-                                        {{ $data2->getPerusahaan->NamaLengkap ?? '-' }}</td>
+                                        {{ $AsalRumahSakit ?? '-' }}</td>
                                 </tr>
                                 <tr>
                                     <td style="font-weight:bold;width:160px;padding:4px 0;vertical-align:top;">
                                         Nama Permintaan</td>
                                     <td style="padding:4px 0 4px 16px;vertical-align:top;">:
-                                        {{ $data2->getPermintaan->getDetail[0]->getBarang->Nama ?? '-' }}</td>
+                                        {{ $NamaPermintaan ?? '-' }}</td>
                                 </tr>
                                 <tr>
                                     <td style="font-weight:bold;width:160px;padding:4px 0;vertical-align:top;">
                                         Rencana Penempatan</td>
                                     <td style="padding:4px 0 4px 16px;vertical-align:top;">:
-                                        {{ $data2->getPermintaan->getDetail[0]->RencanaPenempatan ?? '-' }}</td>
+                                        {{ $RencanaPenempatan ?? '-' }}</td>
                                 </tr>
-
-
+                                <tr>
+                                    <td style="font-weight:bold;width:160px;padding:4px 0;vertical-align:top;">
+                                        Vendor ACC</td>
+                                    <td style="padding:4px 0 4px 16px;vertical-align:top;">:
+                                        {{ $VendorACC ?? '-' }}</td>
+                                </tr>
+                                <tr>
+                                    <td style="font-weight:bold;width:160px;padding:4px 0;vertical-align:top;">
+                                        Harga</td>
+                                    <td style="padding:4px 0 4px 16px;vertical-align:top;">:
+                                        @if (isset($Harga) && $Harga !== null)
+                                            Rp {{ number_format($Harga, 0, ',', '.') }}
+                                        @else
+                                            -
+                                        @endif
+                                    </td>
+                                </tr>
                             </table>
 
+
                             </p>
-                            <div
-                                style="background: #fff3cd; color:#856404; padding:16px 18px;border-radius:6px; margin-bottom:24px;font-size:14px; border: 1px solid #ffe08a;">
-                                <b>⚠️ Penting:</b> Dengan menyetujui
-                                {{ $hasFui ? 'kedua dokumen di bawah ini, Anda akan menyetujui pembelian sesuai dokumen yang diajukan.' : 'dokumen di bawah ini, Anda akan menyetujui pembelian sesuai dokumen yang diajukan.' }}
-                            </div>
+
                             <p style="font-size:15px;line-height:1.6;margin:0 0 18px 0;">
                                 Silakan klik tombol di bawah ini untuk menyetujui pembelian:
                             </p>
@@ -98,13 +110,14 @@
                     <tr>
                         <td align="center" style="padding:16px 32px;">
                             <div style="display: flex; justify-content: center; gap: 18px;">
-                                <a href="{{ route('usulan-investasi.approve', $valueTesting->ApprovalToken) }}"
+                                <a href="{{ route('usulan-investasi.approve', $Approval->ApprovalToken) }}"
                                     style="display:inline-block;background:#198754;color:#fff;padding:16px 36px;border-radius:7px;font-size:17px;font-weight:bold;text-decoration:none;letter-spacing:1px;box-shadow:0 4px 16px rgba(25,135,84,0.14);">
                                     ✓ Setujui
                                 </a>
                             </div>
                         </td>
                     </tr>
+
 
                     <tr>
                         <td style="padding:10px 32px 24px 32px;">

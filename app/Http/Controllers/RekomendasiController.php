@@ -60,17 +60,17 @@ class RekomendasiController extends Controller
                 ->when(
                     $request->tanggalPresentasi,
                     fn($q) =>
-                        $q->whereDate('TanggalPresentasi', $request->tanggalPresentasi)
+                    $q->whereDate('TanggalPresentasi', $request->tanggalPresentasi)
                 )
                 ->when(
                     $request->perusahaan,
                     fn($q) =>
-                        $q->where('KodePerusahaan', $request->perusahaan)
+                    $q->where('KodePerusahaan', $request->perusahaan)
                 )
                 ->when(
                     $request->status,
                     fn($q) =>
-                        $q->where('Status', $request->status),
+                    $q->where('Status', $request->status),
                     function ($q) use ($hiddenStatuses) {
                         // Kecualikan status-status yang dimaksud jika TIDAK difilter
                         $q->whereNotIn('Status', $hiddenStatuses);
@@ -1748,375 +1748,60 @@ class RekomendasiController extends Controller
         return redirect()->back()->with('success', 'Anda sudah menentukan rekomendasi.');
     }
 
-    // public function updateTanggalPresentasi(Request $request, $id)
-    // {
-    //     $request->validate([
-    //         'TanggalPresentasi' => 'required|date'
-    //     ]);
+    public function updateTanggalPresentasi(Request $request, $id)
+    {
+        $request->validate([
+            'TanggalPresentasi' => 'required|date'
+        ]);
 
-    //     $rekomendasi = PengajuanPembelian::find($id);
+        $rekomendasi = PengajuanPembelian::find($id);
 
-    //     if (!$rekomendasi) {
-    //         return redirect()->back()->with('error', 'Rekomendasi tidak ditemukan.');
-    //     }
+        if (!$rekomendasi) {
+            return redirect()->back()->with('error', 'Rekomendasi tidak ditemukan.');
+        }
+        // ========== UPDATE REKOMENDASI ==========
+        $rekomendasi->TanggalPresentasi = $request->TanggalPresentasi;
+        $rekomendasi->Status = 'Selesai';
+        $rekomendasi->save();
 
-    //     // Lembar Disposisi tidak wajib, jadi tidak perlu error jika tidak ada
-    //     $cariDispo = LembarDisposisi::where('IdPengajuan', $rekomendasi->id)->first();
+        $cekdata = Rekomendasi::where('IdPengajuan', $rekomendasi->id)->first();
+        // UNTUK LAMPIRAN EMAIL
+        $fui = UsulanInvestasi::where('IdPengajuan', $rekomendasi->id)->first();
 
-    //     $approvalDispo = null;
-    //     $jenisDispo = null;
-    //     if ($cariDispo) {
-    //         if ($rekomendasi->Jenis == '1') {
-    //             $jenisDispo = 9;
-    //         } else {
-    //             $jenisDispo = 10;
-    //         }
-    //         $approvalDispo = DokumenApproval::where('JenisFormId', $jenisDispo)
-    //             ->where('DokumenId', $cariDispo->id)
-    //             ->where('UserId', 81)
-    //             ->where('Status', 'Pending')
-    //             ->first();
-    //     }
+        $approvalFUITesting = DokumenApproval::with('getUser', 'getJabatan', 'getDepartemen')
+            ->where('JenisFormId', $fui->JenisForm)
+            ->where('DokumenId', $fui->id)
+            ->where('Status', 'Pending')
+            ->where('Urutan', 1)
+            ->first();
 
-    //     // ========== AMBIL DATA FUI (OPTIONAL) ==========
-    //     $fui = UsulanInvestasi::where('IdPengajuan', $rekomendasi->id)->first();
+        // ========== KIRIM EMAIL ==========
+        if ($approvalFUITesting) {
+            Mail::to($approvalFUITesting->Email)
+                ->send(new NotifApprovalPresentasi(
+                    $fui,
+                    $rekomendasi,
+                    $approvalFUITesting
+                ));
+        }
 
-    //     $approvalFui = null;
-    //     $jenisFormFui = null;
-    //     $dataRekom = null;
-    //     if ($fui) {
-    //         $dataRekom = Rekomendasi::with('getRekomedasiDetail.getBarang', 'getRekomedasiDetail.getNamaVendor')->where('IdPengajuan', $fui->IdPengajuan)->first();
 
-    //         // Hanya proses FUI jika ada
-    //         if ($fui->BiayaAkhir !== null && $fui->BiayaAkhir !== '') {
-    //             if ($rekomendasi->Jenis == 1) {
-    //                 // Untuk Jenis Disposisi 1 Medis
-    //                 if ($fui->BiayaAkhir < 50000000) {
-    //                     $jenisFormFui = '7';
-    //                 } elseif ($fui->BiayaAkhir >= 50000000 && $fui->BiayaAkhir <= 100000000) {
-    //                     $jenisFormFui = '11';
-    //                 } elseif ($fui->BiayaAkhir > 100000000) {
-    //                     $jenisFormFui = '12';
-    //                 }
-    //             } else {
-    //                 // Umum
-    //                 if ($fui->BiayaAkhir < 50000000) {
-    //                     $jenisFormFui = '14';
-    //                 } elseif ($fui->BiayaAkhir >= 50000000 && $fui->BiayaAkhir <= 100000000) {
-    //                     $jenisFormFui = '15';
-    //                 } elseif ($fui->BiayaAkhir > 100000000) {
-    //                     $jenisFormFui = '13';
-    //                 }
-    //             }
-    //             if ($jenisFormFui) {
-    //                 $approvalFui = DokumenApproval::where('JenisFormId', $jenisFormFui ?? $fui->JenisForm)
-    //                     ->where('DokumenId', $fui->id)
-    //                     ->where('UserId', 81)
-    //                     ->where('Status', 'Pending')
-    //                     ->first();
-    //                 if (is_null($approvalFui) && !empty($fui->JenisForm) && $jenisFormFui != $fui->JenisForm) {
-    //                     $approvalFui = DokumenApproval::where('JenisFormId', $fui->JenisForm)
-    //                         ->where('DokumenId', $fui->id)
-    //                         ->where('UserId', 81)
-    //                         ->where('Status', 'Pending')
-    //                         ->first();
-    //                 }
-    //             }
-    //         }
-    //     }
 
-    //     // ========== AMBIL DATA USER (EMAIL & NAMA) ==========
-    //     $user = User::find(81);
-    //     if (!$user) {
-    //         return redirect()->back()->with('error', 'User approver tidak ditemukan.');
-    //     }
+        if ($rekomendasi) {
+            $rekomendasi->Status = 'Selesai';
+            $rekomendasi->save();
+        }
 
-    //     // ========== UPDATE REKOMENDASI ==========
-    //     $rekomendasi->TanggalPresentasi = $request->TanggalPresentasi;
-    //     $rekomendasi->Status = 'Selesai';
-    //     $rekomendasi->save();
-
-    //     $cekdata = Rekomendasi::where('IdPengajuan', $rekomendasi->id)->first();
-    //     $idPengajuan = $cekdata->IdPengajuan;
-    //     $idPengajuanItem = $cekdata->PengajuanItemId;
-    //     // UNTUK LAMPIRAN EMAIL
-    //     $rekomendasiLampiran = Rekomendasi::with('getRekomedasiDetail.getPerusahaan', 'getRekomedasiDetail.getBarang', 'getRekomedasiDetail.getNegara')->where('PengajuanItemId', $cekdata->PengajuanItemId)->first();
-    //     if ($rekomendasiLampiran && $rekomendasiLampiran->UserNego !== null) {
-    //         $qrCode = QrCode::create($rekomendasiLampiran->id)
-    //             ->setSize(300)
-    //             ->setMargin(10);
-
-    //         $writer = new PngWriter();
-    //         $result = $writer->write($qrCode);
-
-    //         $rekomendasiLampiran->qrCodeNego = base64_encode($result->getString());
-    //     }
-
-    //     if ($rekomendasiLampiran && $rekomendasiLampiran->DisetujuiOleh !== null) {
-    //         $qrCode = QrCode::create($rekomendasiLampiran->id ?? '')
-    //             ->setSize(300)
-    //             ->setMargin(10);
-
-    //         $writer = new PngWriter();
-    //         $result = $writer->write($qrCode);
-
-    //         $rekomendasiLampiran->qrCodeApprove = base64_encode($result->getString());
-    //     }
-
-    //     // DISPOSISI TIDAK WAJIB
-    //     $lembarDisposisi = LembarDisposisi::with(['getDetail', 'getBarang'])
-    //         ->where('IdPengajuan', $idPengajuan)
-    //         ->where('PengajuanItemId', $idPengajuanItem)
-    //         ->first();
-
-    //     $approval = collect();
-    //     $data = [
-    //         'lembarDisposisi' => $lembarDisposisi,
-    //         'namaBarang' => $lembarDisposisi && $lembarDisposisi->getBarang ? $lembarDisposisi->getBarang->Nama : null,
-    //         'harga' => $lembarDisposisi ? $lembarDisposisi->Harga : null,
-    //         'rencanaVendor' => $lembarDisposisi && $lembarDisposisi->getVendor ? $lembarDisposisi->getVendor->Nama : null,
-    //         'tujuanPenempatan' => $lembarDisposisi ? $lembarDisposisi->TujuanPenempatan : null,
-    //         'formPermintaan' => $lembarDisposisi ? $lembarDisposisi->FormPermintaanUser : null,
-    //         'approval' => collect(),  // Kosong jika tidak ada disposisi
-    //     ];
-
-    //     if ($lembarDisposisi) {
-    //         $approval = DokumenApproval::with('getUser', 'getJabatan', 'getDepartemen')
-    //             ->where('JenisFormId', $lembarDisposisi->JenisForm)
-    //             ->where('DokumenId', $lembarDisposisi->id)
-    //             ->orderBy('Urutan', 'asc')
-    //             ->get();
-
-    //         foreach ($approval as $item) {
-    //             if ($item->Status == 'Approved') {
-    //                 $qrCode = QrCode::create(route('approval.validasi', $item->ApprovalToken))
-    //                     ->setSize(300)
-    //                     ->setMargin(10);
-
-    //                 $writer = new PngWriter();
-    //                 $result = $writer->write($qrCode);
-
-    //                 $item->qrCode = base64_encode($result->getString());
-    //             }
-    //         }
-    //         $data['approval'] = $approval;
-    //     }
-
-    //     // HTA
-    //     $dataHta = PengajuanPembelian::with([
-    //         'getVendor.getVendorDetail',
-    //         'getHtaGpa.getDetailHta' => function ($query) use ($idPengajuanItem) {
-    //             $query->where('PengajuanItemId', $idPengajuanItem);
-    //         },
-    //         'getVendor.getHtaGpa' => function ($query) use ($idPengajuanItem) {
-    //             $query->where('PengajuanItemId', $idPengajuanItem);
-    //         },
-    //         'getJenisPermintaan.getForm',
-    //         'getHtaGpa.getPenilai1',
-    //         'getHtaGpa.getPenilai2',
-    //         'getHtaGpa.getPenilai3',
-    //         'getHtaGpa.getPenilai4',
-    //         'getHtaGpa.getPenilai5',
-    //         'getHtaGpa.getPenilai',
-    //         'getPengajuanItem' => function ($query) use ($idPengajuanItem) {
-    //             $query->where('id', $idPengajuanItem)->with('getBarang.getMerk');
-    //         }
-    //     ])->find($idPengajuan);
-
-    //     $approvalHta = collect();
-    //     if ($dataHta && $dataHta->getHtaGpa) {
-    //         $approvalHta = DokumenApproval::with('getUser', 'getJabatan', 'getDepartemen')
-    //             ->where('JenisFormId', $dataHta->getHtaGpa->JenisForm)
-    //             ->where('DokumenId', $dataHta->getHtaGpa->id)
-    //             ->orderBy('Urutan', 'asc')
-    //             ->get();
-
-    //         foreach ($approvalHta as $itemHta) {
-    //             if ($itemHta->Status == 'Approved') {
-    //                 $qrCode = QrCode::create(route('approval.validasi', $itemHta->ApprovalToken ?? '0'))
-    //                     ->setSize(300)
-    //                     ->setMargin(10);
-
-    //                 $writer = new PngWriter();
-    //                 $result = $writer->write($qrCode);
-
-    //                 $itemHta->qrCode = base64_encode($result->getString());
-    //             }
-    //         }
-    //     }
-
-    //     $parameter = MasterParameter::get();
-
-    //     // FUI
-    //     $usulan = UsulanInvestasi::with('getFuiDetail.getVendor', 'getBarang', 'getVendor', 'getAccDirektur', 'getAccKadiv', 'getDepartemen', 'getDepartemen2', 'getNamaForm')
-    //         ->where('IdPengajuan', $idPengajuan)
-    //         ->where('PengajuanItemId', $idPengajuanItem)
-    //         ->first();
-
-    //     $VendorAcc = null;
-    //     if ($idPengajuanItem) {
-    //         $VendorAcc = Rekomendasi::with([
-    //             'getRekomedasiDetail' => function ($query2) {
-    //                 $query2->where('Rekomendasi', 1);
-    //             },
-    //             'getRekomedasiDetail.getNamaVendor'
-    //         ])
-    //             ->where('PengajuanItemId', $idPengajuanItem)
-    //             ->first();
-    //     }
-
-    //     $approval2 = collect();
-    //     if ($usulan) {
-    //         $approval2 = DokumenApproval::with('getUser', 'getJabatan', 'getDepartemen')
-    //             ->where('JenisFormId', $usulan->JenisForm)
-    //             ->where('DokumenId', $usulan->id)
-    //             ->orderBy('Urutan', 'asc')
-    //             ->get();
-
-    //         foreach ($approval2 as $item) {
-    //             if ($item->Status == 'Approved') {
-    //                 $qrCode = QrCode::create(route('approval.validasi', $item->ApprovalToken))
-    //                     ->setSize(300)
-    //                     ->setMargin(10);
-
-    //                 $writer = new PngWriter();
-    //                 $result = $writer->write($qrCode);
-
-    //                 $item->qrCode = base64_encode($result->getString());
-    //             }
-    //         }
-    //     }
-    //     $Acc = $VendorAcc && isset($VendorAcc->getRekomedasiDetail[0]) ? $VendorAcc->getRekomedasiDetail[0]->IdVendor : null;
-    //     $NamaBarangAcc = $VendorAcc && isset($VendorAcc->getRekomedasiDetail[0]) ? $VendorAcc->getRekomedasiDetail[0]->NamaPermintaan : null;
-
-    //     $data2 = PengajuanPembelian::with([
-    //         'getVendor' => function ($query2) use ($Acc) {
-    //             $query2->where('NamaVendor', $Acc);
-    //         },
-    //         'getVendor.getVendorDetail' => function ($query) use ($NamaBarangAcc) {
-    //             $query->where('NamaBarang', $NamaBarangAcc);
-    //         },
-    //         'getRekomendasi' => function ($query) {
-    //             $query->with([
-    //                 'getRekomedasiDetail' => function ($query2) {
-    //                     $query2->where('Rekomendasi', 1);
-    //                 }
-    //             ]);
-    //         }
-    //     ])->find($idPengajuan);
-
-    //     // FS
-    //     $datafs = FeasibilityStudy::with('getFsDetail', 'getBarang')
-    //         ->where('IdPengajuan', $idPengajuan)
-    //         ->where('PengajuanItemId', $idPengajuanItem)
-    //         ->first();
-
-    //     $approvalfS = collect();  // Default to empty collection
-
-    //     if (!is_null($datafs)) {
-    //         $approvalfS = DokumenApproval::with('getUser', 'getJabatan', 'getDepartemen')
-    //             ->where('JenisFormId', $datafs->JenisForm)
-    //             ->where('DokumenId', $datafs->id)
-    //             ->orderBy('Urutan', 'asc')
-    //             ->get();
-
-    //         // Generate QR code untuk setiap approval yang approved
-    //         foreach ($approvalfS as $itemFS) {
-    //             if ($itemFS->Status == 'Approved') {
-    //                 $qrCode = QrCode::create(route('approval.validasi', $itemFS->ApprovalToken))
-    //                     ->setSize(300)
-    //                     ->setMargin(10);
-
-    //                 $writer = new PngWriter();
-    //                 $result = $writer->write($qrCode);
-
-    //                 $itemFS->qrCode = base64_encode($result->getString());
-    //             }
-    //         }
-    //     }
-    //     // END FS
-    //     // PERMINTAAN
-    //     $permintaan = PermintaanPembelian::with([
-    //         'getDetail.getBarang.getMerk',
-    //         'getDiajukanOleh',
-    //         'getDetail.getBarang.getSatuan'
-    //     ])->find($rekomendasi->IdPermintaan);
-
-    //     $approval3 = collect();
-    //     if ($permintaan) {
-    //         $approval3 = DokumenApproval::with('getUser', 'getJabatan', 'getDepartemen')
-    //             ->where('JenisFormId', $permintaan->JenisForm)
-    //             ->where('DokumenId', $permintaan->id)
-    //             ->orderBy('Urutan', 'asc')
-    //             ->get();
-
-    //         // Generate QR code untuk setiap approval
-    //         foreach ($approval3 as $item) {
-    //             if ($item->Status == 'Approved') {
-    //                 $qrCode = QrCode::create(route('approval.validasi', $item->ApprovalToken))
-    //                     ->setSize(80)
-    //                     ->setMargin(10);
-
-    //                 $writer = new PngWriter();
-    //                 $result = $writer->write($qrCode);
-
-    //                 $item->qrCode = base64_encode($result->getString());
-    //             }
-    //         }
-    //     }
-    //     $approvalFUITesting = DokumenApproval::with('getUser', 'getJabatan', 'getDepartemen')
-    //         ->where('JenisFormId', $usulan->JenisForm)
-    //         ->where('DokumenId', $usulan->id)
-    //         ->where('Status', 'Pending')
-    //         ->orderBy('Urutan', 'asc')
-    //         ->get();
-    //     // dd($approvalFUITesting);
-    //     // ========== KIRIM EMAIL ==========
-    //     foreach ($approvalFUITesting as $key => $valueTesting) {
-    //         // dd($valueTesting);
-    //         Mail::to($valueTesting->Email)
-    //             ->send(new NotifApprovalPresentasi(
-    //                 $rekomendasi,
-    //                 $cariDispo,
-    //                 $fui,
-    //                 $user,
-    //                 $approvalDispo,
-    //                 $approvalFui,
-    //                 $rekomendasiLampiran,
-    //                 $data,
-    //                 $data2,
-    //                 $usulan,
-    //                 $approval,
-    //                 $VendorAcc,
-    //                 $approval2,
-    //                 $permintaan,
-    //                 $approval3,
-    //                 $dataHta,
-    //                 $approvalHta,
-    //                 $parameter,
-    //                 $datafs,
-    //                 $approvalfS,
-    //                 $dataRekom,
-    //                 $valueTesting,
-    //             ));
-    //     }
-
-    //     if ($rekomendasi) {
-    //         $rekomendasi->Status = 'Selesai';
-    //         $rekomendasi->save();
-    //     }
-    //     // ini untuk mengisi tanggal presentasi
-    //     // Tambahkan variabel untuk mencari KodePengajuan
-    //     $cariPengajuan = PengajuanPembelian::find($rekomendasi->IdPengajuan ?? null);
-    //     $kodePengajuan = $cariPengajuan ? $cariPengajuan->KodePengajuan : ($rekomendasi->KodePengajuan ?? null);
-    //     AktivitasPengajuan::create([
-    //         'KodePengajuan' => $kodePengajuan ?? null,
-    //         'Jenis' => 'Rekomendasi',
-    //         'Keterangan' => 'Tanggal presentasi untuk nomor pengajuan ' . ($kodePengajuan ?? '-') . ' telah diperbarui',
-    //         'UserCreate' => auth()->user()->name,
-    //     ]);
-    //     return redirect()->back()->with('success', 'Tanggal presentasi berhasil diperbarui dan email notifikasi telah dikirim.');
-    // }
+        $cariPengajuan = PengajuanPembelian::find($rekomendasi->IdPengajuan ?? null);
+        $kodePengajuan = $cariPengajuan ? $cariPengajuan->KodePengajuan : ($rekomendasi->KodePengajuan ?? null);
+        AktivitasPengajuan::create([
+            'KodePengajuan' => $kodePengajuan ?? null,
+            'Jenis' => 'Rekomendasi',
+            'Keterangan' => 'Tanggal presentasi untuk nomor pengajuan ' . ($kodePengajuan ?? '-') . ' telah diperbarui',
+            'UserCreate' => auth()->user()->name,
+        ]);
+        return redirect()->back()->with('success', 'Tanggal presentasi berhasil diperbarui dan email notifikasi telah dikirim.');
+    }
 
     public function approveBulk($tokens, Request $request)
     {
