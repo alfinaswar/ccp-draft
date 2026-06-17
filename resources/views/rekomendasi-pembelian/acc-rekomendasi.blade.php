@@ -22,12 +22,25 @@
                         Rekomendasi Pembelian untuk Pengajuan: <strong>{{ $data->KodePengajuan }} /
                             {{ $data->getPerusahaan->NamaLengkap }}</strong>
                     </div>
-                    <div class="text-end">
-                        <span class="badge bg-info" style="font-size:1rem;">
+
+                    <div class="text-end d-flex flex-column align-items-end">
+                        <span class="badge bg-info mb-2" style="font-size:1rem;">
                             Status: {{ $data->Status ?? '-' }}
                         </span>
+                        <button type="button" class="btn btn-info d-flex align-items-center mb-2" data-bs-toggle="modal"
+                            data-bs-target="#modalNotes">
+                            <i class="fa fa-sticky-note me-2"></i> Tambah Notes
+                        </button>
+                        @if (isset($data->getPengajuanItem[0]->getRekomendasi->Notes) && $data->getPengajuanItem[0]->getRekomendasi->Notes)
+                            <div class="alert alert-secondary py-2 px-3 mt-2 mb-0"
+                                style="font-size: 0.96rem; word-break:break-word; max-width: 250px;">
+                                <strong>Notes:</strong><br>
+                                {{ $data->getPengajuanItem[0]->getRekomendasi->Notes }}
+                            </div>
+                        @endif
                     </div>
                 </div>
+
                 <div class="card-body">
                     <div class="mb-4">
                         <h5 class="mb-3">Informasi Barang</h5>
@@ -715,6 +728,40 @@
 
     </div>
     </div>
+    <div class="modal fade" id="modalNotes" tabindex="-1" aria-labelledby="modalNotesLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalNotesLabel">Tambah Catatan / Notes</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+
+                {{-- Form AJAX --}}
+                <form id="formNotes" action="{{ route('rekomendasi.simpan-notes') }}" method="POST">
+                    @csrf
+                    <input type="hidden" name="IdPengajuan" value="{{ $data->id }}">
+
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label for="notes_content" class="form-label">Isi Catatan</label>
+                            <textarea class="form-control" id="notes_content" name="Catatan" rows="5"
+                                placeholder="Tulis catatan penting di sini..." required>{{ $data->getRekomendasi[0]->Catatan ?? '' }}</textarea>
+
+                            <div class="invalid-feedback" id="errorCatatan" style="display:none;"></div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                        <button type="submit" class="btn btn-primary" id="btnSimpanNotes">
+                            <span class="spinner-border spinner-border-sm d-none" id="loadingNotes" role="status"
+                                aria-hidden="true"></span>
+                            <span id="textBtnSimpan">Simpan Notes</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
 @endsection
 @push('js')
     @if (Session::get('success'))
@@ -892,5 +939,107 @@
             refreshRekomendasiOptions();
         });
     </script>
+    <script>
+        $(document).ready(function() {
+            $('#formNotes').on('submit', function(e) {
+                e.preventDefault(); // Cegah submit biasa (reload)
 
+                const form = $(this);
+                const url = form.attr('action');
+                const btnSimpan = $('#btnSimpanNotes');
+                const loading = $('#loadingNotes');
+                const textBtn = $('#textBtnSimpan');
+                const errorCatatan = $('#errorCatatan');
+                const textarea = $('#notes_content');
+
+                // Reset error state
+                textarea.removeClass('is-invalid');
+                errorCatatan.hide().text('');
+
+                // Tampilkan loading
+                btnSimpan.prop('disabled', true);
+                loading.removeClass('d-none');
+                textBtn.text('Menyimpan...');
+
+                $.ajax({
+                    url: url,
+                    type: 'POST',
+                    data: form.serialize(),
+                    dataType: 'json',
+                    success: function(response) {
+                        // Tutup modal
+                        $('#modalNotes').modal('hide');
+
+                        // Reset form
+                        form[0].reset();
+
+                        // Ubah data catatan di modal supaya langsung update (tidak reload page)
+                        if (textarea.length && response.success) {
+                            textarea.val(form.find('[name="Catatan"]').val());
+                        }
+
+                        // Bisa jadi, jika ingin mengupdate tampilan catatan di luar modal:
+                        $("#catatanPreview").text(form.find('[name="Catatan"]').val());
+
+                        // Tampilkan notifikasi sukses
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Berhasil!',
+                            text: response.message || 'Catatan berhasil disimpan.',
+                            iconColor: '#4BCC1F',
+                            confirmButtonColor: '#4BCC1F',
+                            timer: 2000,
+                            showConfirmButton: false
+                        });
+
+                        // Jika ada callback untuk append notes ke list (opsional)
+                        if (response.html) {
+                            $('#listNotesContainer').prepend(response.html);
+                        }
+
+                        // Jika data catatan ingin langsung berubah di komponen lain,
+                        // perbarui DOM sesuai kebutuhan aplikasi (replace element, dsb)
+                        // Contoh:
+                        // $('#catatanSummary').text(form.find('[name="Catatan"]').val());
+                    },
+                    error: function(xhr) {
+                        let message = 'Gagal menyimpan catatan. Silakan coba lagi.';
+
+                        // Handle validasi error dari Laravel
+                        if (xhr.status === 422) {
+                            const errors = xhr.responseJSON?.errors;
+                            if (errors && errors.Catatan) {
+                                textarea.addClass('is-invalid');
+                                errorCatatan.text(errors.Catatan[0]).show();
+                                message = errors.Catatan[0];
+                            }
+                        } else if (xhr.responseJSON?.message) {
+                            message = xhr.responseJSON.message;
+                        }
+
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Gagal!',
+                            text: message,
+                            iconColor: '#dc3545',
+                            confirmButtonColor: '#dc3545'
+                        });
+                    },
+                    complete: function() {
+                        // Kembalikan tombol ke state semula
+                        btnSimpan.prop('disabled', false);
+                        loading.addClass('d-none');
+                        textBtn.text('Simpan Notes');
+                    }
+                });
+            });
+
+            // Reset form & error ketika modal ditutup
+            $('#modalNotes').on('hidden.bs.modal', function() {
+                $('#formNotes')[0].reset();
+                $('#notes_content').removeClass('is-invalid');
+                $('#errorCatatan').hide().text('');
+            });
+        });
+    </script>
 @endpush

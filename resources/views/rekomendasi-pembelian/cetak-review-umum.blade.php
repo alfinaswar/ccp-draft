@@ -151,7 +151,7 @@
             <td>Populasi</td>
             @foreach ($rekomendasi->getRekomedasiDetail as $item)
                 <td>
-                    {{ $item->Populasi ?? '-' }}
+                    {!! $item->Populasi ?? '-' !!}
                 </td>
             @endforeach
         </tr>

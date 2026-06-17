@@ -875,16 +875,27 @@ class HtaDanGpaController extends Controller
     {
         $penilai = DokumenApproval::with('getDokumenHTAGPA')->where('ApprovalToken', $token)->first();
         // dd($penilai);
-        if ($penilai->Status !== 'Pending') {
+        if (!$penilai || $penilai->Status !== 'Pending') {
             return redirect()->back()->with('error', 'Approval sudah diproses sebelumnya.');
         }
 
-        // Simpan Justifikasi, status & waktu approve
-        $penilai->update([
-            'Justifikasi' => $request->justifikasi,
-            'Status' => 'Approved',
-            'TanggalApprove' => Carbon::now(),
-        ]);
+        // Cek kalau ada UserId yang sama di $penilai (dengan DokumenId dan JenisFormId yang sama), approve semua
+        $duplicatePenilai = DokumenApproval::where('DokumenId', $penilai->DokumenId)
+            ->where('JenisFormId', $penilai->JenisFormId)
+            ->where('UserId', $penilai->UserId)
+            ->where('Status', 'Pending')
+            ->get();
+
+        foreach ($duplicatePenilai as $toApprove) {
+            $toApprove->update([
+                'Justifikasi' => $request->justifikasi,
+                'Status' => 'Approved',
+                'TanggalApprove' => Carbon::now(),
+            ]);
+        }
+
+        // Refresh $penilai to get updated info
+        $penilai = $penilai->fresh();
 
         // Ambil data HTA/GPA & pengajuan untuk keperluan selanjutnya
         $hta = null;
@@ -898,12 +909,13 @@ class HtaDanGpaController extends Controller
                 $kodePengajuan = $pengajuan ? $pengajuan->KodePengajuan : ($hta->Nomor ?? $hta->id);
             }
         }
+
         // PERMINTAAN
         $permintaan = PermintaanPembelian::with([
             'getDetail.getBarang.getMerk',
             'getDiajukanOleh',
             'getDetail.getBarang.getSatuan'
-        ])->find($pengajuan->IdPermintaan);
+        ])->find($pengajuan->IdPermintaan ?? null);
 
         $ApprovalPermintaan = collect();
         if ($permintaan) {

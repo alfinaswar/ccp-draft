@@ -29,6 +29,7 @@ use Endroid\QrCode\QrCode;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Validator;
 use Maatwebsite\Excel\Facades\Excel;
 use setasign\Fpdi\Tcpdf\Fpdi;
 use Yajra\DataTables\DataTables;
@@ -60,17 +61,17 @@ class RekomendasiController extends Controller
                 ->when(
                     $request->tanggalPresentasi,
                     fn($q) =>
-                    $q->whereDate('TanggalPresentasi', $request->tanggalPresentasi)
+                        $q->whereDate('TanggalPresentasi', $request->tanggalPresentasi)
                 )
                 ->when(
                     $request->perusahaan,
                     fn($q) =>
-                    $q->where('KodePerusahaan', $request->perusahaan)
+                        $q->where('KodePerusahaan', $request->perusahaan)
                 )
                 ->when(
                     $request->status,
                     fn($q) =>
-                    $q->where('Status', $request->status),
+                        $q->where('Status', $request->status),
                     function ($q) use ($hiddenStatuses) {
                         // Kecualikan status-status yang dimaksud jika TIDAK difilter
                         $q->whereNotIn('Status', $hiddenStatuses);
@@ -1646,6 +1647,40 @@ class RekomendasiController extends Controller
         return view('rekomendasi-pembelian.acc-rekomendasi', compact('data', 'parameter', 'negara', 'rekomendasi'));
     }
 
+    public function simpanNotes(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'IdPengajuan' => 'required|integer',
+            'Catatan' => 'required',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validasi gagal.',
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        try {
+            $rekomendasi = Rekomendasi::where('IdPengajuan', $request->IdPengajuan)->first();
+            if ($rekomendasi) {
+                $rekomendasi->Catatan = $request->Catatan;
+                $rekomendasi->save();
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Catatan berhasil disimpan.',
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Terjadi kesalahan: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
     /**
      * Update the specified resource in storage.
      */
@@ -1784,8 +1819,6 @@ class RekomendasiController extends Controller
                     $approvalFUITesting
                 ));
         }
-
-
 
         if ($rekomendasi) {
             $rekomendasi->Status = 'Selesai';

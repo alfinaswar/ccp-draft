@@ -21,7 +21,13 @@ class NotifikasiApproval extends Mailable
 
     public function build()
     {
-        return $this->subject('Permintaan Pembelian - ' . $this->data->getPerusahaan->NamaLengkap . ' - ' . $this->data->getDetail[0]->getBarang->Nama)
+        return $this
+            ->subject(
+                'Permintaan Pembelian - '
+                . ($this->data->getPerusahaan->NamaLengkap ?? '-') . ' - '
+                . (isset($this->data->getDetail[0]->getBarang->Nama) ? $this->data->getDetail[0]->getBarang->Nama : '-') . ' - '
+                . ($this->data->getDetail[0]->RencanaPenempatan ?? '-')
+            )
             ->view('emails.approval-berikutnya')
             ->with([
                 'data' => $this->data,

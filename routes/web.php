@@ -63,12 +63,12 @@ Route::post('/ai/rapikan', [AiController::class, 'rapikan'])->name('ai.rapikan')
 Route::get('/home', [HomeController::class, 'index'])->name('home');
 Route::get('/getJadwalImsak', [HomeController::class, 'getJadwalImsak'])->name('jadwaimsak');
 Route::get('/getJadwalImsakSinta', [JadwalImsak::class, 'getJadwalImsak'])->name('jadwaimsaksinta');
-//Approval HTA dan GPA
+// Approval HTA dan GPA
 Route::post('/justifikasi/{token}', [HtaDanGpaController::class, 'submitJustifikasi'])->name('htagpa.submitJustifikasi');
 Route::get('/approval/hta-gpa/{token}/sebelum-approve', [HtaDanGpaController::class, 'sebelumApprove'])->name('htagpa.sebelum-approve');
 Route::get('/approval/hta-gpa/{token}/approve', [HtaDanGpaController::class, 'approve'])->name('htagpa.approve');
 Route::get('/approval/hta-gpa/{token}/reject', [HtaDanGpaController::class, 'reject'])->name('htagpa.reject');
-//End HTA dan GPA
+// End HTA dan GPA
 
 Route::get('/approval/usulan-investasi/{token}/approve', [UsulanInvestasiController::class, 'approve'])->name('usulan-investasi.approve');
 Route::get('/approval/usulan-investasi/{token}/reject', [UsulanInvestasiController::class, 'reject'])->name('usulan-investasi.reject');
@@ -244,7 +244,8 @@ Route::group(['middleware' => ['auth']], function () {
 
     Route::prefix('rekomendasi')->group(function () {
         Route::get('/', [RekomendasiController::class, 'index'])->name('rekomendasi.index');
-
+        Route::post('/simpan-notes', [RekomendasiController::class, 'simpanNotes'])
+            ->name('rekomendasi.simpan-notes');
         Route::get('/index-selesai', [RekomendasiController::class, 'indexSelesai'])->name('rekomendasi.index-selesai');
         Route::get('/rekomendasi-pembelian/{idPengajuan}/{idPengajuanItem}', [RekomendasiController::class, 'create'])->name('rekomendasi.create');
         Route::get('/review-pembelian/{IdPengajuan}/{barang}', [RekomendasiController::class, 'Review'])->name('rekomendasi.review');
@@ -345,7 +346,7 @@ Route::group(['middleware' => ['auth']], function () {
     Route::prefix('laporan')->group(function () {
         Route::get('/history', [LaporanController::class, 'History'])->name('laporan.history');
 
-        //Laporan Rekomendasi Dr Ingen
+        // Laporan Rekomendasi Dr Ingen
         Route::get('/rekomendasi-ccp', [RekomendasiController::class, 'laporan'])->name('rekomendasi.laporan');
         Route::get('/preview', [RekomendasiController::class, 'preview'])->name('rekomendasi.laporan.preview');
         Route::get('/export', [RekomendasiController::class, 'export'])->name('rekomendasi.laporan.export');
