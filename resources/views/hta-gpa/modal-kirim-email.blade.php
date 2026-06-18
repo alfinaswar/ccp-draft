@@ -83,6 +83,12 @@
                       font-weight: bold;
                       font-size: 14px;
                   }
+
+                  /* Style khusus untuk lock pointer events di baris penilai 3,4,5 */
+                  .locked-pointer-events {
+                      pointer-events: none !important;
+                      background-color: #e9ecef !important;
+                  }
               </style>
           @endpush
           <div class="modal fade" id="modalPenilai" tabindex="-1" aria-labelledby="modalPenilaiLabel" aria-hidden="true">
@@ -136,12 +142,13 @@
                                                   $namaText = isset($app->Nama) ? $app->Nama : '';
                                                   $jabatanId = isset($app->JabatanId) ? $app->JabatanId : '';
                                                   $departemenId = isset($app->DepartemenId) ? $app->DepartemenId : '';
+                                                  $isLocked = $i + 1 >= 3 && $i + 1 <= 5;
                                               @endphp
                                               <tr>
                                                   <td>Penilai {{ $i + 1 }}</td>
                                                   <td>
                                                       <select name="TipeInputPenilai[]"
-                                                          class="form-select tipe-input-penilai"
+                                                          class="form-select tipe-input-penilai{{ $isLocked ? ' locked-controls' : '' }}"
                                                           data-penilai-index="{{ $i + 1 }}">
                                                           <option value="Master"
                                                               @if ($defaultType == 'Master') selected @endif>
@@ -158,7 +165,7 @@
                                                           data-penilai-index="{{ $i + 1 }}"
                                                           @if ($defaultType != 'Master') style="display:none;" @endif>
                                                           <select name="NamaPenilai[]"
-                                                              class="form-select select2 penilai-select"
+                                                              class="form-select select2 penilai-select{{ $isLocked ? ' locked-controls' : '' }}"
                                                               data-penilai-index="{{ $i + 1 }}">
                                                               <option value="" data-email="" data-jabatanid=""
                                                                   data-departemenid="">
@@ -180,20 +187,21 @@
                                                           data-penilai-index="{{ $i + 1 }}"
                                                           @if ($defaultType != 'Manual') style="display:none;" @endif>
                                                           <input type="text" name="NamaPenilaiManual[]"
-                                                              class="form-control" value="{{ $namaText }}"
+                                                              class="form-control{{ $isLocked ? ' locked-controls' : '' }}"
+                                                              value="{{ $namaText }}"
                                                               placeholder="Nama Penilai {{ $i + 1 }}">
                                                       </div>
                                                   </td>
                                                   <td>
                                                       <input type="email" name="EmailPenilai[]"
-                                                          class="form-control email-penilai-input"
+                                                          class="form-control email-penilai-input{{ $isLocked ? ' locked-controls' : '' }}"
                                                           data-penilai-index="{{ $i + 1 }}"
                                                           value="{{ isset($app->Email) ? $app->Email : '' }}"
                                                           placeholder="Email Penilai {{ $i + 1 }}" required>
                                                   </td>
                                                   <td>
                                                       <select name="JabatanId[]"
-                                                          class="form-select select2 jabatan-penilai"
+                                                          class="form-select select2 jabatan-penilai{{ $isLocked ? ' locked-controls' : '' }}"
                                                           data-penilai-index="{{ $i + 1 }}">
                                                           <option value="">Pilih Jabatan</option>
                                                           @foreach ($jabatan as $jab)
@@ -206,7 +214,7 @@
                                                   </td>
                                                   <td>
                                                       <select name="DepartemenId[]"
-                                                          class="form-select select2 departemen-penilai"
+                                                          class="form-select select2 departemen-penilai{{ $isLocked ? ' locked-controls' : '' }}"
                                                           data-penilai-index="{{ $i + 1 }}">
                                                           <option value="">Pilih Departemen</option>
                                                           @foreach ($departemen as $dep)
@@ -258,6 +266,55 @@
                           initHtaGpaSelect2();
                       });
                       let isSubmitting = false;
+
+                      // Fungsi utama untuk lock kolom urutan 3,4,5 tidak bisa diganti (handle pointer events saja)
+                      function lockUrutan345Fields() {
+                          // Untuk select2, perlu lock container juga
+                          // Lock di select dan input pada baris 3,4,5
+                          for (let no of [3, 4, 5]) {
+                              // tipe input select
+                              $('select.tipe-input-penilai[data-penilai-index="' + no + '"]').addClass(
+                                  'locked-pointer-events');
+                              // nama master select
+                              $('select.penilai-select[data-penilai-index="' + no + '"]').addClass('locked-pointer-events');
+                              // nama manual input
+                              $('input[name="NamaPenilaiManual[]"]').eq(no - 1).addClass('locked-pointer-events');
+                              // email
+                              $('input.email-penilai-input[data-penilai-index="' + no + '"]').addClass(
+                                  'locked-pointer-events');
+                              // jabatan
+                              $('select.jabatan-penilai[data-penilai-index="' + no + '"]').addClass('locked-pointer-events');
+                              // departemen
+                              $('select.departemen-penilai[data-penilai-index="' + no + '"]').addClass(
+                                  'locked-pointer-events');
+                          }
+                          // Nonaktifkan event pada elemen locked
+                          $('.locked-pointer-events').on('mousedown focus click keydown keyup input', function(e) {
+                              e.preventDefault();
+                              return false;
+                          });
+                          // Untuk select2, handler click di container
+                          $('.locked-pointer-events').each(function() {
+                              if ($(this).hasClass('select2')) {
+                                  let idx = $(this).data('penilai-index');
+                                  // Nonaktifkan click pada Select2
+                                  $('.select2-container[data-select2-id]').each(function() {
+                                      // Cari yang punya select dengan data-penilai-index yg sama
+                                      let $s = $(this).prev('select[data-penilai-index="' + idx + '"]');
+                                      if ($s.length) {
+                                          $(this).css('pointer-events', 'none');
+                                      }
+                                  });
+                              }
+                          });
+                      }
+
+                      lockUrutan345Fields();
+
+                      // --- PATCH: reapply lock kalau select2 direinit saat shown modal
+                      $('#modalPenilai').on('shown.bs.modal', function() {
+                          setTimeout(lockUrutan345Fields, 300);
+                      });
 
                       function disableAllInteractions() {
                           isSubmitting = true;
@@ -345,6 +402,13 @@
                           var index = $(this).data('penilai-index');
                           var tipe = $(this).val();
                           let $row = $(this).closest('tr');
+                          // Patch: Jika locked, block event
+                          if ([3, 4, 5].includes(Number(index))) {
+                              // Balikin ke default value:
+                              var defaultVal = $(this).find('option[selected]').val() || $(this).data('default');
+                              $(this).val(defaultVal).trigger('change.select2');
+                              return false;
+                          }
                           if (tipe === 'Master') {
                               $row.find('.form-master-penilai[data-penilai-index="' + index + '"]').show();
                               $row.find('.form-manual-penilai[data-penilai-index="' + index + '"]').hide();
@@ -356,10 +420,9 @@
 
                               $row.find('input.email-penilai-input').val(email);
 
-                              // AKU MAU TETAP BISA DIGANTI: Jabatan & Departemen TIDAK diblok/pointer-events: none
                               $row.find('.jabatan-penilai')
                                   .val(jabatan)
-                                  .prop('disabled', false) // <-- tidak disabled!
+                                  .prop('disabled', false)
                                   .css({
                                       'pointer-events': '',
                                       'background-color': '',
@@ -385,8 +448,13 @@
                       });
 
                       // Sync email, jabatan, departemen saat pilih dari master
-                      $('.penilai-select').on('change', function() {
+                      $('.penilai-select').on('change', function(e) {
                           var index = $(this).attr('data-penilai-index');
+                          if ([3, 4, 5].includes(Number(index))) {
+                              // Block change di locked urutan
+                              e.preventDefault();
+                              return false;
+                          }
                           var option = $(this).find('option:selected');
                           var email = option.data('email') || '';
                           var jabatan = option.data('jabatanid') || '';
@@ -394,10 +462,9 @@
 
                           $('input.email-penilai-input[data-penilai-index="' + index + '"]').val(email);
 
-                          // AKU MAU TETAP BISA DIGANTI: Jabatan & Departemen TIDAK diblok/pointer-events: none
                           var $jabatan = $('select.jabatan-penilai[data-penilai-index="' + index + '"]');
                           $jabatan.val(jabatan)
-                              .prop('disabled', false) // <-- tidak disabled!
+                              .prop('disabled', false)
                               .css({
                                   'pointer-events': '',
                                   'background-color': '',
@@ -422,7 +489,7 @@
                               $row.find('input.email-penilai-input').val(email);
                               $row.find('.jabatan-penilai')
                                   .val(jabatan)
-                                  .prop('disabled', false) // <-- tidak disabled!
+                                  .prop('disabled', false)
                                   .css({
                                       'pointer-events': '',
                                       'background-color': '',
@@ -431,7 +498,6 @@
                                   .trigger('change');
                               $row.find('.departemen-penilai').val(departemen).trigger('change');
                           } else {
-                              // Make sure for manual: enable and clean up style
                               $row.find('.jabatan-penilai')
                                   .prop('disabled', false)
                                   .css({
@@ -441,6 +507,9 @@
                                   });
                           }
                       });
+
+                      // Lock form element urutan 3,4,5 sekali lagi setelah semua default sync
+                      lockUrutan345Fields();
 
                       // SweetAlert konfirmasi submit dengan loading super ketat
                       $('#formPenilai').on('submit', function(e) {

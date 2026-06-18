@@ -828,7 +828,7 @@ class HtaDanGpaController extends Controller
         } else {
             // JIKA TIDAK ADA approval selanjutnya: Update status utama
             if ($hta) {
-                $hta->Status = 'Telah Disetujui';
+                $hta->Status = 'Disetujui';
                 $hta->save();
             }
         }
@@ -874,12 +874,9 @@ class HtaDanGpaController extends Controller
     public function submitJustifikasi(Request $request, $token)
     {
         $penilai = DokumenApproval::with('getDokumenHTAGPA')->where('ApprovalToken', $token)->first();
-        // dd($penilai);
         if (!$penilai || $penilai->Status !== 'Pending') {
             return redirect()->back()->with('error', 'Approval sudah diproses sebelumnya.');
         }
-
-        // Cek kalau ada UserId yang sama di $penilai (dengan DokumenId dan JenisFormId yang sama), approve semua
         $duplicatePenilai = DokumenApproval::where('DokumenId', $penilai->DokumenId)
             ->where('JenisFormId', $penilai->JenisFormId)
             ->where('UserId', $penilai->UserId)
@@ -893,11 +890,7 @@ class HtaDanGpaController extends Controller
                 'TanggalApprove' => Carbon::now(),
             ]);
         }
-
-        // Refresh $penilai to get updated info
         $penilai = $penilai->fresh();
-
-        // Ambil data HTA/GPA & pengajuan untuk keperluan selanjutnya
         $hta = null;
         $pengajuan = null;
         $kodePengajuan = null;
@@ -947,12 +940,13 @@ class HtaDanGpaController extends Controller
             'UserCreate' => $penilai->Nama ?? '-',
         ]);
 
-        // --- Kirim email ke approval selanjutnya mirip logic pada approve() ---
         $nextApproval = DokumenApproval::where('DokumenId', $penilai->DokumenId)
             ->where('JenisFormId', $penilai->JenisFormId)
             ->where('Urutan', '>', $penilai->Urutan)
+            ->where('Status', 'Pending')
             ->orderBy('Urutan', 'asc')
             ->first();
+
 
         if ($nextApproval) {
             $this->savePdfToStorage($pengajuan->id, $pengajuan->PengajuanItemId);
