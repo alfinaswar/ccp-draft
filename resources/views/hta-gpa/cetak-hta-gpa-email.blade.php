@@ -265,5 +265,28 @@
             </tr>
         </tbody>
     </table>
+    @if (isset($approval2) && count($approval2) > 0)
+        <table class="table mt-3" style="width:100%; border:1px solid #dee2e6;">
+            <thead>
+                <tr>
+                    <th style="width:40px;">No</th>
+                    <th>Justifikasi</th>
+                    <th>Nama</th>
+                </tr>
+            </thead>
+            <tbody>
+                @php $nomor = 1; @endphp
+                @foreach ($approval2 as $item)
+                    @if (!empty($item->Justifikasi))
+                        <tr>
+                            <td style="text-align:center;">{{ $nomor++ }}</td>
+                            <td>{{ $item->Justifikasi ?? '-' }}</td>
+                            <td>{{ $item->Nama ?? '-' }}</td>
+                        </tr>
+                    @endif
+                @endforeach
+            </tbody>
+        </table>
+    @endif
 
 </div>

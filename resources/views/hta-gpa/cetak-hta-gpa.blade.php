@@ -420,7 +420,23 @@
         </tr>
     </tbody>
 </table>
-
+@if (isset($approval2) && count($approval2) > 0)
+    <div class="mt-3" style="padding: 12px; border-radius:4px;">
+        <p style="font-weight:600; margin-bottom: 8px;">Justifikasi Persetujuan:</p>
+        @php $nomor = 1; @endphp
+        @foreach ($approval2 as $item)
+            @if (!empty($item->Justifikasi))
+                <p style="margin-bottom:10px; padding-left: 4px;">
+                    <span style="display:inline-block; min-width:30px; font-weight:bold;">{{ $nomor++ }}.</span>
+                    <span style="display:inline-block;">
+                        <strong>Justifikasi:</strong> {{ $item->Justifikasi ?? '' }}<br>
+                        <strong>Nama:</strong> {{ $item->Nama ?? '-' }}
+                    </span>
+                </p>
+            @endif
+        @endforeach
+    </div>
+@endif
 <div class="printed-info">
     Dicetak oleh: {{ auth()->user()->name ?? '-' }} pada {{ now()->format('d-m-Y H:i') }}
 </div>

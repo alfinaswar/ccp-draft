@@ -89,6 +89,22 @@
                       pointer-events: none !important;
                       background-color: #e9ecef !important;
                   }
+
+                  /* Gaya icon gembok kecil */
+                  .lock-icon {
+                      font-size: 13px;
+                      color: #b1b1b1;
+                      margin-left: 4px;
+                      vertical-align: middle;
+                  }
+
+                  /* Lebih besar untuk area label */
+                  .lock-icon-label {
+                      font-size: 16px;
+                      color: #b1b1b1;
+                      margin-left: 4px;
+                      vertical-align: middle;
+                  }
               </style>
           @endpush
           <div class="modal fade" id="modalPenilai" tabindex="-1" aria-labelledby="modalPenilaiLabel" aria-hidden="true">
@@ -145,85 +161,122 @@
                                                   $isLocked = $i + 1 >= 3 && $i + 1 <= 5;
                                               @endphp
                                               <tr>
-                                                  <td>Penilai {{ $i + 1 }}</td>
                                                   <td>
-                                                      <select name="TipeInputPenilai[]"
-                                                          class="form-select tipe-input-penilai{{ $isLocked ? ' locked-controls' : '' }}"
-                                                          data-penilai-index="{{ $i + 1 }}">
-                                                          <option value="Master"
-                                                              @if ($defaultType == 'Master') selected @endif>
-                                                              Dari Data Master
-                                                          </option>
-                                                          <option value="Manual"
-                                                              @if ($defaultType == 'Manual') selected @endif>
-                                                              Input Manual
-                                                          </option>
-                                                      </select>
+                                                      Penilai {{ $i + 1 }}
+                                                      @if ($isLocked)
+                                                          <i class="fa fa-lock lock-icon-label" title="Terkunci"></i>
+                                                      @endif
+                                                  </td>
+                                                  <td>
+                                                      <div style="position:relative;display:flex;align-items:center;">
+                                                          <select name="TipeInputPenilai[]"
+                                                              class="form-select tipe-input-penilai{{ $isLocked ? ' locked-controls' : '' }}"
+                                                              data-penilai-index="{{ $i + 1 }}">
+                                                              <option value="Master"
+                                                                  @if ($defaultType == 'Master') selected @endif>
+                                                                  Dari Data Master
+                                                              </option>
+                                                              <option value="Manual"
+                                                                  @if ($defaultType == 'Manual') selected @endif>
+                                                                  Input Manual
+                                                              </option>
+                                                          </select>
+                                                          @if ($isLocked)
+                                                              <i class="fa fa-lock lock-icon" title="Terkunci"></i>
+                                                          @endif
+                                                      </div>
                                                   </td>
                                                   <td>
                                                       <div class="form-master-penilai"
                                                           data-penilai-index="{{ $i + 1 }}"
                                                           @if ($defaultType != 'Master') style="display:none;" @endif>
-                                                          <select name="NamaPenilai[]"
-                                                              class="form-select select2 penilai-select{{ $isLocked ? ' locked-controls' : '' }}"
-                                                              data-penilai-index="{{ $i + 1 }}">
-                                                              <option value="" data-email="" data-jabatanid=""
-                                                                  data-departemenid="">
-                                                                  Pilih Nama Penilai {{ $i + 1 }}
-                                                              </option>
-                                                              @foreach ($user as $u)
-                                                                  <option
-                                                                      value="{{ $u->id }},{{ $u->name }}"
-                                                                      data-email="{{ $u->email }}"
-                                                                      data-jabatanid="{{ $u->jabatan ?? '' }}"
-                                                                      data-departemenid="{{ $u->departemen ?? '' }}"
-                                                                      @if (isset($app->UserId) && $u->id == $app->UserId) selected @endif>
-                                                                      {{ $u->name }}
+                                                          <div
+                                                              style="position:relative;display:flex;align-items:center;">
+                                                              <select name="NamaPenilai[]"
+                                                                  class="form-select select2 penilai-select{{ $isLocked ? ' locked-controls' : '' }}"
+                                                                  data-penilai-index="{{ $i + 1 }}">
+                                                                  <option value="" data-email=""
+                                                                      data-jabatanid="" data-departemenid="">
+                                                                      Pilih Nama Penilai {{ $i + 1 }}
                                                                   </option>
-                                                              @endforeach
-                                                          </select>
+                                                                  @foreach ($user as $u)
+                                                                      <option
+                                                                          value="{{ $u->id }},{{ $u->name }}"
+                                                                          data-email="{{ $u->email }}"
+                                                                          data-jabatanid="{{ $u->jabatan ?? '' }}"
+                                                                          data-departemenid="{{ $u->departemen ?? '' }}"
+                                                                          @if (isset($app->UserId) && $u->id == $app->UserId) selected @endif>
+                                                                          {{ $u->name }}
+                                                                      </option>
+                                                                  @endforeach
+                                                              </select>
+                                                              @if ($isLocked)
+                                                                  <i class="fa fa-lock lock-icon" title="Terkunci"></i>
+                                                              @endif
+                                                          </div>
                                                       </div>
                                                       <div class="form-manual-penilai"
                                                           data-penilai-index="{{ $i + 1 }}"
                                                           @if ($defaultType != 'Manual') style="display:none;" @endif>
-                                                          <input type="text" name="NamaPenilaiManual[]"
-                                                              class="form-control{{ $isLocked ? ' locked-controls' : '' }}"
-                                                              value="{{ $namaText }}"
-                                                              placeholder="Nama Penilai {{ $i + 1 }}">
+                                                          <div
+                                                              style="position:relative;display:flex;align-items:center;">
+                                                              <input type="text" name="NamaPenilaiManual[]"
+                                                                  class="form-control{{ $isLocked ? ' locked-controls' : '' }}"
+                                                                  value="{{ $namaText }}"
+                                                                  placeholder="Nama Penilai {{ $i + 1 }}">
+                                                              @if ($isLocked)
+                                                                  <i class="fa fa-lock lock-icon" title="Terkunci"></i>
+                                                              @endif
+                                                          </div>
                                                       </div>
                                                   </td>
                                                   <td>
-                                                      <input type="email" name="EmailPenilai[]"
-                                                          class="form-control email-penilai-input{{ $isLocked ? ' locked-controls' : '' }}"
-                                                          data-penilai-index="{{ $i + 1 }}"
-                                                          value="{{ isset($app->Email) ? $app->Email : '' }}"
-                                                          placeholder="Email Penilai {{ $i + 1 }}" required>
+                                                      <div style="position:relative;display:flex;align-items:center;">
+                                                          <input type="email" name="EmailPenilai[]"
+                                                              class="form-control email-penilai-input{{ $isLocked ? ' locked-controls' : '' }}"
+                                                              data-penilai-index="{{ $i + 1 }}"
+                                                              value="{{ isset($app->Email) ? $app->Email : '' }}"
+                                                              placeholder="Email Penilai {{ $i + 1 }}" required>
+                                                          @if ($isLocked)
+                                                              <i class="fa fa-lock lock-icon" title="Terkunci"></i>
+                                                          @endif
+                                                      </div>
                                                   </td>
                                                   <td>
-                                                      <select name="JabatanId[]"
-                                                          class="form-select select2 jabatan-penilai{{ $isLocked ? ' locked-controls' : '' }}"
-                                                          data-penilai-index="{{ $i + 1 }}">
-                                                          <option value="">Pilih Jabatan</option>
-                                                          @foreach ($jabatan as $jab)
-                                                              <option value="{{ $jab->id }}"
-                                                                  @if (old('JabatanId.' . $i, $jabatanId) == $jab->id) selected @endif>
-                                                                  {{ isset($jab->Nama) ? $jab->Nama : (isset($jab->Nama) ? $jab->Nama : '') }}
-                                                              </option>
-                                                          @endforeach
-                                                      </select>
+                                                      <div style="position:relative;display:flex;align-items:center;">
+                                                          <select name="JabatanId[]"
+                                                              class="form-select select2 jabatan-penilai{{ $isLocked ? ' locked-controls' : '' }}"
+                                                              data-penilai-index="{{ $i + 1 }}">
+                                                              <option value="">Pilih Jabatan</option>
+                                                              @foreach ($jabatan as $jab)
+                                                                  <option value="{{ $jab->id }}"
+                                                                      @if (old('JabatanId.' . $i, $jabatanId) == $jab->id) selected @endif>
+                                                                      {{ isset($jab->Nama) ? $jab->Nama : (isset($jab->Nama) ? $jab->Nama : '') }}
+                                                                  </option>
+                                                              @endforeach
+                                                          </select>
+                                                          @if ($isLocked)
+                                                              <i class="fa fa-lock lock-icon" title="Terkunci"></i>
+                                                          @endif
+                                                      </div>
                                                   </td>
                                                   <td>
-                                                      <select name="DepartemenId[]"
-                                                          class="form-select select2 departemen-penilai{{ $isLocked ? ' locked-controls' : '' }}"
-                                                          data-penilai-index="{{ $i + 1 }}">
-                                                          <option value="">Pilih Departemen</option>
-                                                          @foreach ($departemen as $dep)
-                                                              <option value="{{ $dep->id }}"
-                                                                  @if (old('DepartemenId.' . $i, $departemenId) == $dep->id) selected @endif>
-                                                                  {{ isset($dep->Nama) ? $dep->Nama : (isset($dep->nama) ? $dep->nama : '') }}
-                                                              </option>
-                                                          @endforeach
-                                                      </select>
+                                                      <div style="position:relative;display:flex;align-items:center;">
+                                                          <select name="DepartemenId[]"
+                                                              class="form-select select2 departemen-penilai{{ $isLocked ? ' locked-controls' : '' }}"
+                                                              data-penilai-index="{{ $i + 1 }}">
+                                                              <option value="">Pilih Departemen</option>
+                                                              @foreach ($departemen as $dep)
+                                                                  <option value="{{ $dep->id }}"
+                                                                      @if (old('DepartemenId.' . $i, $departemenId) == $dep->id) selected @endif>
+                                                                      {{ isset($dep->Nama) ? $dep->Nama : (isset($dep->nama) ? $dep->nama : '') }}
+                                                                  </option>
+                                                              @endforeach
+                                                          </select>
+                                                          @if ($isLocked)
+                                                              <i class="fa fa-lock lock-icon" title="Terkunci"></i>
+                                                          @endif
+                                                      </div>
                                                   </td>
                                               </tr>
                                           @endforeach
@@ -307,6 +360,42 @@
                                   });
                               }
                           });
+                          // Tampilkan icon gembok jika belum muncul (backup dari HTML, antisipasi dinamis)
+                          for (let no of [3, 4, 5]) {
+                              // setiap kolom yg dikunci, cek adakah lock-icon, jika tidak, append (untuk dinamis js, walau sudah ada di blade)
+                              // Input Tipe
+                              let $tipe = $('select.tipe-input-penilai[data-penilai-index="' + no + '"]');
+                              if ($tipe.closest('div').find('.lock-icon').length === 0) {
+                                  $tipe.closest('div').append('<i class="fa fa-lock lock-icon" title="Terkunci"></i>');
+                              }
+                              // Form master select
+                              let $masterRow = $('.form-master-penilai[data-penilai-index="' + no +
+                                  '"] select.penilai-select');
+                              if ($masterRow.length && $masterRow.closest('div').find('.lock-icon').length === 0) {
+                                  $masterRow.closest('div').append('<i class="fa fa-lock lock-icon" title="Terkunci"></i>');
+                              }
+                              // Manual input
+                              let $manualRow = $('.form-manual-penilai[data-penilai-index="' + no +
+                                  '"] input[name="NamaPenilaiManual[]"]');
+                              if ($manualRow.length && $manualRow.closest('div').find('.lock-icon').length === 0) {
+                                  $manualRow.closest('div').append('<i class="fa fa-lock lock-icon" title="Terkunci"></i>');
+                              }
+                              // Email
+                              let $email = $('input.email-penilai-input[data-penilai-index="' + no + '"]');
+                              if ($email.length && $email.closest('div').find('.lock-icon').length === 0) {
+                                  $email.closest('div').append('<i class="fa fa-lock lock-icon" title="Terkunci"></i>');
+                              }
+                              // Jabatan
+                              let $jabatan = $('select.jabatan-penilai[data-penilai-index="' + no + '"]');
+                              if ($jabatan.length && $jabatan.closest('div').find('.lock-icon').length === 0) {
+                                  $jabatan.closest('div').append('<i class="fa fa-lock lock-icon" title="Terkunci"></i>');
+                              }
+                              // Departemen
+                              let $departemen = $('select.departemen-penilai[data-penilai-index="' + no + '"]');
+                              if ($departemen.length && $departemen.closest('div').find('.lock-icon').length === 0) {
+                                  $departemen.closest('div').append('<i class="fa fa-lock lock-icon" title="Terkunci"></i>');
+                              }
+                          }
                       }
 
                       lockUrutan345Fields();
