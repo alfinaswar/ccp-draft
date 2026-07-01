@@ -185,7 +185,11 @@ class PermintaanPembelianController extends Controller
                     $encryptedId = encrypt($row->id);
                     $actions = '';
 
-                    if (auth()->user()->can('permintaan-hapus')) {
+                    // Hapus hanya jika status BUKAN 'Telah Disetujui'
+                    if (
+                        auth()->user()->can('permintaan-hapus') &&
+                        $row->Status != 'Telah Disetujui'
+                    ) {
                         $actions .= '<button class="btn btn-sm btn-danger btn-delete me-1" data-id="' . $encryptedId . '">
                         <i class="fa fa-trash"></i> Hapus
                     </button>';
@@ -197,6 +201,7 @@ class PermintaanPembelianController extends Controller
 
                     return $actions;
                 })
+
                 ->editColumn('Jenis', function ($row) {
                     return optional($row->getJenisPermintaan)->Nama;
                 })
