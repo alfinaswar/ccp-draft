@@ -603,6 +603,45 @@ class UsulanInvestasiController extends Controller
     public function approve($token)
     {
         $penilai = DokumenApproval::with('getUser')->where('ApprovalToken', $token)->firstOrFail();
+
+        if ($penilai->UserId == 81) {
+            $usulan = UsulanInvestasi::find($penilai->DokumenId);
+            $kodePengajuan = null;
+            if ($usulan) {
+                $pengajuan = PengajuanPembelian::find($usulan->IdPengajuan);
+                if ($pengajuan) {
+                    $kodePengajuan = $pengajuan->KodePengajuan;
+                    $pengajuan->AccCeo = 'Y';
+                    $pengajuan->Status = 'Disetujui CEO';
+                    $pengajuan->TanggalAccCeo = Carbon::now();
+                    $pengajuan->save();
+                } else {
+                    $kodePengajuan = $usulan->id ?? null;
+                }
+            }
+
+            $penilai->update([
+                'Status' => 'Approved',
+                'TanggalApprove' => Carbon::now(),
+            ]);
+
+           AktivitasPengajuan::create([
+                'KodePengajuan' => $kodePengajuan ?? null,
+                'Jenis' => 'Persetujuan CEO',
+                'Keterangan' => 'Arfan Awaloeddin (CEO) telah menyetujui Dokumen dengan Nomor Pengajuan: ' . ($kodePengajuan ?? '-'),
+                'UserCreate' => 'Arfan Awaloeddin',
+            ]);
+
+            if (function_exists('activity')) {
+                activity('approval_fui_ceo')
+                    ->causedBy($penilai->UserId)
+                    ->withProperties([
+                        'approval_token' => $token,
+                        'keterangan' => 'CEO Menyetujui Dokumen dengan Nomor pengajuan: ' . $kodePengajuan,
+                    ])
+                    ->log('CEO Menyetujui Dokumen dengan Nomor pengajuan: ' . $kodePengajuan);
+            }
+        }
         $penilai->update([
             'Status' => 'Approved',
             'TanggalApprove' => Carbon::now(),
@@ -624,7 +663,7 @@ class UsulanInvestasiController extends Controller
             'UserCreate' => $penilai->Nama ?? '-',
         ]);
 
-        $approvalSelanjutnya = DokumenApproval::where('DokumenId', $penilai->DokumenId)
+        $approvalSelanjutnya =DokumenApproval::where('DokumenId', $penilai->DokumenId)
             ->where('JenisFormId', $penilai->JenisFormId)
             ->where('Urutan', '>', $penilai->Urutan)
             ->where('Status', 'Pending')
@@ -635,7 +674,6 @@ class UsulanInvestasiController extends Controller
             // Kirim notifikasi email ke approval selanjutnya (contoh trigger event/email)
             try {
                 if ($approvalSelanjutnya->Email) {
-
                     Mail::to($approvalSelanjutnya->Email)
                         ->send(new NotifApprovalPresentasi(
                             UsulanInvestasi::find($approvalSelanjutnya->DokumenId),
