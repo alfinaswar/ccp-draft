@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\NotifApprovalPresentasi;
 use App\Mail\NotifFui;
 use App\Models\AktivitasPengajuan;
 use App\Models\DokumenApproval;
@@ -602,29 +603,51 @@ class UsulanInvestasiController extends Controller
     public function approve($token)
     {
         $penilai = DokumenApproval::with('getUser')->where('ApprovalToken', $token)->firstOrFail();
-        // dd($penilai);
         $penilai->update([
             'Status' => 'Approved',
             'TanggalApprove' => Carbon::now(),
         ]);
-        // Untuk FUI
-        if ($penilai->Status === 'Approved') {
-            $pengajuan = null;
-            $kodePengajuan = null;
-            if ($penilai->DokumenId ?? false) {
-                $usulan = UsulanInvestasi::find($penilai->DokumenId);
-                if ($usulan) {
-                    $pengajuan = PengajuanPembelian::find($usulan->IdPengajuan);
-                    $kodePengajuan = $pengajuan ? $pengajuan->KodePengajuan : ($usulan->id ?? null);
-                }
+
+        $pengajuan = null;
+        $kodePengajuan = null;
+        if ($penilai->DokumenId ?? false) {
+            $usulan = UsulanInvestasi::find($penilai->DokumenId);
+            if ($usulan) {
+                $pengajuan = PengajuanPembelian::find($usulan->IdPengajuan);
+                $kodePengajuan = $pengajuan ? $pengajuan->KodePengajuan : ($usulan->id ?? null);
             }
-            AktivitasPengajuan::create([
-                'KodePengajuan' => $kodePengajuan,
-                'Jenis' => 'FUI',
-                'Keterangan' => ($penilai->Nama ?? '-') . ' telah menyetujui Form Usulan Investasi (FUI)',
-                'UserCreate' => $penilai->Nama ?? '-',
-            ]);
         }
+        AktivitasPengajuan::create([
+            'KodePengajuan' => $kodePengajuan,
+            'Jenis' => 'FUI',
+            'Keterangan' => ($penilai->Nama ?? '-') . ' telah menyetujui Form Usulan Investasi (FUI)',
+            'UserCreate' => $penilai->Nama ?? '-',
+        ]);
+
+        $approvalSelanjutnya = DokumenApproval::where('DokumenId', $penilai->DokumenId)
+            ->where('JenisFormId', $penilai->JenisFormId)
+            ->where('Urutan', '>', $penilai->Urutan)
+            ->where('Status', 'Pending')
+            ->orderBy('Urutan')
+            ->first();
+
+        if ($approvalSelanjutnya) {
+            // Kirim notifikasi email ke approval selanjutnya (contoh trigger event/email)
+            try {
+                if ($approvalSelanjutnya->Email) {
+
+                    Mail::to($approvalSelanjutnya->Email)
+                        ->send(new NotifApprovalPresentasi(
+                            UsulanInvestasi::find($approvalSelanjutnya->DokumenId),
+                            $pengajuan,
+                            $approvalSelanjutnya
+                        ));
+                }
+            } catch (\Exception $e) {
+                Log::error('Gagal mengirim notifikasi approval selanjutnya FUI: ' . $e->getMessage());
+            }
+        }
+
         return view('emails.setelah-approval', compact('penilai'))->with([
             'message' => 'Terima kasih, persetujuan Anda berhasil dicatat.'
         ]);

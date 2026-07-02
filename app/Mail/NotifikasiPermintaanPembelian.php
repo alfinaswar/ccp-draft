@@ -24,8 +24,9 @@ class NotifikasiPermintaanPembelian extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: "Permintaan Pembelian - {$this->permintaan->getPerusahaan->NamaLengkap} - {$this->permintaan->getDetail[0]->getBarang->Nama}"
+            subject: "Permintaan Pembelian - {$this->permintaan->getPerusahaan->NamaLengkap} - {$this->permintaan->getDetail[0]->getBarang->Nama} - {$this->permintaan->getDetail[0]->RencanaPenempatan}"
         );
+
     }
 
     public function content(): Content
