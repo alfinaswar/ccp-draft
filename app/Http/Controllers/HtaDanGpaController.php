@@ -146,6 +146,7 @@ class HtaDanGpaController extends Controller
                         'DepartemenId' => $approvalSetting->DepartemenId ?? null,
                         'PerusahaanId' => $approvalSetting->KodePerusahaan,
                         'JabatanId' => $approvalSetting->JabatanId ?? null,
+                        'NamaJabatan' => $approvalSetting->NamaJabatan ?? null,
                         'UserId' => $approvalSetting->UserId ?? null,
                         'Nama' => $approvalSetting->getUser->name ?? null,
                         'Status' => 'Pending',
@@ -211,7 +212,6 @@ class HtaDanGpaController extends Controller
         $idPengajuan = $request->vendor[0]['IdPengajuan'];
         $pengajuan = PengajuanPembelian::find($idPengajuan);
 
-        // jenis pengajuan (2 = logum, 16 = proyek)
         $jenisPengajuan = ($pengajuan && $pengajuan->Jenis == '2') ? 2 : 16;
 
         // Find or create header
@@ -947,7 +947,6 @@ class HtaDanGpaController extends Controller
             ->orderBy('Urutan', 'asc')
             ->first();
 
-
         if ($nextApproval) {
             $this->savePdfToStorage($pengajuan->id, $pengajuan->PengajuanItemId);
             if (!empty($nextApproval->Email) && $nextApproval->UserId != 5) {
@@ -1135,7 +1134,6 @@ class HtaDanGpaController extends Controller
                 return 'storage/rekap-file/pengajuan-' . $idPengajuan . '/' . $pdfFileName;
             }
         } else {
-            // Jika PDF Permintaan tidak ada, simpan PDF HTA-GPA saja
             $pdfFileName = 'hta-gpa-' . $idPengajuan . '.pdf';
             $storagePath = $dirPath . '/' . $pdfFileName;
             Storage::put($storagePath, $htaGpaOutput);
