@@ -81,57 +81,13 @@
 
                     <div class="row mt-4 justify-content-center">
                         <div class="col-12">
-                            <h5 class="text-center mb-4"><strong>Persetujuan Permintaan Pembelian</strong></h5>
-                            <!-- Tambah baris untuk nama jabatan di atas tabel approval -->
+                            <h5 class="text-center mb-4"><strong>Persetujuan HTA / GPA</strong></h5>
                             <div class="mb-2 text-center">
-
                                 @if (!empty($approval))
-                                    @if ($data->Jenis == '2')
-                                        {{-- UMUM --}}
-                                        @php
-                                            if (
-                                                !empty($approval) &&
-                                                isset($approval[0]->NamaJabatan) &&
-                                                $approval[0]->NamaJabatan !== null
-                                            ) {
-                                                $jabatan = [];
-                                                foreach ($approval as $item) {
-                                                    $jabatan[] = $item->NamaJabatan ?? '-';
-                                                }
-                                            } else {
-                                                $jabatan = [
-                                                    'Kepala Divisi Umum',
-                                                    'Kepala Divisi Keuangan',
-                                                    'Direktur Rumah Sakut',
-                                                ];
-                                            }
-                                        @endphp
-                                    @else
-                                        {{-- PROYEK --}}
-                                        @php
-                                            if (
-                                                !empty($approval) &&
-                                                isset($approval[0]->NamaJabatan) &&
-                                                $approval[0]->NamaJabatan !== null
-                                            ) {
-                                                $jabatan = [];
-                                                foreach ($approval as $item) {
-                                                    $jabatan[] = $item->NamaJabatan ?? '-';
-                                                }
-                                            } else {
-                                                $jabatan = [
-                                                    'Kepala Divisi Umum',
-                                                    'Kepala Divisi Keuangan',
-                                                    'Direktur Rumah Sakut',
-                                                ];
-                                            }
-                                        @endphp
-                                    @endif
-
                                     <div class="row justify-content-center">
-                                        @foreach ($jabatan as $namaJabatan)
+                                        @foreach ($approval as $item)
                                             <div class="col text-center" style="font-weight:600;">
-                                                {{ $namaJabatan ?? '-' }}
+                                                {{ $item->NamaJabatan ?? '-' }}
                                             </div>
                                         @endforeach
                                     </div>
@@ -152,15 +108,22 @@
                                                 <td class="text-center" style="height:80px; vertical-align: top;">
                                                     @if ($item->Status == 'Approved' && isset($item->qrCode))
                                                         <img src="data:image/png;base64,{{ $item->qrCode }}" alt="QR Code"
-                                                            style="width:80px; height:80px;">
+                                                            style="width:80px; height:80px;"><br>
                                                     @endif
                                                 </td>
                                             @endforeach
                                         </tr>
                                         <tr>
                                             @foreach ($approval as $item)
+                                                <td class="text-center" style="padding-bottom:0;">
+                                                    <hr
+                                                        style="width: 70%; margin:0 auto 3px auto;border-top:2px solid #000;">
+                                                </td>
+                                            @endforeach
+                                        </tr>
+                                        <tr>
+                                            @foreach ($approval as $item)
                                                 <td class="text-center align-top">
-
                                                     <span style="font-weight:600;">
                                                         {{ $item->Nama ?? '-' }}
                                                     </span>
@@ -169,15 +132,6 @@
                                                     <small><em>
                                                             {{ $item->TanggalApprove ? \Carbon\Carbon::parse($item->TanggalApprove)->locale('id')->isoFormat('D MMMM Y') . ' ' . \Carbon\Carbon::parse($item->TanggalApprove)->format('H:i') : '-' }}
                                                         </em></small>
-                                                    <br>
-                                                    {{-- Tampilkan justifikasi jika ada --}}
-                                                    {{-- @if ($item->Justifikasi)
-                                                        <span class="badge rounded bg-info text-dark mt-2"
-                                                            style="font-size:12px;">
-                                                            <i class="fa fa-info-circle"></i>
-                                                            {{ $item->Justifikasi }}
-                                                        </span>
-                                                    @endif --}}
                                                 </td>
                                             @endforeach
                                         </tr>
@@ -185,12 +139,10 @@
                                 </table>
                             </div>
                         </div>
-
                         <div class="col-12 text-end mt-3">
-                            <a href="javascript:history.back()" class="btn btn-secondary me-2">
+                            <a href="{{ route('ajukan.show', encrypt($data->id)) }}" class="btn btn-secondary me-2">
                                 <i class="fa fa-arrow-left"></i> Kembali
                             </a>
-
                             @foreach ($approval as $item)
                                 @if (auth()->id() == ($item->UserId ?? null) && $item->Status != 'Approved' && !empty($item->ApprovalToken))
                                     <button type="button" class="btn btn-approve me-2"
@@ -198,7 +150,7 @@
                                         data-bs-toggle="modal" data-bs-target="#modalJustifikasi"
                                         data-approval-token="{{ $item->ApprovalToken }}"
                                         data-approval-route="{{ route('htagpa.submitJustifikasi', $item->ApprovalToken) }}"
-                                        data-jabatan="{{ $item->getJabatan->Nama ?? $item->JenisUser }}"
+                                        data-jabatan="{{ $item->NamaJabatan ?? ($item->getJabatan->Nama ?? $item->JenisUser) }}"
                                         data-nama="{{ $item->Nama ?? 'Penilai' }}">
                                         <i class="fa fa-check"></i>
                                         Setujui
@@ -206,6 +158,24 @@
                                 @endif
                             @endforeach
                         </div>
+                        @if (isset($approval) && count($approval) > 0)
+                            <div class="mt-4">
+                                <dl>
+                                    @php $nomor = 1; @endphp
+                                    @foreach ($approval as $item)
+                                        @if (!empty($item->Justifikasi))
+                                            <dt>
+                                                <strong>{{ $nomor++ }}.
+                                                    Justifikasi{{ $item->Nama ? ' oleh ' . $item->Nama : '' }}:</strong>
+                                            </dt>
+                                            <dd class="text-muted" style="margin-bottom:10px;">
+                                                {{ $item->Justifikasi }}
+                                            </dd>
+                                        @endif
+                                    @endforeach
+                                </dl>
+                            </div>
+                        @endif
                     </div>
                     @if (isset($approval) && count($approval) > 0)
                         <div class="mt-4">

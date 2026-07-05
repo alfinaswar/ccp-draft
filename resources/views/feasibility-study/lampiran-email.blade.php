@@ -324,8 +324,7 @@
             <tr>
                 @foreach ($approval2 as $item)
                     <td style="text-align:center; font-weight:600; border:none;">
-                        {{ $item->getJabatan->Nama ?? '-' }}<br>
-                        {{ $item->getDepartemen->Nama ?? '-' }}
+                        {{ $item->NamaJabatan ?? '-' }}
                     </td>
                 @endforeach
             </tr>

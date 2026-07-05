@@ -363,18 +363,9 @@
     <tbody>
         {{-- Jabatan & Departemen --}}
         <tr>
-            @php
-                $jabatanList = [
-                    'Kepala KSM Rumah Sakit',
-                    'Ketua Tim HTA Rumah Sakit',
-                    'Direktur Rumah Sakit',
-                    'Group Head Medik',
-                    'Group Head Penunjang Medis',
-                ];
-            @endphp
-            @foreach ($approval2 as $idx => $item)
+            @foreach ($approval2 as $item)
                 <td style="font-weight:600; vertical-align:bottom;">
-                    {{ $jabatanList[$idx] ?? '-' }}
+                    {{ $item->NamaJabatan ?? '-' }}
                 </td>
             @endforeach
         </tr>

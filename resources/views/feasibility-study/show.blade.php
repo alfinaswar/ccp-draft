@@ -293,15 +293,14 @@
                         </div>
                         <div class="row mt-4 justify-content-center">
                             <div class="col-12">
-                                <h5 class="text-center mb-4"><strong>Persetujuan Permintaan Pembelian</strong></h5>
+                                <h5 class="text-center mb-4"><strong>Persetujuan Feasibility Study</strong></h5>
                                 <!-- Tambah baris untuk nama jabatan di atas tabel approval -->
                                 <div class="mb-2 text-center">
                                     @if (!empty($approval))
                                         <div class="row justify-content-center">
                                             @foreach ($approval as $item)
                                                 <div class="col text-center" style="font-weight:600;">
-                                                    {{ $item->getJabatan->Nama ?? '-' }}
-                                                    {{ $item->getDepartemen->Nama ?? '-' }}
+                                                    {{ $item->NamaJabatan ?? '-' }}
                                                 </div>
                                             @endforeach
                                         </div>

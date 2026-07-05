@@ -199,8 +199,7 @@
         </table>
     </div>
 
-    <h5 class="text-center mb-4"><strong>Persetujuan Permintaan Pembelian</strong></h5>
-    <!-- Untuk cetak PDF tanda tangan approval -->
+    <h5 class="text-center mb-4"><strong>Persetujuan HTA / GPA</strong></h5>
     <table style="width:100%; margin: 0 auto; border:none;">
         <colgroup>
             @if (!empty($approval2))
@@ -211,18 +210,9 @@
         </colgroup>
         <tbody>
             <tr>
-                @php
-                    $jabatanList = [
-                        'Kepala KSM Rumah Sakit',
-                        'Ketua Tim HTA Rumah Sakit',
-                        'Direktur Rumah Sakit',
-                        'Group Head Medik',
-                        'Group Head Penunjang Medis',
-                    ];
-                @endphp
-                @foreach ($approval2 as $idx => $item)
+                @foreach ($approval2 as $item)
                     <td style="font-weight:600; vertical-align:bottom;">
-                        {{ $jabatanList[$idx] ?? '-' }}
+                        {{ $item->NamaJabatan ?? '-' }}
                     </td>
                 @endforeach
             </tr>
@@ -258,7 +248,6 @@
                         </span>
                         <div style="display: block; text-align: center;">
                             <small style="display: inline-block;">{{ $item->Status ?? '-' }}</small>
-
                         </div>
                     </td>
                 @endforeach

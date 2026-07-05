@@ -227,18 +227,9 @@
                             <div class="mb-2 text-center">
                                 @if (!empty($approval))
                                     <div class="row justify-content-center">
-                                        @php
-                                            $jabatan = [
-                                                'Kepala KSM Rumah Sakit',
-                                                'Ketua Tim HTA Rumah Sakit',
-                                                'Direktur Rumah Sakit',
-                                                'Group Head Medik',
-                                                'Group Head Penunjang Medis',
-                                            ];
-                                        @endphp
-                                        @foreach ($jabatan as $namaJabatan)
+                                        @foreach ($approval as $item)
                                             <div class="col text-center" style="font-weight:600;">
-                                                {{ $namaJabatan ?? '-' }}
+                                                {{ $item->NamaJabatan ?? '-' }}
                                             </div>
                                         @endforeach
                                     </div>
@@ -301,7 +292,7 @@
                                         data-bs-toggle="modal" data-bs-target="#modalJustifikasi"
                                         data-approval-token="{{ $item->ApprovalToken }}"
                                         data-approval-route="{{ route('htagpa.submitJustifikasi', $item->ApprovalToken) }}"
-                                        data-jabatan="{{ $item->getJabatan->Nama ?? $item->JenisUser }}"
+                                        data-jabatan="{{ $item->NamaJabatan ?? ($item->getJabatan->Nama ?? $item->JenisUser) }}"
                                         data-nama="{{ $item->Nama ?? 'Penilai' }}">
                                         <i class="fa fa-check"></i>
                                         Setujui
@@ -328,6 +319,7 @@
                             </div>
                         @endif
                     </div>
+
                 </div>
             </div>
         </div>

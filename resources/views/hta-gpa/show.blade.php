@@ -216,18 +216,9 @@
                             <div class="mb-2 text-center">
                                 @if (!empty($approval))
                                     <div class="row justify-content-center">
-                                        @php
-                                            $jabatan = [
-                                                'Kepala KSM Rumah Sakit',
-                                                'Ketua Tim HTA Rumah Sakit',
-                                                'Direktur Rumah Sakit',
-                                                'Group Head Medik',
-                                                'Group Head Penunjang Medis',
-                                            ];
-                                        @endphp
-                                        @foreach ($jabatan as $namaJabatan)
+                                        @foreach ($approval as $item)
                                             <div class="col text-center" style="font-weight:600;">
-                                                {{ $namaJabatan ?? '-' }}
+                                                {{ $item->NamaJabatan ?? '-' }}
                                             </div>
                                         @endforeach
                                     </div>
@@ -243,7 +234,6 @@
                                         @endif
                                     </colgroup>
                                     <tbody>
-
                                         <tr>
                                             @foreach ($approval as $item)
                                                 <td class="text-center" style="height:80px; vertical-align: top;">
@@ -265,7 +255,6 @@
                                         <tr>
                                             @foreach ($approval as $item)
                                                 <td class="text-center align-top">
-
                                                     <span style="font-weight:600;">
                                                         {{ $item->Nama ?? '-' }}
                                                     </span>
@@ -281,7 +270,6 @@
                                 </table>
                             </div>
                         </div>
-                        {{-- {{ dd($data->getHtaGpa->IdPengajuan, $data->getHtaGpa) }} --}}
                         <div class="col-12 text-end mt-3">
                             <a href="{{ route('ajukan.show', encrypt($data->id)) }}" class="btn btn-secondary me-2">
                                 <i class="fa fa-arrow-left"></i> Kembali
@@ -293,14 +281,13 @@
                                         data-bs-toggle="modal" data-bs-target="#modalJustifikasi"
                                         data-approval-token="{{ $item->ApprovalToken }}"
                                         data-approval-route="{{ route('htagpa.submitJustifikasi', $item->ApprovalToken) }}"
-                                        data-jabatan="{{ $item->getJabatan->Nama ?? $item->JenisUser }}"
+                                        data-jabatan="{{ $item->NamaJabatan ?? ($item->getJabatan->Nama ?? $item->JenisUser) }}"
                                         data-nama="{{ $item->Nama ?? 'Penilai' }}">
                                         <i class="fa fa-check"></i>
                                         Setujui
                                     </button>
                                 @endif
                             @endforeach
-
                         </div>
                         @if (isset($approval) && count($approval) > 0)
                             <div class="mt-4">
