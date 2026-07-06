@@ -11,6 +11,7 @@ use App\Models\MasterBarang;
 use App\Models\MasterForm;
 use App\Models\PengajuanItem;
 use App\Models\PengajuanPembelian;
+use App\Services\PdfGeneratorService;
 use Carbon\Carbon;
 use Endroid\QrCode\Writer\PngWriter;
 use Endroid\QrCode\QrCode;
@@ -22,6 +23,13 @@ use setasign\Fpdi\Tcpdf\Fpdi;
 
 class FeasibilityStudyController extends Controller
 {
+    protected $pdfGenerator;
+
+    public function __construct(PdfGeneratorService $pdfGenerator)
+    {
+        $this->pdfGenerator = $pdfGenerator;
+    }
+
     /**
      * Display a listing of the resource.
      */
@@ -307,8 +315,8 @@ class FeasibilityStudyController extends Controller
             ->firstOrFail();
 
         $Pengajuan = PengajuanPembelian::find($idPengajuan);
-        $this->savePdfToStorage($idPengajuan, $idPengajuanItem);
-
+        // $this->savePdfToStorage($idPengajuan, $idPengajuanItem);
+        $this->pdfGenerator->generateAll($Pengajuan->id);
         // Mulai logika pengiriman email sesuai instruksi
         $emailsToSend = [];
 
@@ -530,7 +538,8 @@ class FeasibilityStudyController extends Controller
                         $item->qrCode = base64_encode($result->getString());
                     }
                 }
-                $this->savePdfToStorage($fs->IdPengajuan);
+                // $this->savePdfToStorage($fs->IdPengajuan);
+                $this->pdfGenerator->generateAll($fs->IdPengajuan);
                 // dd(123);
                 try {
                     Mail::to($nextApproval->Email)
@@ -551,7 +560,8 @@ class FeasibilityStudyController extends Controller
                 }
             }
         } else {
-            $this->savePdfToStorage($fs->IdPengajuan);
+            // $this->savePdfToStorage($fs->IdPengajuan);
+            $this->pdfGenerator->generateAll($fs->IdPengajuan);
             if ($fs) {
                 $fs->update([
                     'Status' => 'Final',
@@ -643,6 +653,7 @@ class FeasibilityStudyController extends Controller
                 $detailData
             );
         }
+        $this->pdfGenerator->generateAll($header->IdPengajuan);
         return redirect()->back()->with('success', 'Feasibility Study berhasil diupdate');
     }
 

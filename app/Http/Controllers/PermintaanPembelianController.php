@@ -201,7 +201,6 @@ class PermintaanPembelianController extends Controller
 
                     return $actions;
                 })
-
                 ->editColumn('Jenis', function ($row) {
                     return optional($row->getJenisPermintaan)->Nama;
                 })
@@ -439,6 +438,7 @@ class PermintaanPembelianController extends Controller
             }
             if ($permintaan) {
                 $this->savePdfToStorage(encrypt($permintaan->id));
+                // $this->generateRekomendasi($permintaan->id);
             }
         }
 

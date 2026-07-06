@@ -280,8 +280,34 @@
                         $showApprovalList = false;
                         $approvalList = [];
                         $totalNego = 0;
-                        $jenisP = $data2->getPerusahaan->Kategori;
+                        $jenisP = $data2->getPerusahaan->Kategori ?? null;
+
+                        // IF Versi v2: gunakan flow dari gambar/prompt
                         if (
+                            isset($data2) &&
+                            ($data2->Versi ?? ($data2->Versi ?? 'v1')) === 'v2' &&
+                            !empty($dataRekom) &&
+                            isset($dataRekom->getRekomedasiDetail)
+                        ) {
+                            // Ambil HargaNego rekomendasi 1, default 0
+                            $rekomendasiSatu = $dataRekom->getRekomedasiDetail->first(function ($item) {
+                                return isset($item->Rekomendasi) && $item->Rekomendasi == 1;
+                            });
+                            $totalNego = (int) ($rekomendasiSatu->HargaNego ?? 0);
+
+                            $showApprovalList = true;
+                            // NOTE: Ikuti gambar sebagai acuan utama, tanpa membedakan Jenis/jangmed/umum
+                            if ($totalNego > 100000000) {
+                                $approvalList = ['Direktur RS', 'GH Keuangan', 'Direktur RSAB Group', 'CEO'];
+                            } elseif ($totalNego > 50000000 && $totalNego <= 100000000) {
+                                $approvalList = ['Direktur RS', 'GH Keuangan', 'Direktur RSAB Group'];
+                            } else {
+                                // Untuk <= 50 juta, tetap pake default $approvalList kosong/nilai lama jika ada
+                                $showApprovalList = false; // fallback pake approval lama jika di bawah 50jt
+                            }
+                        }
+                        // fallback ke versi sebelumnya (v1 logic lama)
+                        elseif (
                             isset($data2) &&
                             isset($data2->Jenis) &&
                             !empty($dataRekom) &&
@@ -290,7 +316,7 @@
                             $rekomendasiSatu = $dataRekom->getRekomedasiDetail->first(function ($item) {
                                 return isset($item->Rekomendasi) && $item->Rekomendasi == 1;
                             });
-                            $totalNego = $rekomendasiSatu->HargaNego;
+                            $totalNego = $rekomendasiSatu->HargaNego ?? 0;
                             $showApprovalList = true;
 
                             if ($data2->Jenis == 1) {
@@ -331,8 +357,8 @@
                                 }
                             }
                         }
-
                     @endphp
+
                     @if ($showApprovalList && !empty($approvalList))
                         @foreach ($approvalList as $jabatan)
                             <td class="text-center no-border" style="font-weight:600;">

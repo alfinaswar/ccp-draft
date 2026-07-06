@@ -15,6 +15,7 @@ use App\Models\Rekomendasi;
 use App\Models\User;
 use App\Models\UsulanInvestasi;
 use App\Models\UsulanInvestasiDetail;
+use App\Services\PdfGeneratorService;
 use Carbon\Carbon;
 use Endroid\QrCode\Writer\PngWriter;
 use Endroid\QrCode\QrCode;
@@ -25,6 +26,13 @@ use Illuminate\Support\Str;
 
 class UsulanInvestasiController extends Controller
 {
+    protected $pdfGenerator;
+
+    public function __construct(PdfGeneratorService $pdfGenerator)
+    {
+        $this->pdfGenerator = $pdfGenerator;
+    }
+
     /**
      * Display a listing of the resource.
      */
@@ -394,7 +402,8 @@ class UsulanInvestasiController extends Controller
 
         $pengajuan = PengajuanPembelian::find($idPengajuan);
         // dd($pengajuan);
-        $this->savePdfToStorage($pengajuan->id, $pengajuan->id);
+        // $this->savePdfToStorage($pengajuan->id, $pengajuan->id);
+        $this->pdfGenerator->generateAll($pengajuan->id);
         $kodePengajuan = $pengajuan ? $pengajuan->KodePengajuan : null;
         AktivitasPengajuan::create([
             'KodePengajuan' => $kodePengajuan ?? null,
@@ -625,7 +634,7 @@ class UsulanInvestasiController extends Controller
                 'TanggalApprove' => Carbon::now(),
             ]);
 
-           AktivitasPengajuan::create([
+            AktivitasPengajuan::create([
                 'KodePengajuan' => $kodePengajuan ?? null,
                 'Jenis' => 'Persetujuan CEO',
                 'Keterangan' => 'Arfan Awaloeddin (CEO) telah menyetujui Dokumen dengan Nomor Pengajuan: ' . ($kodePengajuan ?? '-'),
@@ -663,7 +672,7 @@ class UsulanInvestasiController extends Controller
             'UserCreate' => $penilai->Nama ?? '-',
         ]);
 
-        $approvalSelanjutnya =DokumenApproval::where('DokumenId', $penilai->DokumenId)
+        $approvalSelanjutnya = DokumenApproval::where('DokumenId', $penilai->DokumenId)
             ->where('JenisFormId', $penilai->JenisFormId)
             ->where('Urutan', '>', $penilai->Urutan)
             ->where('Status', 'Pending')

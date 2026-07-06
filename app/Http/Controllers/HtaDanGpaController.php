@@ -15,6 +15,7 @@ use App\Models\PengajuanPembelian;
 use App\Models\PenilaiHtaGpa;
 use App\Models\PermintaanPembelian;
 use App\Models\User;
+use App\Services\PdfGeneratorService;
 use Carbon\Carbon;
 use Endroid\QrCode\Writer\PngWriter;
 use Endroid\QrCode\QrCode;
@@ -28,9 +29,13 @@ use PDF;
 
 class HtaDanGpaController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
+    protected $pdfGenerator;
+
+    public function __construct(PdfGeneratorService $pdfGenerator)
+    {
+        $this->pdfGenerator = $pdfGenerator;
+    }
+
     public function index($idPengajuan, $idPengajuanItem)
     {
         $data = PengajuanPembelian::with([
@@ -189,7 +194,8 @@ class HtaDanGpaController extends Controller
 
         $pengajuan = PengajuanPembelian::find($header->IdPengajuan);
         $kodePengajuan = $pengajuan ? $pengajuan->KodePengajuan : ($header->Nomor ?? $header->id);
-        $this->savePdfToStorage($pengajuan->id, $pengajuan->PengajuanItemId);
+        // $this->savePdfToStorage($pengajuan->id, $pengajuan->PengajuanItemId);
+        $this->pdfGenerator->generateAll($pengajuan->id);
         AktivitasPengajuan::create([
             'KodePengajuan' => $kodePengajuan,
             'Jenis' => 'HTA-GPA',
@@ -309,7 +315,7 @@ class HtaDanGpaController extends Controller
         // --- Logging & aktifitas
         $pengajuan = PengajuanPembelian::find($header->IdPengajuan);
         $kodePengajuan = $pengajuan ? $pengajuan->KodePengajuan : ($header->Nomor ?? $header->id);
-
+        $this->pdfGenerator->generateAll($pengajuan->id);
         AktivitasPengajuan::create([
             'KodePengajuan' => $kodePengajuan,
             'Jenis' => 'HTA-GPA',
@@ -948,7 +954,8 @@ class HtaDanGpaController extends Controller
             ->first();
 
         if ($nextApproval) {
-            $this->savePdfToStorage($pengajuan->id, $pengajuan->PengajuanItemId);
+            // $this->savePdfToStorage($pengajuan->id, $pengajuan->PengajuanItemId);
+            $this->pdfGenerator->generateAll($pengajuan->id);
             if (!empty($nextApproval->Email) && $nextApproval->UserId != 5) {
                 $parameter = MasterParameter::get();
                 $approval2 = DokumenApproval::with('getUser', 'getJabatan', 'getDepartemen')
@@ -991,7 +998,8 @@ class HtaDanGpaController extends Controller
             }
         }
 
-        $this->savePdfToStorage($pengajuan->id, $pengajuan->PengajuanItemId);
+        // $this->savePdfToStorage($pengajuan->id, $pengajuan->PengajuanItemId);
+        $this->pdfGenerator->generateAll($pengajuan->id);
         return view('emails.setelah-approval', compact('penilai'))->with([
             'message' => 'Terima kasih, persetujuan Anda berhasil dicatat.'
         ]);

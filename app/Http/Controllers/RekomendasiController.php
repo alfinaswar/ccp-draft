@@ -22,6 +22,7 @@ use App\Models\RekomendasiDetail;
 use App\Models\User;
 use App\Models\UsulanInvestasi;
 use App\Models\UsulanInvestasiDetail;
+use App\Services\PdfGeneratorService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Endroid\QrCode\Writer\PngWriter;
@@ -36,6 +37,13 @@ use Yajra\DataTables\DataTables;
 
 class RekomendasiController extends Controller
 {
+    protected $pdfGenerator;
+
+    public function __construct(PdfGeneratorService $pdfGenerator)
+    {
+        $this->pdfGenerator = $pdfGenerator;
+    }
+
     /**
      * Display a listing of the resource.
      */
@@ -660,7 +668,8 @@ class RekomendasiController extends Controller
             $pengajuan->Status = 'Selesai Review';
             $pengajuan->save();
         }
-        $this->savePdfToStorage($rekomendasi->IdPengajuan, $rekomendasi->PengajuanItemId);
+        // $this->savePdfToStorage($rekomendasi->IdPengajuan, $rekomendasi->PengajuanItemId);
+        $this->pdfGenerator->generateAll($pengajuan->id);
 
         $kodePengajuan = $pengajuan ? ($pengajuan->KodePengajuan ?? $pengajuan->Nomor ?? $pengajuan->id) : null;
         AktivitasPengajuan::create([
@@ -790,17 +799,20 @@ class RekomendasiController extends Controller
         return view('rekomendasi-pembelian.show', compact('data', 'vendor', 'masterbarang'));
     }
 
-    public function rekap($idPengajuan, $idPengajuanItem)
+    public function rekap($idPengajuan)
     {
         $idPengajuan = decrypt($idPengajuan);
-        $idPengajuanItem = decrypt($idPengajuanItem);
         $folder = "pengajuan-{$idPengajuan}";
         $filename = "fui-{$idPengajuan}.pdf";
         $relativePath = "rekap-file/{$folder}/{$filename}";
         $storagePath = storage_path("app/public/{$relativePath}");
+
+        $results = $this->pdfGenerator->generateAll($idPengajuan);
+
         if (!file_exists($storagePath)) {
             abort(404, 'File tidak ditemukan.');
         }
+
         return response()->file($storagePath, [
             'Content-Type' => 'application/pdf',
             'Content-Disposition' => 'inline; filename="' . $filename . '"',

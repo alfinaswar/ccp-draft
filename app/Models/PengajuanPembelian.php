@@ -24,6 +24,10 @@ class PengajuanPembelian extends Model
      */
     protected $guarded = ['id'];
 
+    protected $attributes = [
+        'Versi' => 'v2',
+    ];
+
     public function getPerusahaan()
     {
         return $this->hasOne(MasterPerusahaan::class, 'Kode', 'KodePerusahaan');
@@ -53,14 +57,17 @@ class PengajuanPembelian extends Model
     {
         return $this->hasOne(HtaDanGpa::class, 'IdPengajuan', 'id');
     }
+
     public function getFUI()
     {
         return $this->hasOne(UsulanInvestasi::class, 'IdPengajuan', 'id');
     }
+
     public function getDisposisi()
     {
         return $this->hasOne(LembarDisposisi::class, 'IdPengajuan', 'id');
     }
+
     public function getFS()
     {
         return $this->hasOne(FeasibilityStudy::class, 'IdPengajuan', 'id');
@@ -70,18 +77,22 @@ class PengajuanPembelian extends Model
     {
         return $this->hasMany(Rekomendasi::class, 'IdPengajuan', 'id');
     }
+
     public function getDepartemen()
     {
         return $this->hasOne(MasterDepartemen::class, 'id', 'DepartemenId');
     }
+
     public function getPermintaan()
     {
         return $this->hasOne(PermintaanPembelian::class, 'id', 'IdPermintaan');
     }
+
     public function getRekomendasiCcp()
     {
         return $this->hasOne(Rekomendasi::class, 'IdPengajuan', 'id');
     }
+
     public function getTracking()
     {
         return $this->hasMany(AktivitasPengajuan::class, 'KodePengajuan', 'KodePengajuan');
