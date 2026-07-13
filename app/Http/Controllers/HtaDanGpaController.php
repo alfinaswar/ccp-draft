@@ -436,6 +436,7 @@ class HtaDanGpaController extends Controller
                 'JenisUser' => $request->TipeInputPenilai[$key],
                 'JabatanId' => $request->JabatanId[$key],
                 'DepartemenId' => $request->DepartemenId[$key],
+                'NamaJabatan' => $approval->NamaJabatan,
                 'UserId' => $userId,
                 'Nama' => $request->NamaPenilaiManual[$key] ?? $userName,
                 'Email' => $request->EmailPenilai[$key],

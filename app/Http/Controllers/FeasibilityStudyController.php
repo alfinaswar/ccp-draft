@@ -271,6 +271,7 @@ class FeasibilityStudyController extends Controller
                     'DepartemenId' => $approvalSetting->Departemen,
                     'PerusahaanId' => $approvalSetting->KodePerusahaan,
                     'JabatanId' => $approvalSetting->JabatanId ?? null,
+                    'NamaJabatan' => $approvalSetting->NamaJabatan ?? null,
                     'UserId' => $approvalSetting->UserId ?? null,
                     'Nama' => $approvalSetting->getUser->name ?? null,
                     'Email' => $approvalSetting->getUser->email ?? null,
