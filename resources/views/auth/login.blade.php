@@ -44,11 +44,6 @@
                                     style="width: 280px; height: auto;">
                             </div>
 
-                            <div class="login-userheading text-center">
-                                <h3>Selamat Datang di AB Proc</h3>
-                                <h4>Silakan masuk untuk melanjutkan</h4>
-                            </div>
-
 
                             @if ($errors->any())
                                 <div class="alert alert-danger">
