@@ -14,7 +14,7 @@
     <link rel="shortcut icon" type="image/x-icon" href="{{ asset('') }}assets/img/favicon.png">
 
     <!-- Bootstrap CSS -->
-    <link rel="stylesheet" href="{{ asset('') }}as  sets/css/bootstrap.min.css">
+    <link rel="stylesheet" href="{{ asset('') }}assets/css/bootstrap.min.css">
 
     <!-- Fontawesome CSS -->
     <link rel="stylesheet" href="{{ asset('') }}assets/plugins/fontawesome/css/fontawesome.min.css">
@@ -44,7 +44,10 @@
                                     style="width: 280px; height: auto;">
                             </div>
 
-
+                            <div class="login-userheading">
+                                <h3>Masuk</h3>
+                                <h4>Akses aplikasi CCP menggunakan email dan kata sandi Anda.</h4>
+                            </div>
                             @if ($errors->any())
                                 <div class="alert alert-danger">
                                     <ul class="mb-0">
