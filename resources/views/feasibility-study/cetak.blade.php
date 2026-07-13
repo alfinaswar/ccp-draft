@@ -349,13 +349,6 @@
             </tr>
             <tr>
                 @foreach ($approval as $item)
-                    <td class="text-center" style="padding-bottom:0; border:none;">
-                        <hr style="width: 70%; margin:0 auto 3px auto;border-top:2px solid #000;">
-                    </td>
-                @endforeach
-            </tr>
-            <tr>
-                @foreach ($approval as $item)
                     <td class="text-center align-top" style="border:none;">
                         <span style="font-weight:600;">
                             {{ $item->Nama ?? '-' }}

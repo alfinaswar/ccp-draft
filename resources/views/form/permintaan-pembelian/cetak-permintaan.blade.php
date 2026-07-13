@@ -162,10 +162,8 @@
             </colgroup>
             <tbody>
                 <tr>
-                    @foreach ($approval as $item)
-                        <td style="font-weight:600;">
-                            {{ $item->getJabatan->Nama ?? '-' }}<br>{{ $item->getDepartemen->Nama ?? '' }}</td>
-                    @endforeach
+                    <td style="font-weight:600;">Meminta</td>
+                    <td style="font-weight:600;">Kadiv</td>
                 </tr>
                 <tr>
                     @foreach ($approval as $item)
@@ -173,7 +171,7 @@
                             <div style="display:flex;flex-direction:column;align-items:center;">
                                 @if ($item->Status == 'Approved' && isset($item->qrCode))
                                     <img src="data:image/png;base64,{{ $item->qrCode }}" alt="QR Code"
-                                        style="width:100px;height:100px;display:block;margin:0 auto;">
+                                        style="width:75px;height:75px;display:block;margin:0 auto;">
                                 @endif
                                 <hr>
                             </div>

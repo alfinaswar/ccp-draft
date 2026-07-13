@@ -349,16 +349,16 @@
                     @endphp
 
                     @if (($showApprovalList2 ?? false) && !empty($approvalList2 ?? []))
-                        @foreach ($approvalList2 as $jabatan)
+                        @foreach ($approval2 ?? [] as $item)
                             <td class="text-center no-border" style="font-weight:600;">
-                                {{ $jabatan ?? '-' }}
+                                {{ $item->NamaJabatan ?? '-' }}
                             </td>
                         @endforeach
+
                     @else
                         @foreach ($approval2 ?? [] as $item)
                             <td class="text-center no-border">
-                                {{ $item->getJabatan->Nama ?? '-' }}<br>
-                                {{ $item->getDepartemen->Nama ?? '' }}
+                                {{ $item->NamaJabatan ?? '-' }}
                             </td>
                         @endforeach
                     @endif

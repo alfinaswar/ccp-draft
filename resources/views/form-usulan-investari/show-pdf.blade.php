@@ -360,16 +360,15 @@
                     @endphp
 
                     @if ($showApprovalList && !empty($approvalList))
-                        @foreach ($approvalList as $jabatan)
-                            <td class="text-center no-border" style="font-weight:600;">
-                                {{ $jabatan }}
+                       @foreach ($approval as $item)
+                            <td class="text-center no-border">
+                                {{ $item->NamaJabatan ?? '-' }}<br>
                             </td>
                         @endforeach
                     @else
                         @foreach ($approval as $item)
                             <td class="text-center no-border">
-                                {{ $item->getJabatan->Nama ?? '-' }}<br>
-                                {{ $item->getDepartemen->Nama ?? '' }}
+                                {{ $item->NamaJabatan ?? '-' }}
                             </td>
                         @endforeach
                     @endif

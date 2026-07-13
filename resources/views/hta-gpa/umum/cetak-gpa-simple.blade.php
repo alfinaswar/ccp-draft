@@ -164,13 +164,7 @@
                         </td>
                     @endforeach
                 </tr>
-                {{-- Ruang TTD --}}
-                <tr>
-                    @foreach ($approval2 as $item)
-                        <td style="height: 20px; border:none;">&nbsp;</td>
-                    @endforeach
-                </tr>
-                {{-- QR Code --}}
+
                 <tr>
                     @foreach ($approval2 as $item)
                         <td class="qr-container">

@@ -141,7 +141,6 @@
                                               <th>Nama</th>
                                               <th>Email</th>
                                               <th>Jabatan</th>
-                                              <th>Departemen</th>
                                           </tr>
                                       </thead>
                                       <tbody>

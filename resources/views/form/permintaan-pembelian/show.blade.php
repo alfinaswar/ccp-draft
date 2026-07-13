@@ -116,12 +116,13 @@
                             <div class="mb-2 text-center">
                                 @if (!empty($approval))
                                     <div class="row justify-content-center">
-                                        @foreach ($approval as $item)
-                                            <div class="col text-center" style="font-weight:600;">
-                                                {{ $item->getJabatan->Nama ?? '-' }}
-                                                {{ $item->getDepartemen->Nama ?? '' }}
-                                            </div>
-                                        @endforeach
+                                        <div class="col text-center" style="font-weight:600;">
+                                            Meminta
+                                        </div>
+                                        <div class="col text-center" style="font-weight:600;">
+                                            Kadiv
+                                        </div>
+
                                     </div>
                                 @endif
                             </div>
