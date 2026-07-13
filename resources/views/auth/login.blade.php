@@ -45,9 +45,10 @@
                             </div>
 
                             <div class="login-userheading text-center">
-                                <h3>Maaf, untuk sementara tidak bisa login.</h3>
-                                <h4>Login akan dibuka kembali setelah sosialisasi.</h4>
+                                <h3>Selamat Datang di AB Proc</h3>
+                                <h4>Silakan masuk untuk melanjutkan</h4>
                             </div>
+
 
                             @if ($errors->any())
                                 <div class="alert alert-danger">
