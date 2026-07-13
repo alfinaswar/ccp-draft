@@ -327,7 +327,7 @@ class HomeController extends Controller
             $countValid = 0;
 
             foreach ($data as $pengajuan) {
-                // $diajukanPada = $pengajuan->;
+                $diajukanPada = $pengajuan->DiajukanPada;
 
                 $disetujuiPada = null;
                 if (
