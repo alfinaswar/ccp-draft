@@ -348,11 +348,12 @@
                             @if ($showApprovalList && !empty($approvalList))
                                 <div class="mb-2 text-center">
                                     <div class="row justify-content-center">
-                                        @foreach ($approvalList as $jabatan)
+                                        @foreach ($approval as $item)
                                             <div class="col text-center" style="font-weight:600;">
-                                                {{ $jabatan }}
+                                                {{ $item->NamaJabatan ?? '-' }}
                                             </div>
                                         @endforeach
+
                                     </div>
                                 </div>
                             @endif
