@@ -171,7 +171,6 @@
                                         @endforeach
                                     @else
                                         @foreach ($data->getDetail as $key => $list)
-                                            {{-- {{ dd($list) }} --}}
                                             <tr>
                                                 <td>
                                                     <select name="NamaBarang[]" class="form-control select2" required>
