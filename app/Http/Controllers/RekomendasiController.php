@@ -1492,7 +1492,7 @@ class RekomendasiController extends Controller
         ]);
 
         $rekomendasi = PengajuanPembelian::find($id);
-
+        // dd($rekomendasi);
         if (!$rekomendasi) {
             return redirect()->back()->with('error', 'Rekomendasi tidak ditemukan.');
         }
@@ -1512,7 +1512,7 @@ class RekomendasiController extends Controller
             ->where('Status', 'Pending')
             ->orderBy('Urutan', 'asc')
             ->first();
-        $this->pdfGenerator->generateAll($rekomendasi->id);
+        $this->pdfGenerator->generateAll($id);
         // ========== KIRIM EMAIL ==========
         if ($approvalFUITesting) {
             Mail::to($approvalFUITesting->Email)
