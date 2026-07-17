@@ -1512,7 +1512,7 @@ class RekomendasiController extends Controller
             ->where('Status', 'Pending')
             ->orderBy('Urutan', 'asc')
             ->first();
-        $this->pdfGenerator->generateAll($id);
+        $this->pdfGenerator->generateAll($rekomendasi->id);
         // ========== KIRIM EMAIL ==========
         if ($approvalFUITesting) {
             Mail::to($approvalFUITesting->Email)
