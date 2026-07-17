@@ -218,6 +218,7 @@ class HtaDanGpaController extends Controller
         $idPengajuan = $request->vendor[0]['IdPengajuan'];
         $pengajuan = PengajuanPembelian::find($idPengajuan);
 
+        // jenis pengajuan (2 = logum, 16 = proyek)
         $jenisPengajuan = ($pengajuan && $pengajuan->Jenis == '2') ? 2 : 16;
 
         // Find or create header

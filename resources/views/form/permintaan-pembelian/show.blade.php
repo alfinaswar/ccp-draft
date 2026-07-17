@@ -120,9 +120,8 @@
                                             Meminta
                                         </div>
                                         <div class="col text-center" style="font-weight:600;">
-                                            Kadiv
+                                            Disetujui Oleh
                                         </div>
-
                                     </div>
                                 @endif
                             </div>
