@@ -99,7 +99,8 @@ class LaporanController extends Controller
                         : '-';
                 })
                 ->addColumn('LokasiPenempatan', function ($row) {
-                    return $row->getPermintaan->getDetail[0]->RencanaPenempatan;
+                    $detail = $row->getPermintaan->getDetail->first() ?? null;
+                    return $detail->RencanaPenempatan ?? '-';
                 })
                 ->addColumn('TanggalPresentasi', function ($row) {
                     if ($row->TanggalPresentasi) {
