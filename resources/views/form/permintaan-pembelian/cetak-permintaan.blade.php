@@ -163,7 +163,7 @@
             <tbody>
                 <tr>
                     <td style="font-weight:600;">Meminta</td>
-                    <td style="font-weight:600;">Kadiv</td>
+                    <td style="font-weight:600;">Disetujui Oleh</td>
                 </tr>
                 <tr>
                     @foreach ($approval as $item)
