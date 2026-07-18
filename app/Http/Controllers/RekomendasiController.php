@@ -802,16 +802,30 @@ class RekomendasiController extends Controller
     public function rekap($idPengajuan)
     {
         $idPengajuan = decrypt($idPengajuan);
-        $folder = "pengajuan-{$idPengajuan}";
-        $filename = "fui-{$idPengajuan}.pdf";
-        $relativePath = "rekap-file/{$folder}/{$filename}";
+
+
+        $pengajuan = PengajuanPembelian::find($idPengajuan);
+        if (!$pengajuan) {
+            abort(404, 'Pengajuan tidak ditemukan.');
+        }
+
+        if ($pengajuan->JenisPengajuan != 1) {
+            $folder = "pengajuan-{$idPengajuan}";
+            $filename = "fs-{$idPengajuan}.pdf";
+            $relativePath = "rekap-file/{$folder}/{$filename}";
+        } else {
+            $folder = "pengajuan-{$idPengajuan}";
+            $filename = "fui-{$idPengajuan}.pdf";
+            $relativePath = "rekap-file/{$folder}/{$filename}";
+        }
+
         $storagePath = storage_path("app/public/{$relativePath}");
 
         $results = $this->pdfGenerator->generateAll($idPengajuan);
 
-        // if (!file_exists($storagePath)) {
-        //     abort(404, 'File tidak ditemukan.');
-        // }
+        if (!file_exists($storagePath)) {
+            abort(404, 'File tidak ditemukan.');
+        }
 
         return response()->file($storagePath, [
             'Content-Type' => 'application/pdf',
