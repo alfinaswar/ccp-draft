@@ -564,19 +564,27 @@ class PdfGeneratorService
             $pdfFilesToMerge = [];
 
             if ($pengajuan->Jenis == 1) {
-                // ==========================================
-                // JENIS == 1: GABUNGKAN FS + FUI
-                // (FS sudah berisi: rekomendasi + fs + hta-gpa)
-                // ==========================================
+
                 $fsPath = $fullDirPath . '/fs-' . $idPengajuan . '.pdf';
 
                 if (file_exists($fsPath)) {
                     $pdfFilesToMerge[] = $fsPath;
+                    $pdfFilesToMerge[] = $fuiTempPath;
+                    Log::info('FUI Jenis 1: Gabungkan FS + FUI untuk pengajuan ' . $idPengajuan);
+                } else {
+                    $rekomendasiPath = $fullDirPath . '/rekomendasi_' . $idPengajuan . '.pdf';
+                    $htaGpaPath = $fullDirPath . '/hta-gpa-' . $idPengajuan . '.pdf';
+
+                    if (file_exists($rekomendasiPath)) {
+                        $pdfFilesToMerge[] = $rekomendasiPath;
+                    }
+                    if (file_exists($htaGpaPath)) {
+                        $pdfFilesToMerge[] = $htaGpaPath;
+                    }
+                    $pdfFilesToMerge[] = $fuiTempPath;
+                    Log::info('FUI Jenis 1 (tanpa FS): Gabungkan Rekomendasi + HTA-GPA + FUI untuk pengajuan ' . $idPengajuan);
                 }
 
-                $pdfFilesToMerge[] = $fuiTempPath;
-
-                Log::info('FUI Jenis 1: Gabungkan FS + FUI untuk pengajuan ' . $idPengajuan);
             } else {
                 // ==========================================
                 // JENIS != 1: GABUNGKAN REKOMENDASI + HTA-GPA + FUI
