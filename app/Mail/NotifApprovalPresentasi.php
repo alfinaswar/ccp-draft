@@ -6,8 +6,8 @@ use App\Models\RekomendasiDetail;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 
 class NotifApprovalPresentasi extends Mailable
 {
@@ -56,7 +56,7 @@ class NotifApprovalPresentasi extends Mailable
         // HANYA ATTACH FILE fs-{id}.pdf
         // ==========================================
         $idPengajuan = $this->rekomendasi->id;
-        $fsFileName = 'fs-' . $idPengajuan . '.pdf';
+        $fsFileName = ($this->rekomendasi->Jenis == 1 ? 'fs-' : 'fui-') . $idPengajuan . '.pdf';
         $fsFullPath = storage_path('app/public/rekap-file/pengajuan-' . $idPengajuan . '/' . $fsFileName);
 
         if (file_exists($fsFullPath) && filesize($fsFullPath) > 0) {

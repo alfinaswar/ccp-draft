@@ -1492,7 +1492,7 @@ class RekomendasiController extends Controller
         ]);
 
         $rekomendasi = PengajuanPembelian::find($id);
-
+        // dd($rekomendasi);
         if (!$rekomendasi) {
             return redirect()->back()->with('error', 'Rekomendasi tidak ditemukan.');
         }
@@ -1505,13 +1505,14 @@ class RekomendasiController extends Controller
         // UNTUK LAMPIRAN EMAIL
         $fui = UsulanInvestasi::where('IdPengajuan', $rekomendasi->id)->first();
 
+        // Cari DokumenApproval dengan status 'Pending' dan Urutan terkecil (prioritas terkecil)
         $approvalFUITesting = DokumenApproval::with('getUser', 'getJabatan', 'getDepartemen')
             ->where('JenisFormId', $fui->JenisForm)
             ->where('DokumenId', $fui->id)
             ->where('Status', 'Pending')
-            ->where('Urutan', 1)
+            ->orderBy('Urutan', 'asc')
             ->first();
-
+        $this->pdfGenerator->generateAll($rekomendasi->id);
         // ========== KIRIM EMAIL ==========
         if ($approvalFUITesting) {
             Mail::to($approvalFUITesting->Email)
