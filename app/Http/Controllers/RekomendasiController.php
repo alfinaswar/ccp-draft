@@ -810,7 +810,18 @@ class RekomendasiController extends Controller
         $results = $this->pdfGenerator->generateAll($idPengajuan);
 
         if (!file_exists($storagePath)) {
-            abort(404, 'File tidak ditemukan.');
+            $filenameFs = "fs-{$idPengajuan}.pdf";
+            $relativePathFs = "rekap-file/{$folder}/{$filenameFs}";
+            $storagePathFs = storage_path("app/public/{$relativePathFs}");
+
+            if (!file_exists($storagePathFs)) {
+                abort(404, 'File tidak ditemukan.');
+            }
+
+            return response()->file($storagePathFs, [
+                'Content-Type' => 'application/pdf',
+                'Content-Disposition' => 'inline; filename="' . $filenameFs . '"',
+            ]);
         }
 
         return response()->file($storagePath, [
