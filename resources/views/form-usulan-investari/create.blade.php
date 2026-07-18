@@ -57,7 +57,7 @@
                                     </div>
                                     <div class="mb-1">
                                         <label class="form-label fw-bold">Nama Kepala Divisi</label>
-                                        <select class="form-select select2" name="NamaKadiv">
+                                        <select class="form-select select2" name="NamaKadiv" required>
                                             <option value="">-- Pilih Kepala Divisi --</option>
                                             @foreach ($user as $u)
                                                 <option value="{{ $u->id }}"
@@ -67,6 +67,7 @@
                                                     {{ $u->name }}</option>
                                             @endforeach
                                         </select>
+
                                         @error('NamaKadiv')
                                             <div class="text-danger mt-1">{{ $message }}</div>
                                         @enderror
@@ -128,16 +129,17 @@
                                     </div>
                                     <div class="mb-1">
                                         <label class="form-label fw-bold">Nama Kepala Divisi</label>
-                                        <select class="form-select select2" name="NamaKadiv2">
-                                            <option value="">-- Pilih Kepala Divisi --</option>
+                                        <select class="form-select select2" name="NamaKadiv2" required>
+                                            <option value="" disabled {{ (!isset($usulan) && !old('NamaKadiv2')) ? 'selected' : '' }}>-- Pilih Kepala Divisi --</option>
                                             @foreach ($user as $u)
                                                 <option value="{{ $u->id }}"
                                                     @if (isset($usulan) && $usulan->NamaKadiv2 == $u->id) selected
-                                                    @elseif(old('NamaKadiv2') == $u->id)
-                                                        selected @endif>
-                                                    {{ $u->name }}</option>
+                                                    @elseif(old('NamaKadiv2') == $u->id) selected @endif>
+                                                    {{ $u->name }}
+                                                </option>
                                             @endforeach
                                         </select>
+
                                         @error('NamaKadiv2')
                                             <div class="text-danger mt-1">{{ $message }}</div>
                                         @enderror
