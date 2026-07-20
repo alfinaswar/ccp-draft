@@ -350,5 +350,11 @@ Route::group(['middleware' => ['auth']], function () {
         Route::get('/rekomendasi-ccp', [RekomendasiController::class, 'laporan'])->name('rekomendasi.laporan');
         Route::get('/preview', [RekomendasiController::class, 'preview'])->name('rekomendasi.laporan.preview');
         Route::get('/export', [RekomendasiController::class, 'export'])->name('rekomendasi.laporan.export');
+//LAPORAN PEMBELIAN
+Route::get('/laporan/total-pembelian', [LaporanController::class, 'totalPembelian'])->name('laporan.total-pembelian');
+Route::get('/laporan/total-pembelian/export', [LaporanController::class, 'exportExcel'])->name('laporan.total-pembelian.export');
+Route::get('/laporan/total-pembelian/detail/{kode}', [LaporanController::class, 'detail'])->name('laporan.total-pembelian.detail');
+
+
     });
 });

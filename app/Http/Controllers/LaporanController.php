@@ -2,12 +2,15 @@
 
 namespace App\Http\Controllers;
 
+use App\Exports\LaporanTotalPembelianExport;
 use App\Models\MasterJenisPengajuan;
 use App\Models\MasterPerusahaan;
 use App\Models\PengajuanPembelian;
 use App\Models\Rekomendasi;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
+use Maatwebsite\Excel\Facades\Excel;
 use Yajra\DataTables\DataTables;
 
 class LaporanController extends Controller
@@ -124,17 +127,79 @@ class LaporanController extends Controller
     /**
      * Show the form for creating a new resource.
      */
-    public function create()
+    public function totalPembelian(Request $request)
     {
-        //
+        if ($request->ajax()) {
+            $query = MasterPerusahaan::select([
+                'master_perusahaans.id',
+                'master_perusahaans.Kode',
+                'master_perusahaans.Nama',
+                DB::raw('COALESCE(SUM(rekomendasi_details.HargaAwal), 0) as TotalHargaAwal'),
+                DB::raw('COALESCE(SUM(rekomendasi_details.HargaNego), 0) as TotalHargaNego'),
+                DB::raw('COALESCE(SUM(rekomendasi_details.HargaAwal - rekomendasi_details.HargaNego), 0) as TotalSelisih')
+            ])
+                ->leftJoin('rekomendasi_details', 'master_perusahaans.Kode', '=', 'rekomendasi_details.KodePerusahaan')
+                ->whereNull('rekomendasi_details.deleted_at')
+                ->where('rekomendasi_details.Rekomendasi', '1'); // Hanya Rekomendasi 1
+
+            // --- LOGIKA FILTER BULAN ---
+            if ($request->filled('start_month')) {
+                $startDate = Carbon::createFromFormat('Y-m', $request->start_month)->startOfMonth();
+                $query->where('rekomendasi_details.created_at', '>=', $startDate);
+            }
+            if ($request->filled('end_month')) {
+                $endDate = Carbon::createFromFormat('Y-m', $request->end_month)->endOfMonth();
+                $query->where('rekomendasi_details.created_at', '<=', $endDate);
+            }
+            // ---------------------------
+
+            $query->groupBy('master_perusahaans.id', 'master_perusahaans.Kode', 'master_perusahaans.Nama');
+
+            // Hitung Grand Total dengan filter yang sama
+            $grandTotalQuery = MasterPerusahaan::select(
+                DB::raw('COALESCE(SUM(rekomendasi_details.HargaAwal - rekomendasi_details.HargaNego), 0) as total')
+            )
+                ->leftJoin('rekomendasi_details', 'master_perusahaans.Kode', '=', 'rekomendasi_details.KodePerusahaan')
+                ->whereNull('rekomendasi_details.deleted_at')
+                ->where('rekomendasi_details.Rekomendasi', '1');
+
+            if ($request->filled('start_month')) {
+                $grandTotalQuery->where('rekomendasi_details.created_at', '>=', Carbon::createFromFormat('Y-m', $request->start_month)->startOfMonth());
+            }
+            if ($request->filled('end_month')) {
+                $grandTotalQuery->where('rekomendasi_details.created_at', '<=', Carbon::createFromFormat('Y-m', $request->end_month)->endOfMonth());
+            }
+
+            $grandTotalSelisih = $grandTotalQuery->value('total');
+
+            return DataTables::of($query)
+                ->addIndexColumn()
+                ->editColumn('TotalHargaAwal', fn($row) => 'Rp ' . number_format($row->TotalHargaAwal, 0, ',', '.'))
+                ->editColumn('TotalHargaNego', fn($row) => 'Rp ' . number_format($row->TotalHargaNego, 0, ',', '.'))
+                ->editColumn('TotalSelisih', fn($row) => 'Rp ' . number_format($row->TotalSelisih, 0, ',', '.'))
+                ->addColumn('action', function ($row) {
+                    return '
+                        <a href="' . route('laporan.total-pembelian.detail', $row->Kode) . '" class="btn btn-sm btn-info px-4">
+                            <i class="fa fa-list"></i> Detail
+                        </a>
+                    ';
+                })
+                ->with('grandTotalSelisih', number_format($grandTotalSelisih ?? 0, 0, ',', '.'))
+                ->rawColumns(['action'])
+                ->make(true);
+        }
+
+        return view('laporan.total-pembelian.index');
     }
+
 
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function exportExcel(Request $request)
     {
-        //
+        $filename = 'Laporan_Total_Pembelian_Rekomendasi_' . date('Ymd_His') . '.xlsx';
+        return Excel::download(new LaporanTotalPembelianExport($request), $filename);
     }
 
     /**

@@ -133,7 +133,7 @@
                                             <option value="" disabled {{ (!isset($usulan) && !old('NamaKadiv2')) ? 'selected' : '' }}>-- Pilih Kepala Divisi --</option>
                                             @foreach ($user as $u)
                                                 <option value="{{ $u->id }}"
-                                                    @if (isset($usulan) && $usulan->NamaKadiv2 == $u->id) selected
+                                                    @if (isset($usulan) && $usulan->NamaKadiv2 == $u->id)   
                                                     @elseif(old('NamaKadiv2') == $u->id) selected @endif>
                                                     {{ $u->name }}
                                                 </option>

@@ -238,20 +238,35 @@
                                         <span class="menu-arrow"></span>
                                     </a>
                                     <ul>
+                                        @can('laporan-rekomendasi-ccp')
+
                                         <li>
                                             <a href="{{ route('rekomendasi.laporan') }}"
-                                                class="{{ Request::segment(2) == 'rekomendasi-ccp' ? 'active' : '' }}">
-                                                <i data-feather="check-circle"></i>
-                                                <span>Rekomendasi CCP</span>
-                                            </a>
-                                        </li>
-                                        <li>
-                                            <a href="{{ route('laporan.history') }}"
-                                                class="{{ Request::segment(2) == 'history' ? 'active' : '' }}">
-                                                <i data-feather="book-open"></i>
-                                                <span>History Pembelian Alat</span>
-                                            </a>
-                                        </li>
+                                            class="{{ Request::segment(2) == 'rekomendasi-ccp' ? 'active' : '' }}">
+                                            <i data-feather="check-circle"></i>
+                                            <span>Rekomendasi CCP</span>
+                                        </a>
+                                    </li>
+                                    @endcan
+                                    {{-- @can('laporan-rekomendasi-history') --}}
+                                    <li>
+                                        <a href="{{ route('laporan.history') }}"
+                                        class="{{ Request::segment(2) == 'history' ? 'active' : '' }}">
+                                        <i data-feather="book-open"></i>
+                                        <span>History Pembelian Alat</span>
+                                    </a>
+                                </li>
+                                    {{-- @endcan --}}
+                                    @can('laporan-total-pembelian')
+                                    <li>
+                                        <a href="{{ route('laporan.total-pembelian') }}"
+                                        class="{{ Request::segment(2) == 'total-pembelian' ? 'active' : '' }}">
+                                            <i data-feather="dollar-sign"></i>
+                                            <span>Total Pembelian</span>
+                                        </a>
+                                    </li>
+                                    @endcan
+
                                     </ul>
                                 </li>
                             </ul>
