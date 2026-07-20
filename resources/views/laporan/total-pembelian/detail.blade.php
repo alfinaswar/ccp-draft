@@ -11,11 +11,9 @@
                     <li class="breadcrumb-item active">{{ $perusahaan->Nama }}</li>
                 </ul>
             </div>
-            <div class="col-auto">
-                <a href="{{ route('laporan.total-pembelian') }}" class="btn btn-secondary px-4">
-                    <i class="fa fa-arrow-left"></i> Kembali
-                </a>
-            </div>
+
+
+
         </div>
     </div>
 
@@ -59,24 +57,25 @@
                     </div>
 
                     <!-- Filter Section -->
+                                        <!-- Filter Section -->
                     <div class="row mb-3 g-3">
                         <div class="col-md-3">
                             <label class="form-label fw-bold text-secondary small">Bulan Awal</label>
-                            <input type="month" name="start_month" id="start_month" class="form-control form-control-sm">
+                            <input type="month" name="start_month" id="start_month"
+                                   class="form-control form-control-sm"
+                                   value="{{ request('start_month') }}" readonly>
                         </div>
                         <div class="col-md-3">
                             <label class="form-label fw-bold text-secondary small">Bulan Akhir</label>
-                            <input type="month" name="end_month" id="end_month" class="form-control form-control-sm">
+                            <input type="month" name="end_month" id="end_month"
+                                   class="form-control form-control-sm"
+                                   value="{{ request('end_month') }}" readonly>
                         </div>
                         <div class="col-md-6 d-flex align-items-end gap-2">
-                            <button type="button" id="btnFilter" class="btn btn-primary btn-sm px-4">
-                                <i class="fa fa-filter"></i> Filter
-                            </button>
-                            <button type="button" id="btnReset" class="btn btn-secondary btn-sm px-4">
-                                <i class="fa fa-undo"></i> Reset
-                            </button>
+                            {{-- Buttons disabled in read-only mode --}}
                         </div>
                     </div>
+
 
                     <!-- Table Section -->
                     <div class="table-responsive">
@@ -100,7 +99,6 @@
         </div>
     </div>
 @endsection
-
 @push('js')
     <script>
         $(document).ready(function() {
@@ -120,24 +118,11 @@
                             d.end_month = $('#end_month').val();
                         },
                         dataSrc: function (json) {
-                            // Hitung total dari data yang sedang ditampilkan di tabel (halaman ini)
-                            // Catatan: Untuk total absolut seluruh halaman (bukan per halaman),
-                            // sebaiknya dikirim dari controller via ->with('sumAwal', ...)
-                            let totalAwal = 0, totalNego = 0, totalHemat = 0;
-
-                            json.data.forEach(function(item) {
-                                // Hapus 'Rp ' dan '.' untuk kalkulasi, lalu ubah ke float
-                                let awal = parseFloat(item.HargaAwal.replace(/[^0-9]/g, '')) || 0;
-                                let nego = parseFloat(item.HargaNego.replace(/[^0-9]/g, '')) || 0;
-                                totalAwal += awal;
-                                totalNego += nego;
-                                totalHemat += (awal - nego);
-                            });
-
-                            // Update summary cards (Format ulang ke Rupiah)
-                            $('#sumAwal').text('Rp ' + totalAwal.toLocaleString('id-ID'));
-                            $('#sumNego').text('Rp ' + totalNego.toLocaleString('id-ID'));
-                            $('#sumHemat').text('Rp ' + totalHemat.toLocaleString('id-ID'));
+                            // LANGSUNG AMBIL DARI CONTROLLER (SUDAH DI-SUM OLEH DATABASE)
+                            // Ini menjamin angka total selalu benar, meski di halaman 1, 2, dst.
+                            $('#sumAwal').text('Rp ' + json.sumAwal);
+                            $('#sumNego').text('Rp ' + json.sumNego);
+                            $('#sumHemat').text('Rp ' + json.sumSelisih);
 
                             return json.data;
                         }
@@ -155,7 +140,6 @@
                         { data: 'HargaAwal', name: 'HargaAwal' },
                         { data: 'HargaNego', name: 'HargaNego' },
                         { data: 'Selisih', name: 'Selisih', orderable: false },
-                        // { data: 'TanggalPresentasi', name: 'TanggalPresentasi' },
                         { data: 'action', name: 'action', orderable: false, searchable: false }
                     ]
                 });

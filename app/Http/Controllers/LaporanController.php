@@ -220,9 +220,11 @@ class LaporanController extends Controller
      */
     public function detailTotalPembelian(Request $request, $kode)
     {
+        // dd($kode);
         $perusahaan = MasterPerusahaan::where('Kode', $kode)->firstOrFail();
 
         if ($request->ajax()) {
+            // 1. Query utama untuk DataTables (hanya untuk mengambil data per halaman)
             $query = RekomendasiDetail::with('getPengajuan')
                 ->select([
                     'rekomendasi_details.id',
@@ -230,20 +232,32 @@ class LaporanController extends Controller
                     'rekomendasi_details.NamaPermintaan',
                     'rekomendasi_details.HargaAwal',
                     'rekomendasi_details.HargaNego',
-                    // 'rekomendasi_details.TanggalPresentasi', // Dihilangkan sesuai instruksi
                 ])
                 ->where('rekomendasi_details.KodePerusahaan', $kode)
                 ->where('rekomendasi_details.Rekomendasi', '1')
                 ->whereNull('rekomendasi_details.deleted_at');
 
+            // 2. Query KHUSUS untuk menghitung TOTAL (SUM) secara akurat dari database
+            $sumQuery = RekomendasiDetail::where('KodePerusahaan', $kode)
+                ->where('Rekomendasi', '1')
+                ->whereNull('deleted_at');
 
-            // Terapkan filter bulan jika ada (agar konsisten dengan halaman utama)
+            // Terapkan filter bulan yang SAMA PERSIS untuk kedua query
             if ($request->filled('start_month')) {
-                $query->where('rekomendasi_details.created_at', '>=', \Carbon\Carbon::createFromFormat('Y-m', $request->start_month)->startOfMonth());
+                $start = Carbon::createFromFormat('Y-m', $request->start_month)->startOfMonth();
+                $query->where('rekomendasi_details.created_at', '>=', $start);
+                $sumQuery->where('created_at', '>=', $start);
             }
             if ($request->filled('end_month')) {
-                $query->where('rekomendasi_details.created_at', '<=', \Carbon\Carbon::createFromFormat('Y-m', $request->end_month)->endOfMonth());
+                $end = Carbon::createFromFormat('Y-m', $request->end_month)->endOfMonth();
+                $query->where('rekomendasi_details.created_at', '<=', $end);
+                $sumQuery->where('created_at', '<=', $end);
             }
+
+            // Hitung total langsung dari database
+            $totalAwal = $sumQuery->sum('HargaAwal') ?? 0;
+            $totalNego = $sumQuery->sum('HargaNego') ?? 0;
+            $totalSelisih = $sumQuery->sum(DB::raw('HargaAwal - HargaNego')) ?? 0;
 
             return DataTables::of($query)
                 ->addIndexColumn()
@@ -255,30 +269,31 @@ class LaporanController extends Controller
                 })
                 ->addColumn('NamaPermintaan', function ($row) {
                     $namaBarang = null;
-
-                    // Cek jika relasi ada, jika tidak maka null
                     if (
                         $row->getPengajuan &&
                         isset($row->getPengajuan->getVendor[0]) &&
                         isset($row->getPengajuan->getVendor[0]->getVendorDetail[0]) &&
-                        $row->getPengajuan->getVendor[0]->getVendorDetail[0]->getNamaBarang &&
+                        isset($row->getPengajuan->getVendor[0]->getVendorDetail[0]->getNamaBarang) &&
                         isset($row->getPengajuan->getVendor[0]->getVendorDetail[0]->getNamaBarang->Nama)
                     ) {
                         $namaBarang = $row->getPengajuan->getVendor[0]->getVendorDetail[0]->getNamaBarang->Nama;
                     }
-
-                    return '<span class="fw-semibold">' . e($namaBarang) . '</span>';
+                    return '<span class="fw-semibold">' . e($namaBarang ?? $row->NamaPermintaan) . '</span>';
                 })
-
-
                 ->addColumn('action', function ($row) {
                     return '
-                        <a href="#" class="btn btn-sm btn-info px-3" title="Lihat Spesifikasi">
-                            <i class="fa fa-eye"></i>
-                        </a>
-                    ';
+                    <a href="#" class="btn btn-sm btn-info px-3" title="Lihat Spesifikasi">
+                        <i class="fa fa-eye"></i>
+                    </a>
+                ';
                 })
-                ->rawColumns(['Selisih', 'action','NamaPermintaan'])
+                // KIRIM TOTAL DARI DATABASE KE DATATABLES JSON
+                ->with([
+                    'sumAwal' => number_format($totalAwal, 0, ',', '.'),
+                    'sumNego' => number_format($totalNego, 0, ',', '.'),
+                    'sumSelisih' => number_format($totalSelisih, 0, ',', '.')
+                ])
+                ->rawColumns(['Selisih', 'action', 'NamaPermintaan'])
                 ->make(true);
         }
 
