@@ -353,7 +353,7 @@ Route::group(['middleware' => ['auth']], function () {
 //LAPORAN PEMBELIAN
 Route::get('/laporan/total-pembelian', [LaporanController::class, 'totalPembelian'])->name('laporan.total-pembelian');
 Route::get('/laporan/total-pembelian/export', [LaporanController::class, 'exportExcel'])->name('laporan.total-pembelian.export');
-Route::get('/laporan/total-pembelian/detail/{kode}', [LaporanController::class, 'detail'])->name('laporan.total-pembelian.detail');
+Route::get('/laporan/total-pembelian/detail/{kode}', [LaporanController::class, 'detailTotalPembelian'])->name('laporan.total-pembelian.detail');
 
 
     });

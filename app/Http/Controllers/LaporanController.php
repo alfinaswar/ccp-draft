@@ -7,6 +7,7 @@ use App\Models\MasterJenisPengajuan;
 use App\Models\MasterPerusahaan;
 use App\Models\PengajuanPembelian;
 use App\Models\Rekomendasi;
+use App\Models\RekomendasiDetail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -177,12 +178,24 @@ class LaporanController extends Controller
                 ->editColumn('TotalHargaAwal', fn($row) => 'Rp ' . number_format($row->TotalHargaAwal, 0, ',', '.'))
                 ->editColumn('TotalHargaNego', fn($row) => 'Rp ' . number_format($row->TotalHargaNego, 0, ',', '.'))
                 ->editColumn('TotalSelisih', fn($row) => 'Rp ' . number_format($row->TotalSelisih, 0, ',', '.'))
-                ->addColumn('action', function ($row) {
+                ->addColumn('action', function ($row) use ($request) {
+                    // Bangun URL detail dengan menyertakan parameter filter bulan jika ada
+                    $url = route('laporan.total-pembelian.detail', $row->Kode);
+                    $params = [];
+                    if ($request->filled('start_month'))
+                        $params[] = 'start_month=' . $request->start_month;
+                    if ($request->filled('end_month'))
+                        $params[] = 'end_month=' . $request->end_month;
+
+                    if (!empty($params)) {
+                        $url .= '?' . implode('&', $params);
+                    }
+
                     return '
-                        <a href="' . route('laporan.total-pembelian.detail', $row->Kode) . '" class="btn btn-sm btn-info px-4">
-                            <i class="fa fa-list"></i> Detail
-                        </a>
-                    ';
+        <a href="' . $url . '" class="btn btn-sm btn-info px-4">
+            <i class="fa fa-list"></i> Detail
+        </a>
+    ';
                 })
                 ->with('grandTotalSelisih', number_format($grandTotalSelisih ?? 0, 0, ',', '.'))
                 ->rawColumns(['action'])
@@ -205,9 +218,71 @@ class LaporanController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
+    public function detailTotalPembelian(Request $request, $kode)
     {
-        //
+        $perusahaan = MasterPerusahaan::where('Kode', $kode)->firstOrFail();
+
+        if ($request->ajax()) {
+            $query = RekomendasiDetail::with('getPengajuan')
+                ->select([
+                    'rekomendasi_details.id',
+                    'rekomendasi_details.IdPengajuan',
+                    'rekomendasi_details.NamaPermintaan',
+                    'rekomendasi_details.HargaAwal',
+                    'rekomendasi_details.HargaNego',
+                    // 'rekomendasi_details.TanggalPresentasi', // Dihilangkan sesuai instruksi
+                ])
+                ->where('rekomendasi_details.KodePerusahaan', $kode)
+                ->where('rekomendasi_details.Rekomendasi', '1')
+                ->whereNull('rekomendasi_details.deleted_at');
+
+
+            // Terapkan filter bulan jika ada (agar konsisten dengan halaman utama)
+            if ($request->filled('start_month')) {
+                $query->where('rekomendasi_details.created_at', '>=', \Carbon\Carbon::createFromFormat('Y-m', $request->start_month)->startOfMonth());
+            }
+            if ($request->filled('end_month')) {
+                $query->where('rekomendasi_details.created_at', '<=', \Carbon\Carbon::createFromFormat('Y-m', $request->end_month)->endOfMonth());
+            }
+
+            return DataTables::of($query)
+                ->addIndexColumn()
+                ->editColumn('HargaAwal', fn($row) => 'Rp ' . number_format($row->HargaAwal ?? 0, 0, ',', '.'))
+                ->editColumn('HargaNego', fn($row) => 'Rp ' . number_format($row->HargaNego ?? 0, 0, ',', '.'))
+                ->addColumn('Selisih', function ($row) {
+                    $selisih = ($row->HargaAwal ?? 0) - ($row->HargaNego ?? 0);
+                    return '<span class="text-success fw-bold">Rp ' . number_format($selisih, 0, ',', '.') . '</span>';
+                })
+                ->addColumn('NamaPermintaan', function ($row) {
+                    $namaBarang = null;
+
+                    // Cek jika relasi ada, jika tidak maka null
+                    if (
+                        $row->getPengajuan &&
+                        isset($row->getPengajuan->getVendor[0]) &&
+                        isset($row->getPengajuan->getVendor[0]->getVendorDetail[0]) &&
+                        $row->getPengajuan->getVendor[0]->getVendorDetail[0]->getNamaBarang &&
+                        isset($row->getPengajuan->getVendor[0]->getVendorDetail[0]->getNamaBarang->Nama)
+                    ) {
+                        $namaBarang = $row->getPengajuan->getVendor[0]->getVendorDetail[0]->getNamaBarang->Nama;
+                    }
+
+                    return '<span class="fw-semibold">' . e($namaBarang) . '</span>';
+                })
+
+
+                ->addColumn('action', function ($row) {
+                    return '
+                        <a href="#" class="btn btn-sm btn-info px-3" title="Lihat Spesifikasi">
+                            <i class="fa fa-eye"></i>
+                        </a>
+                    ';
+                })
+                ->rawColumns(['Selisih', 'action','NamaPermintaan'])
+                ->make(true);
+        }
+
+        return view('laporan.total-pembelian.detail', compact('perusahaan'));
     }
 
     /**

@@ -48,4 +48,8 @@ class RekomendasiDetail extends Model
     {
         return $this->hasOne(Negara::class, 'Kode', 'NegaraProduksi');
     }
+    public function getPengajuan()
+    {
+    return $this->belongsTo(PengajuanPembelian::class, 'IdPengajuan', 'id');
+    }
 }
