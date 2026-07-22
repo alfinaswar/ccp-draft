@@ -103,11 +103,12 @@
             <tr>
                 <td>Nama Kepala Divisi</td>
                 <td>:</td>
-                <td>{{ $usulan->getKadiv->name }}</td>
+                <td>{{ $usulan->getKadiv->name ?? '-' }}</td>
                 <td>Nama Kepala Divisi</td>
                 <td>:</td>
-                <td>{{ $usulan->getKadiv2->name }}</td>
+                <td>{{ $usulan->getKadiv2->name ?? '-' }}</td>
             </tr>
+
             <tr>
                 <td>Divisi</td>
                 <td>:</td>
