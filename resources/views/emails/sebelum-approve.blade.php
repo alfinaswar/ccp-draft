@@ -247,9 +247,10 @@
                                 Justifikasi Pembelian / Pemilihan Barang/Jasa
                                 <span class="required">*</span>
                             </label>
-                            <textarea class="form-control @error('justifikasi') is-invalid @enderror" id="justifikasi" name="justifikasi"
+                            <textarea required class="form-control @error('justifikasi') is-invalid @enderror" id="justifikasi" name="justifikasi"
                                 rows="6" maxlength="1000"
                                 placeholder="Jelaskan alasan pembelian/pemilihan barang/jasa ini, termasuk urgensi, manfaat, dan kesesuaian dengan kebutuhan departemen...">{{ old('justifikasi') }}</textarea>
+
                             <div class="invalid-feedback">
                                 @error('justifikasi')
                                     {{ $message }}
