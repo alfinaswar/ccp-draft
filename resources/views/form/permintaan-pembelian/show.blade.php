@@ -17,11 +17,26 @@
         <div class="col-sm-12">
             <div class="card mb-4">
                 <div class="card-header bg-dark">
-                    <h4 class="card-title mb-0">Detail Permintaan Pembelian</h4>
-                    <p class="card-text mb-0">
-                        Berikut detail permintaan pembelian.
-                    </p>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h4 class="card-title mb-0">Detail Permintaan Pembelian</h4>
+                            <p class="card-text mb-0">
+                                Berikut detail permintaan pembelian.
+                            </p>
+                        </div>
+                        <div class="text-end">
+                            <div>
+                                <strong>No. Permintaan:</strong>
+                                <span>{{ $data->NomorPermintaan ?? '-' }}</span>
+                            </div>
+                            <div>
+                                <strong>Asal RS:</strong>
+                                <span>{{ $data->getPerusahaan->NamaLengkap ?? '-' }}</span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
+
                 <div class="card-body">
                     <div class="row g-3 mb-4">
                         <div class="col-md-6">
