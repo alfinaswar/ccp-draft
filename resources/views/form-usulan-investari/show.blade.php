@@ -495,10 +495,11 @@
                                                                 'usulan-investasi.approve',
                                                                 $item->ApprovalToken ?? '',
                                                             );
+                                                            $templateText = "Yth. Bapak/Ibu {$item->Nama},\n\nMohon untuk melakukan approval Formulir Usulan Investasi pada link berikut:\n{$approvalUrl}\n\nTerima kasih.";
                                                         @endphp
                                                         @if ($prevApproved)
                                                             <button type="button" class="btn btn-outline-primary btn-sm"
-                                                                onclick="navigator.clipboard.writeText('{{ $approvalUrl }}'); Swal.fire('Disalin!','Link approval telah disalin ke clipboard!','success')">
+                                                                onclick="navigator.clipboard.writeText(`{{ $templateText }}`); Swal.fire('Disalin!','Template link approval beserta kata-kata telah disalin ke clipboard!','success')">
                                                                 <i class="fa fa-copy"></i> Salin Link Approval
                                                             </button>
                                                         @else
@@ -523,6 +524,7 @@
                     </div>
                 </div>
             </div>
+
 
         @endif
                     </div>
