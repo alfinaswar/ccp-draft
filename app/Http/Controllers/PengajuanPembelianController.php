@@ -142,14 +142,16 @@ class PengajuanPembelianController extends Controller
                 ->addColumn('NamaBarang', function ($row) {
                     $namaBarang = '-';
                     $merek = '-';
+                    $tipe = '-';
                     if ($row->getPengajuanItem && count($row->getPengajuanItem) > 0) {
                         $item = $row->getPengajuanItem[0];
                         $namaBarang = $item->getBarang->Nama ?? '-';
                         $merek = $item->getBarang->getMerk->Nama ?? '';
                         $tipe = $item->getBarang->Tipe ?? '-';
                     }
-                    return $namaBarang . ' / ' . $merek;
+                    return $namaBarang . ' / ' . $merek . ' / ' . $tipe;
                 })
+
                 ->addColumn('action', function ($row) {
                     $id = encrypt($row->id);
 
