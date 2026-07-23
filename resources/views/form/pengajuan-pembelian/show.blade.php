@@ -341,8 +341,10 @@
                                                             <tr>
                                                                 <td width="5">{{ $key + 1 }}</td>
                                                                 <td>
-                                                                    <span>{{ $barangMaster ? $barangMaster->Nama : '-' }}</span>
+                                                                    <span>{{ $barangMaster ? $barangMaster->Nama : '-' }} / {{ $barangMaster ? $barangMaster->Tipe : '-' }}</span>
+
                                                                 </td>
+
                                                                 <td>
                                                                     <span>{{ optional($barangMaster?->getMerk)->Nama ?? '-' }}</span>
                                                                 </td>
