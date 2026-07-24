@@ -101,7 +101,69 @@ class UsulanInvestasiController extends Controller
         }
         return view('form-usulan-investari.create', compact('barang', 'user', 'departemen', 'data', 'dataRekom', 'PengajuanItemId', 'approval', 'usulan'));
     }
+    public function SebelumApprove($token)
+    {
+        $approvalRow = DokumenApproval::with(['getUser', 'getJabatan', 'getDepartemen'])->where('ApprovalToken', $token)->first();
 
+        if (!$approvalRow) {
+            return back()->with('error', 'Token approval tidak valid atau tidak ditemukan.');
+        }
+
+        // if ($approvalRow->Status !== 'Pending') {
+        //     return view('emails.setelah-approval', compact('approvalRow'))->with([
+        //         'message' => 'Persetujuan sudah diproses sebelumnya dengan status: ' . $approvalRow->Status
+        //     ]);
+        // }
+
+        // Ambil usulan investasi terkait
+        $usulan = UsulanInvestasi::find($approvalRow->DokumenId);
+        $pengajuan = PengajuanPembelian::find($usulan->IdPengajuan);
+        $rekomendasi = Rekomendasi::with(['getRekomedasiDetail' => function ($query) {
+            $query->where('Rekomendasi', 1);
+        }])->where('IdPengajuan', $usulan->IdPengajuan)->first();
+
+        // Dapatkan path lampiran file dari public
+        $jenis = $pengajuan->Jenis ?? null;
+        $idPengajuan = $usulan->IdPengajuan;
+        $this->pdfGenerator->generateAll($idPengajuan);
+
+        // Path base dari public_path
+        $basePublicPath = public_path('storage/rekap-file/pengajuan-' . $idPengajuan . '/');
+
+        if ($jenis == 1) {
+            $fileName = 'fs-' . $idPengajuan . '.pdf';
+            $fullPath = $basePublicPath . $fileName;
+            if (!file_exists($fullPath)) {
+                $fileName = 'fui-' . $idPengajuan . '.pdf';
+                $fullPath = $basePublicPath . $fileName;
+            }
+        } else {
+            $fileName = 'fui-' . $idPengajuan . '.pdf';
+            $fullPath = $basePublicPath . $fileName;
+        }
+        // dd($fullPath);
+        // dd(file_exists($fullPath));
+
+        // Sekarang kamu bisa cek file_exists($fullPath) untuk benar-benar memastikan file ada atau tidak tanpa menggabungkan di tempat lain
+
+
+        // Buat link download dokumen
+        $downloadUrl = null;
+        if ($fileName && file_exists($fullPath)) {
+            $downloadUrl = url('storage/rekap-file/pengajuan-' . $idPengajuan . '/' . $fileName);
+        }
+        // dd($downloadUrl);
+
+
+        return view('form-usulan-investari.preview', compact(
+            'pengajuan',
+            'rekomendasi',
+            'fileName',
+            'downloadUrl',
+            'token'
+        ));
+
+    }
     public function kirimUlangNotifikasi($id)
     {
         // dd($id);

@@ -1257,11 +1257,11 @@
                         @endif
 
                         @if ($data->Status == 'Selesai Review' && !auth()->user()->hasRole('Group Head'))
-                            <a href="{{ route('ajukan.minta-ttd-dir-group', encrypt($data->id)) }}"
+                            {{-- <a href="{{ route('ajukan.minta-ttd-dir-group', encrypt($data->id)) }}"
                                 class="btn btn-primary">
                                 <span class="me-1"><i class="fa fa-user-secret"></i></span>
                                 Ajukan Permintaan Persetujuan Direktur Group
-                            </a>
+                            </a> --}}
                             <button type="button" class="btn btn-success" id="btn-selesaikan"
                                 {{ $disableAjukanPresentasi ? 'disabled' : '' }}>
                                 <i class="fa fa-check"></i> Selesaikan Pengajuan

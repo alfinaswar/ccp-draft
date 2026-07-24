@@ -11,6 +11,7 @@ use App\Models\MasterBarang;
 use App\Models\MasterForm;
 use App\Models\PengajuanItem;
 use App\Models\PengajuanPembelian;
+use App\Models\Rekomendasi;
 use App\Services\PdfGeneratorService;
 use Carbon\Carbon;
 use Endroid\QrCode\Writer\PngWriter;
@@ -596,7 +597,68 @@ class FeasibilityStudyController extends Controller
             'message' => 'Terima kasih, persetujuan Anda berhasil dicatat.'
         ]);
     }
+    public function SebelumApprove($token)
+    {
+        // Cari approval row berdasarkan token
+        $approvalRow = DokumenApproval::with(['getUser', 'getJabatan', 'getDepartemen'])
+            ->where('ApprovalToken', $token)
+            ->first();
 
+        if (!$approvalRow) {
+            return back()->with('error', 'Token approval tidak valid atau tidak ditemukan.');
+        }
+
+        // Ambil FS terkait (DokumenId pada approval mengacu pada FS)
+        $fs = FeasibilityStudy::find($approvalRow->DokumenId);
+        if (!$fs) {
+            return back()->with('error', 'Data Feasibility Study tidak ditemukan.');
+        }
+
+        // Ambil pengajuan terkait FS
+        $pengajuan = PengajuanPembelian::find($fs->IdPengajuan);
+// dd($pengajuan);
+        // Ambil rekomendasi yang sudah di-acc terkait pengajuan ini
+        $rekomendasi = Rekomendasi::with([
+            'getRekomedasiDetail' => function ($q) {
+                $q->where('Rekomendasi', 1);
+            }
+        ])->where('IdPengajuan', $fs->IdPengajuan)->first();
+
+        // Pastikan PDF FS selesai digenerate
+        $idPengajuan = $fs->IdPengajuan;
+        $this->pdfGenerator->generateAll($idPengajuan);
+
+        // Siapkan lokasi file PDF
+        $jenis = $pengajuan->Jenis ?? null;
+        $storagePath = public_path('storage/rekap-file/pengajuan-' . $idPengajuan . '/');
+
+        if ($jenis == 1) {
+            $fileName = 'fs-' . $idPengajuan . '.pdf';
+            $fullPath = $storagePath . $fileName;
+            if (!file_exists($fullPath)) {
+                $fileName = 'fui-' . $idPengajuan . '.pdf';
+                $fullPath = $storagePath . $fileName;
+            }
+        } else {
+            $fileName = 'fui-' . $idPengajuan . '.pdf';
+            $fullPath = $storagePath . $fileName;
+        }
+
+        // Buat URL download jika file ada
+        $downloadUrl = null;
+        if (file_exists($fullPath)) {
+            $downloadUrl = url('storage/rekap-file/pengajuan-' . $idPengajuan . '/' . $fileName);
+        }
+
+        // Tampilkan preview untuk approval FS
+        return view('feasibility-study.preview', compact(
+            'pengajuan',
+            'rekomendasi',
+            'fileName',
+            'downloadUrl',
+            'token'
+        ));
+    }
     /** Show the form for editing the specified resource. */
 
     /**

@@ -69,10 +69,12 @@ Route::get('/approval/hta-gpa/{token}/sebelum-approve', [HtaDanGpaController::cl
 Route::get('/approval/hta-gpa/{token}/approve', [HtaDanGpaController::class, 'approve'])->name('htagpa.approve');
 Route::get('/approval/hta-gpa/{token}/reject', [HtaDanGpaController::class, 'reject'])->name('htagpa.reject');
 // End HTA dan GPA
-
+Route::get('/preview-approval/{id}', [UsulanInvestasiController::class, 'SebelumApprove'])->name('usulan-investasi.SebelumApprove');
 Route::get('/approval/usulan-investasi/{token}/approve', [UsulanInvestasiController::class, 'approve'])->name('usulan-investasi.approve');
 Route::get('/approval/usulan-investasi/{token}/reject', [UsulanInvestasiController::class, 'reject'])->name('usulan-investasi.reject');
 // Route::get('/approval/fisibility-studi/{token}/approve', [FeasibilityStudyController::class, 'approve'])->name('fs.approve');
+
+Route::get('/preview-approval-fs/{id}', [FeasibilityStudyController::class, 'SebelumApprove'])->name('fs.SebelumApprove');
 Route::get('/approval/fisibility-studi/{token}/reject', [FeasibilityStudyController::class, 'reject'])->name('fs.reject');
 Route::get('/validasi-approval/{id}', [MasterApprovalController::class, 'validasi'])
     ->name('approval.validasi');
@@ -279,6 +281,7 @@ Route::group(['middleware' => ['auth']], function () {
         Route::get('/cetak/{id}', [UsulanInvestasiController::class, 'cetak'])->name('usulan-investasi.cetak');
         Route::post('/setujui-kadiv/{id}', [UsulanInvestasiController::class, 'approveKadiv'])->name('rekomendasi.setujui-kadiv');
         Route::post('/setujui-direktur/{id}', [UsulanInvestasiController::class, 'approveDirektur'])->name('rekomendasi.setujui-direktur');
+
         Route::get('/kirim-ulang-notifikasi-fui/{id}', [UsulanInvestasiController::class, 'kirimUlangNotifikasi'])->name('usulan-investasi.kirim-ulang-notifikasi');
     });
     Route::prefix('form-hta-atau-gpa')->group(function () {

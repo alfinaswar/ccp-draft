@@ -130,11 +130,12 @@
                                     <div class="mb-1">
                                         <label class="form-label fw-bold">Nama Kepala Divisi</label>
                                         <select class="form-select select2" name="NamaKadiv2" required>
-                                            <option value="" disabled {{ (!isset($usulan) && !old('NamaKadiv2')) ? 'selected' : '' }}>-- Pilih Kepala Divisi --</option>
+                                            <option value="" disabled
+                                                {{ !isset($usulan) && !old('NamaKadiv2') ? 'selected' : '' }}>-- Pilih
+                                                Kepala Divisi --</option>
                                             @foreach ($user as $u)
                                                 <option value="{{ $u->id }}"
-                                                    @if (isset($usulan) && $usulan->NamaKadiv2 == $u->id)   
-                                                    @elseif(old('NamaKadiv2') == $u->id) selected @endif>
+                                                    @if (isset($usulan) && $usulan->NamaKadiv2 == $u->id) @elseif(old('NamaKadiv2') == $u->id) selected @endif>
                                                     {{ $u->name }}
                                                 </option>
                                             @endforeach
@@ -529,95 +530,7 @@
 
             </div>
         </div>
-        @if (!empty($usulan))
-            <div class="col-sm-12">
-                <div class="card">
-                    <div class="card-header d-flex justify-content-between align-items-center">
-                        <h5 class="card-title mb-0">Status Approval</h5>
-                        {{-- @if (!empty($approval) && count($approval) > 0)
-                            <a href="{{ route('usulan-investasi.kirim-ulang-notifikasi', $usulan->id) }}"
-                                class="btn btn-primary" id="btnKonfirmasiKirimUlang">
-                                <i class="fa fa-paper-plane me-1"></i> Kirim Ulang Notifikasi
-                            </a>
-                        @endif --}}
-                    </div>
-                    <div class="card-body">
-                        {{-- <span>
-                            Gunakan fitur <strong>Kirim Ulang Notifikasi</strong> untuk mengirim ulang email
-                            approval ke penilai yang statusnya masih <strong>Pending</strong>, tanpa membatalkan
-                            status approval yang sudah ada sebelumnya.
-                        </span> --}}
-                        <div class="table-responsive">
-                            <table class="table align-middle">
-                                <thead class="table-light">
-                                    <tr>
-                                        <th>No</th>
-                                        <th>Nama</th>
-                                        <th>Email</th>
-                                        <th>Urutan</th>
-                                        <th>Status</th>
-                                        <th>Status Email</th>
-                                        <th>TanggalApprove</th>
-                                        <th>Aksi</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @if ($approval && count($approval) > 0)
-                                        @foreach ($approval as $key => $item)
-                                            <tr>
-                                                <td>{{ $key + 1 }}</td>
-                                                <td>{{ $item->Nama }}</td>
-                                                <td>{{ $item->Email }}</td>
-                                                <td>{{ $item->Urutan }}</td>
-                                                <td>
-                                                    <span
-                                                        class="badge
-                                            @if ($item->Status == 'Approved') bg-success
-                                            @elseif($item->Status == 'Pending') bg-warning text-dark
-                                            @elseif($item->Status == 'Rejected') bg-danger
-                                            @else bg-secondary @endif">
-                                                        {{ $item->Status }}
-                                                    </span>
-                                                </td>
-                                                <td>{{ $item->StatusEmail }}</td>
-                                                <td>
-                                                    {{ $item->TanggalApprove ? \Carbon\Carbon::parse($item->TanggalApprove)->format('d-m-Y H:i') : '-' }}
-                                                </td>
-                                                <td>
-                                                    @if ($item->UserId == 81)
-                                                        <span class="text-muted">Notifikasi Akan dikirim kan oleh ccp
-                                                            setelah presentasi</span>
-                                                    @else
-                                                        {{-- Button Salin Link Approval --}}
-                                                        @php
-                                                            $approvalUrl = route(
-                                                                'usulan-investasi.approve',
-                                                                $item->ApprovalToken ?? '',
-                                                            );
-                                                        @endphp
-                                                        <button type="button" class="btn btn-outline-primary btn-sm"
-                                                            onclick="navigator.clipboard.writeText('{{ $approvalUrl }}'); Swal.fire('Disalin!','Link approval telah disalin ke clipboard!','success')">
-                                                            <i class="fa fa-copy"></i> Salin Link Approval
-                                                        </button>
-                                                    @endif
-                                                </td>
-                                            </tr>
-                                        @endforeach
-                                    @else
-                                        <tr>
-                                            <td colspan="17" class="text-center">Belum ada data approval.</td>
-                                        </tr>
-                                    @endif
-                                </tbody>
-                            </table>
 
-
-                        </div>
-
-                    </div>
-                </div>
-            </div>
-        @endif
 
     </div>
 @endsection

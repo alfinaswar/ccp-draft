@@ -403,7 +403,7 @@
                             @if ($approval && count($approval) > 0)
                                 @foreach ($approval as $key => $item)
                                     @php
-                                        $approvalUrl = route('fs.approve', $item->ApprovalToken ?? '');
+                                        $approvalUrl = route('fs.SebelumApprove', $item->ApprovalToken ?? '');
                                         $canCopy = true;
                                         if ($item->Urutan > 1) {
                                             $prevItem = $approval->firstWhere('Urutan', $item->Urutan - 1);
