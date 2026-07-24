@@ -78,8 +78,14 @@ class UsulanInvestasi extends Model
     {
         return $this->hasOne(MasterForm::class, 'id', 'JenisForm');
     }
+
     public function getPerusahaan()
     {
         return $this->hasOne(MasterPerusahaan::class, 'id', 'IdPengajuan')->withDefault();
+    }
+
+    public function getPengajuan()
+    {
+        return $this->hasOne(PengajuanPembelian::class, 'id', 'IdPengajuan');
     }
 }

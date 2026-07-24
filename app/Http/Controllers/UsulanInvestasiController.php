@@ -101,6 +101,7 @@ class UsulanInvestasiController extends Controller
         }
         return view('form-usulan-investari.create', compact('barang', 'user', 'departemen', 'data', 'dataRekom', 'PengajuanItemId', 'approval', 'usulan'));
     }
+
     public function SebelumApprove($token)
     {
         $approvalRow = DokumenApproval::with(['getUser', 'getJabatan', 'getDepartemen'])->where('ApprovalToken', $token)->first();
@@ -146,14 +147,12 @@ class UsulanInvestasiController extends Controller
 
         // Sekarang kamu bisa cek file_exists($fullPath) untuk benar-benar memastikan file ada atau tidak tanpa menggabungkan di tempat lain
 
-
         // Buat link download dokumen
         $downloadUrl = null;
         if ($fileName && file_exists($fullPath)) {
             $downloadUrl = url('storage/rekap-file/pengajuan-' . $idPengajuan . '/' . $fileName);
         }
         // dd($downloadUrl);
-
 
         return view('form-usulan-investari.preview', compact(
             'pengajuan',
@@ -162,8 +161,8 @@ class UsulanInvestasiController extends Controller
             'downloadUrl',
             'token'
         ));
-
     }
+
     public function kirimUlangNotifikasi($id)
     {
         // dd($id);
@@ -489,7 +488,7 @@ class UsulanInvestasiController extends Controller
      */
     public function show($IdPengajuan, $barang)
     {
-        $usulan = UsulanInvestasi::with('getFuiDetail', 'getBarang', 'getVendor', 'getAccDirektur', 'getAccKadiv')
+        $usulan = UsulanInvestasi::with('getFuiDetail', 'getBarang', 'getVendor', 'getAccDirektur', 'getAccKadiv', 'getPengajuan')
             ->where('IdPengajuan', $IdPengajuan)
             ->where('PengajuanItemId', $barang)
             ->first();

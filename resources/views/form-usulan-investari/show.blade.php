@@ -428,107 +428,115 @@
                             @endforeach
 
                         </div>
-                                @if (!empty($usulan))
-            <div class="col-sm-12">
-                <div class="card">
-                    <div class="card-header d-flex justify-content-between align-items-center">
-                        <h5 class="card-title mb-0">Status Approval</h5>
-                        {{-- @if (!empty($approval) && count($approval) > 0)
-                            <a href="{{ route('usulan-investasi.kirim-ulang-notifikasi', $usulan->id) }}"
-                                class="btn btn-primary" id="btnKonfirmasiKirimUlang">
-                                <i class="fa fa-paper-plane me-1"></i> Kirim Ulang Notifikasi
-                            </a>
-                        @endif --}}
-                    </div>
-                    <div class="card-body">
-                        {{-- <span>
-                            Gunakan fitur <strong>Kirim Ulang Notifikasi</strong> untuk mengirim ulang email
-                            approval ke penilai yang statusnya masih <strong>Pending</strong>, tanpa membatalkan
-                            status approval yang sudah ada sebelumnya.
-                        </span> --}}
-                        <div class="table-responsive">
-                            <table class="table align-middle">
-                                <thead class="table-light">
-                                    <tr>
-                                        <th>No</th>
-                                        <th>Nama</th>
-                                        <th>Email</th>
-                                        <th>Urutan</th>
-                                        <th>Status</th>
-                                        {{-- <th>Status Email</th> --}}
-                                        <th>TanggalApprove</th>
-                                        <th>Aksi</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @if ($approval && count($approval) > 0)
-                                        @php
-                                            $prevApproved = true;
-                                        @endphp
-                                        @foreach ($approval as $key => $item)
-                                            <tr>
-                                                <td>{{ $key + 1 }}</td>
-                                                <td>{{ $item->Nama }}</td>
-                                                <td>{{ $item->Email }}</td>
-                                                <td>{{ $item->Urutan }}</td>
-                                                <td>
-                                                    <span
-                                                        class="badge
-                                                            @if ($item->Status == 'Approved') bg-success
-                                                            @elseif($item->Status == 'Pending') bg-warning text-dark
-                                                            @elseif($item->Status == 'Rejected') bg-danger
-                                                            @else bg-secondary @endif">
-                                                        {{ $item->Status }}
-                                                    </span>
-                                                </td>
-                                                {{-- <td>{{ $item->StatusEmail }}</td> --}}
-                                                <td>
-                                                    {{ $item->TanggalApprove ? \Carbon\Carbon::parse($item->TanggalApprove)->format('d-m-Y H:i') : '-' }}
-                                                </td>
-                                                <td>
-                                                    @if ($item->UserId == 81)
-                                                        <span class="text-muted">Notifikasi Akan dikirim kan oleh ccp
-                                                            setelah presentasi</span>
-                                                    @else
+                        @if (!empty($usulan) && ($usulan->getPengajuan->Status ?? null) == 'Selesai')
+                            <div class="col-sm-12">
+                                <div class="card">
+                                    <div class="card-header d-flex justify-content-between align-items-center">
+                                        <h5 class="card-title mb-0">Status Approval</h5>
+                                        {{-- @if (!empty($approval) && count($approval) > 0)
+                        <a href="{{ route('usulan-investasi.kirim-ulang-notifikasi', $usulan->id) }}"
+                            class="btn btn-primary" id="btnKonfirmasiKirimUlang">
+                            <i class="fa fa-paper-plane me-1"></i> Kirim Ulang Notifikasi
+                        </a>
+                    @endif --}}
+                                    </div>
+                                    <div class="card-body">
+                                        {{-- <span>
+                        Gunakan fitur <strong>Kirim Ulang Notifikasi</strong> untuk mengirim ulang email
+                        approval ke penilai yang statusnya masih <strong>Pending</strong>, tanpa membatalkan
+                        status approval yang sudah ada sebelumnya.
+                    </span> --}}
+                                        <div class="table-responsive">
+                                            <table class="table align-middle">
+                                                <thead class="table-light">
+                                                    <tr>
+                                                        <th>No</th>
+                                                        <th>Nama</th>
+                                                        <th>Email</th>
+                                                        <th>Urutan</th>
+                                                        <th>Status</th>
+                                                        {{-- <th>Status Email</th> --}}
+                                                        <th>TanggalApprove</th>
+                                                        <th>Aksi</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    @if ($approval && count($approval) > 0)
                                                         @php
-                                                            $approvalUrl = route(
-                                                                'usulan-investasi.SebelumApprove',
-                                                                $item->ApprovalToken ?? '',
-                                                            );
-                                                            $templateText = "Yth. Bapak/Ibu {$item->Nama},\n\nMohon untuk melakukan approval Formulir Usulan Investasi pada link berikut:\n{$approvalUrl}\n\nTerima kasih.";
+                                                            $prevApproved = true;
                                                         @endphp
-                                                        @if ($prevApproved)
-                                                            @if ($item->Status !== 'Approved')
-                                                                <button type="button" class="btn btn-outline-primary btn-sm"
-                                                                    onclick="navigator.clipboard.writeText(`{{ $templateText }}`); Swal.fire('Disalin!','Template link approval beserta kata-kata telah disalin ke clipboard!','success')">
-                                                                    <i class="fa fa-copy"></i> Salin Link Approval
-                                                                </button>
-                                                            @else
-                                                                <span class="text-muted">Sudah disetujui - tidak bisa salin lagi</span>
-                                                            @endif
-                                                        @else
-                                                            <span class="text-muted">Approval sebelumnya harus disetujui</span>
-                                                        @endif
+                                                        @foreach ($approval as $key => $item)
+                                                            <tr>
+                                                                <td>{{ $key + 1 }}</td>
+                                                                <td>{{ $item->Nama }}</td>
+                                                                <td>{{ $item->Email }}</td>
+                                                                <td>{{ $item->Urutan }}</td>
+                                                                <td>
+                                                                    <span
+                                                                        class="badge
+                                                        @if ($item->Status == 'Approved') bg-success
+                                                        @elseif($item->Status == 'Pending') bg-warning text-dark
+                                                        @elseif($item->Status == 'Rejected') bg-danger
+                                                        @else bg-secondary @endif">
+                                                                        {{ $item->Status }}
+                                                                    </span>
+                                                                </td>
+                                                                {{-- <td>{{ $item->StatusEmail }}</td> --}}
+                                                                <td>
+                                                                    {{ $item->TanggalApprove ? \Carbon\Carbon::parse($item->TanggalApprove)->format('d-m-Y H:i') : '-' }}
+                                                                </td>
+                                                                <td>
+                                                                    @if ($item->UserId == 81)
+                                                                        <span class="text-muted">Notifikasi Akan dikirim
+                                                                            kan oleh ccp
+                                                                            setelah presentasi</span>
+                                                                    @else
+                                                                        @php
+                                                                            $approvalUrl = route(
+                                                                                'usulan-investasi.SebelumApprove',
+                                                                                $item->ApprovalToken ?? '',
+                                                                            );
+                                                                            $templateText = "Yth. Bapak/Ibu {$item->Nama},\n\nMohon untuk melakukan approval Formulir Usulan Investasi pada link berikut:\n{$approvalUrl}\n\nTerima kasih.";
+                                                                        @endphp
+                                                                        @if ($prevApproved)
+                                                                            @if ($item->Status !== 'Approved')
+                                                                                <button type="button"
+                                                                                    class="btn btn-outline-primary btn-sm"
+                                                                                    onclick="navigator.clipboard.writeText(`{{ $templateText }}`); Swal.fire('Disalin!','Template link approval beserta kata-kata telah disalin ke clipboard!','success')">
+                                                                                    <i class="fa fa-copy"></i> Salin Link
+                                                                                    Approval
+                                                                                </button>
+                                                                            @else
+                                                                                <span class="text-muted">Sudah disetujui -
+                                                                                    tidak bisa salin lagi</span>
+                                                                            @endif
+                                                                        @else
+                                                                            <span class="text-muted">Approval sebelumnya
+                                                                                harus disetujui</span>
+                                                                        @endif
+                                                                    @endif
+                                                                </td>
+                                                            </tr>
+                                                            @php
+                                                                // Only approvals with Status == 'Approved' count as allowed to proceed
+                                                                $prevApproved =
+                                                                    $prevApproved && $item->Status === 'Approved';
+                                                            @endphp
+                                                        @endforeach
+                                                    @else
+                                                        <tr>
+                                                            <td colspan="17" class="text-center">Belum ada data
+                                                                approval.</td>
+                                                        </tr>
                                                     @endif
-                                                </td>
-                                            </tr>
-                                            @php
-                                                // Only approvals with Status == 'Approved' count as allowed to proceed
-                                                $prevApproved = $prevApproved && ($item->Status === 'Approved');
-                                            @endphp
-                                        @endforeach
-                                    @else
-                                        <tr>
-                                            <td colspan="17" class="text-center">Belum ada data approval.</td>
-                                        </tr>
-                                    @endif
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        @endif
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        @endif
+
 
 
                     </div>
