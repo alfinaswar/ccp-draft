@@ -326,7 +326,7 @@ class FeasibilityStudyController extends Controller
 
         if ($approval1) {
             if (
-                !empty($approval1->Email) && $approval1->Email != '-' && $approval1->UserId != 2
+                !empty($approval1->Email) && $approval1->Email != '-'
             ) {
                 if ($approval1->Status == 'Pending') {
                     $emailsToSend[] = $approval1;
@@ -337,7 +337,6 @@ class FeasibilityStudyController extends Controller
                         $approval2second &&
                         !empty($approval2second->Email) &&
                         $approval2second->Email != '-' &&
-                        $approval2second->UserId != 2 &&
                         $approval2second->Status != 'Approved'
                     ) {
                         $emailsToSend[] = $approval2second;
@@ -346,18 +345,30 @@ class FeasibilityStudyController extends Controller
             }
         }
 
+
         // Kalau tidak ada urutan 1, fallback ke existing logic (kirim ke semua yang bukan approved)
         if (empty($emailsToSend)) {
-            foreach ($approval2 as $penilai) {
-                if (
-                    empty($penilai->Email) ||
-                    $penilai->Email == '-' ||
-                    $penilai->UserId == 2 ||
-                    $penilai->Status == 'Approved'
-                ) {
-                    continue;
+            // Cari urutan ke-2 pada approval2
+            $approvalUrutan2 = $approval2->where('Urutan', 2)->first();
+            if (
+                $approvalUrutan2 &&
+                !empty($approvalUrutan2->Email) &&
+                $approvalUrutan2->Email != '-' &&
+                $approvalUrutan2->Status != 'Approved'
+            ) {
+                $emailsToSend[] = $approvalUrutan2;
+            } else {
+                // Fallback: kirim ke semua yang bukan approved (sesuai logic lama)
+                foreach ($approval2 as $penilai) {
+                    if (
+                        empty($penilai->Email) ||
+                        $penilai->Email == '-' ||
+                        $penilai->Status == 'Approved'
+                    ) {
+                        continue;
+                    }
+                    $emailsToSend[] = $penilai;
                 }
-                $emailsToSend[] = $penilai;
             }
         }
 
