@@ -377,9 +377,99 @@
 
                             </div>
                         </div>
-
+{{-- ini FS --}}
+@if (!empty($fs))
+    <div class="col-sm-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0">Status Approval</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>No</th>
+                                <th>Nama</th>
+                                <th>Email</th>
+                                <th>Urutan</th>
+                                <th>Status</th>
+                                <th>Status Email</th>
+                                <th>TanggalApprove</th>
+                                <th>Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if ($approval && count($approval) > 0)
+                                @foreach ($approval as $key => $item)
+                                    @php
+                                        $approvalUrl = route('fs.approve', $item->ApprovalToken ?? '');
+                                        $canCopy = true;
+                                        if ($item->Urutan > 1) {
+                                            $prevItem = $approval->firstWhere('Urutan', $item->Urutan - 1);
+                                            if ($prevItem && $prevItem->Status != 'Approved') {
+                                                $canCopy = false;
+                                            }
+                                        }
+                                        // Kalau sudah approve tidak bisa salin lagi
+                                        if ($item->Status == 'Approved') {
+                                            $canCopy = false;
+                                        }
+                                        $template = "Yth. Bapak/Ibu {$item->Nama},\n\nMohon untuk melakukan approval Feasibility Study (FS) pada link berikut:\n\n$approvalUrl\n\nTerima kasih.";
+                                    @endphp
+                                    <tr>
+                                        <td>{{ $key + 1 }}</td>
+                                        <td>{{ $item->Nama }}</td>
+                                        <td>{{ $item->Email }}</td>
+                                        <td>{{ $item->Urutan }}</td>
+                                        <td>
+                                            <span
+                                                class="badge
+                                                @if ($item->Status == 'Approved') bg-success
+                                                @elseif($item->Status == 'Pending') bg-warning text-dark
+                                                @elseif($item->Status == 'Rejected') bg-danger
+                                                @else bg-secondary @endif">
+                                                {{ $item->Status }}
+                                            </span>
+                                        </td>
+                                        <td>{{ $item->StatusEmail }}</td>
+                                        <td>
+                                            {{ $item->TanggalApprove ? \Carbon\Carbon::parse($item->TanggalApprove)->format('d-m-Y H:i') : '-' }}
+                                        </td>
+                                        <td>
+                                            @if ($item->Status == 'Approved')
+                                                <span class="text-muted" style="font-size: 12px;">
+                                                    Sudah diapprove
+                                                </span>
+                                            @elseif ($canCopy)
+                                                <button type="button" class="btn btn-outline-primary btn-sm"
+                                                    onclick="navigator.clipboard.writeText(`{{ $template }}`); Swal.fire('Disalin!','Template link approval telah disalin ke clipboard!','success')">
+                                                    <i class="fa fa-copy"></i> Salin Link Approval
+                                                </button>
+                                            @else
+                                                <span class="text-muted" style="font-size: 12px;">
+                                                    Menunggu approval urutan sebelumnya
+                                                </span>
+                                            @endif
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            @else
+                                <tr>
+                                    <td colspan="17" class="text-center">Belum ada data approval.</td>
+                                </tr>
+                            @endif
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+@endif
                     </div>
                 </div>
+
+
 
             </div>
         </div>

@@ -420,12 +420,16 @@ class FeasibilityStudyController extends Controller
                 $item->qrCode = base64_encode($result->getString());
             }
         }
-
+        $fs = FeasibilityStudy::with('getFsDetail', 'getBarang')
+            ->where('IdPengajuan', $idPengajuan)
+            ->where('PengajuanItemId', $idPengajuanItem)
+            ->firstOrFail();
         return view('feasibility-study.show', [
             'data' => $data,
             'approval' => $approval,
             'idPengajuan' => $idPengajuan,
-            'idPengajuanItem' => $idPengajuanItem
+            'idPengajuanItem' => $idPengajuanItem,
+            'fs' => $fs
         ]);
     }
 
