@@ -120,6 +120,7 @@ class RekomendasiController extends Controller
                 ->addColumn('NamaBarang', function ($row) {
                     $namaBarang = '-';
                     $merek = '-';
+                    $tipe = '-';
                     if ($row->getPengajuanItem && count($row->getPengajuanItem) > 0) {
                         $item = $row->getPengajuanItem[0];
                         $namaBarang = $item->getBarang->Nama ?? '-';
