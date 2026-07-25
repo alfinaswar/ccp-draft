@@ -367,7 +367,7 @@
                                         <a href="#" class="btn btn-primary me-2 swal-confirm-btn-approve"
                                             data-url="{{ route('fs.approve', $item->ApprovalToken) }}"
                                             data-title="Konfirmasi"
-                                            data-text="Apakah Anda yakin ingin menyetujui sebagai {{ $item->getJabatan->Nama }}?">
+                                            data-text="Apakah Anda yakin ingin menyetujui sebagai {{ $item->NamaJabatan ?? '-' }}?">
                                             <i class="fa {{ $item->icon ?? 'fa-user' }}"></i>
                                             Setujui
                                         </a>
