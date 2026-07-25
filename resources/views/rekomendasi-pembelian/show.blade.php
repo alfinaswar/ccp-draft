@@ -29,11 +29,17 @@
                             {{ $data->KodePengajuan ?? '-' }}
                         </span>
                     </h4>
-                    <div>
+                    <div class="d-flex align-items-center" style="gap: 0.5rem;">
                         <span class="badge text-dark" style="font-size: 1em;">
                             {{ $data->Status ?? '-' }}
                         </span>
+                        @if ($data->Status === 'Ditolak')
+                            <button type="button" class="btn btn-danger ms-2" id="show-ccp-note">
+                                <i class="fa fa-sticky-note"></i> Lihat Catatan dari CCP
+                            </button>
+                        @endif
                     </div>
+
                 </div>
 
 
@@ -596,8 +602,29 @@
             </div>
         </div>
     </div>
+     @if ($data->Status === 'Ditolak')
+        <div class="sticky-note" id="ccp-note"
+            style="display:none; position: fixed; left: 30px; top: 90px; z-index: 10000; min-width: 500px; max-width: 500px; background: #fffecf; color: #856404; border: 1.5px solid #f7d358; border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.07); padding: 22px 18px 18px 26px; font-family: 'Comic Sans MS', 'Comic Sans', cursive, sans-serif; font-size: 1.05em;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                <span style="font-weight: bold; color: #d9534f; font-size: 1.13em;">
+                    🗒️ Catatan dari CCP
+                </span>
+                <button type="button" class="btn-close" aria-label="Close"
+                    onclick="document.getElementById('ccp-note').style.display='none';"
+                    style="margin-left: 12px; filter: brightness(0.7);"></button>
+            </div>
+            <div>
+                {!! $data->Keterangan ?? '' !!}
+            </div>
+        </div>
+    @endif
 @endsection
 @push('js')
+ <script>
+        document.getElementById('show-ccp-note').addEventListener('click', function() {
+            document.getElementById('ccp-note').style.display = 'block';
+        });
+    </script>
     <script>
         $(document).ready(function() {
             var intervalLoading = null;
