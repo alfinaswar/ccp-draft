@@ -72,6 +72,16 @@
     </style>
 </head>
 
+@php
+    // Define rupiah only once per page
+    if (!function_exists('__rupiah_util_ccp')) {
+        function __rupiah_util_ccp($angka)
+        {
+            return 'Rp ' . number_format($angka, 0, ',', '.');
+        }
+    }
+@endphp
+
 <body>
     <div class="watermark">
         <img src="{{ url('assets/img/ccp/bgsurat/main-bg.png') }}" alt="">
@@ -148,12 +158,6 @@
             <tbody>
                 @php
                     $grandTotal = 0;
-                    if (!function_exists('rupiah')) {
-                        function rupiah($angka)
-                        {
-                            return 'Rp ' . number_format($angka, 0, ',', '.');
-                        }
-                    }
                 @endphp
                 @forelse (($dataRekom->getRekomedasiDetail ?? []) as $key => $rekomDetail)
                     <tr>
@@ -165,13 +169,13 @@
                             {{ $rekomDetail->getNamaVendor->Nama ?? '-' }}
                         </td>
                         <td>
-                            {{ isset($rekomDetail->HargaAwal) ? rupiah((int) preg_replace('/[^\d]/', '', $rekomDetail->HargaAwal ?? 0)) : 'Rp 0' }}
+                            {{ isset($rekomDetail->HargaAwal) ? __rupiah_util_ccp((int) preg_replace('/[^\d]/', '', $rekomDetail->HargaAwal ?? 0)) : 'Rp 0' }}
                         </td>
                         <td>
-                            {{ isset($rekomDetail->HargaNego) ? rupiah((int) preg_replace('/[^\d]/', '', $rekomDetail->HargaNego ?? 0)) : 'Rp 0' }}
+                            {{ isset($rekomDetail->HargaNego) ? __rupiah_util_ccp((int) preg_replace('/[^\d]/', '', $rekomDetail->HargaNego ?? 0)) : 'Rp 0' }}
                         </td>
                         <td>
-                            {{ rupiah((int) preg_replace('/[^\d]/', '', $rekomDetail->HargaNego ?? 0)) }}
+                            {{ __rupiah_util_ccp((int) preg_replace('/[^\d]/', '', $rekomDetail->HargaNego ?? 0)) }}
                         </td>
                     </tr>
                 @empty
@@ -203,12 +207,6 @@
             <tbody>
                 @php
                     $grandTotal = 0;
-                    if (!function_exists('rupiah')) {
-                        function rupiah($angka)
-                        {
-                            return 'Rp ' . number_format($angka, 0, ',', '.');
-                        }
-                    }
                     $rekomItems = collect($dataRekom->getRekomedasiDetail ?? [])
                         ->where('Rekomendasi', 1)
                         ->values();
@@ -223,13 +221,13 @@
                             {{ $rekomDetail->getNamaVendor->Nama ?? '-' }}
                         </td>
                         <td>
-                            {{ isset($rekomDetail->HargaAwal) ? rupiah((int) preg_replace('/[^\d]/', '', $rekomDetail->HargaAwal ?? 0)) : 'Rp 0' }}
+                            {{ isset($rekomDetail->HargaAwal) ? __rupiah_util_ccp((int) preg_replace('/[^\d]/', '', $rekomDetail->HargaAwal ?? 0)) : 'Rp 0' }}
                         </td>
                         <td>
-                            {{ isset($rekomDetail->HargaNego) ? rupiah((int) preg_replace('/[^\d]/', '', $rekomDetail->HargaNego ?? 0)) : 'Rp 0' }}
+                            {{ isset($rekomDetail->HargaNego) ? __rupiah_util_ccp((int) preg_replace('/[^\d]/', '', $rekomDetail->HargaNego ?? 0)) : 'Rp 0' }}
                         </td>
                         <td>
-                            {{ rupiah((int) preg_replace('/[^\d]/', '', $rekomDetail->HargaNego ?? 0)) }}
+                            {{ __rupiah_util_ccp((int) preg_replace('/[^\d]/', '', $rekomDetail->HargaNego ?? 0)) }}
                         </td>
                     </tr>
                 @empty

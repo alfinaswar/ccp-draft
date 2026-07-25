@@ -42,25 +42,25 @@
                                     <td style="font-weight:bold;width:160px;padding:4px 0;vertical-align:top;">Kode
                                         Pengajuan</td>
                                     <td style="padding:4px 0 4px 16px;vertical-align:top;">:
-                                        {{ $cekjenis->KodePengajuan ?? '-' }}</td>
+                                        {{ $data2->KodePengajuan ?? '-' }}</td>
                                 </tr>
                                 <tr>
                                     <td style="font-weight:bold;width:160px;padding:4px 0;vertical-align:top;">
                                         Rumah Sakit / Cisco</td>
                                     <td style="padding:4px 0 4px 16px;vertical-align:top;">:
-                                        {{ $cekjenis->getPerusahaan->NamaLengkap ?? '-' }}</td>
+                                        {{ $data2->getPerusahaan->NamaLengkap ?? '-' }}</td>
                                 </tr>
                                 <tr>
                                     <td style="font-weight:bold;width:160px;padding:4px 0;vertical-align:top;">
                                         Nama Permintaan</td>
                                     <td style="padding:4px 0 4px 16px;vertical-align:top;">:
-                                        {{ $cekjenis->getPermintaan->getDetail[0]->getBarang->Nama ?? '-' }}</td>
+                                        {{ $data2->getPermintaan->getDetail[0]->getBarang->Nama ?? '-' }}</td>
                                 </tr>
                                 <tr>
                                     <td style="font-weight:bold;width:160px;padding:4px 0;vertical-align:top;">
                                         Rencana Penempatan</td>
                                     <td style="padding:4px 0 4px 16px;vertical-align:top;">:
-                                        {{ $cekjenis->getPermintaan->getDetail[0]->RencanaPenempatan ?? '-' }}</td>
+                                        {{ $data2->getPermintaan->getDetail[0]->RencanaPenempatan ?? '-' }}</td>
                                 </tr>
 
 
@@ -87,7 +87,7 @@
                                     letter-spacing:1px;
                                     transition:background 0.3s;
                                 ">
-                                SETUJUI FORM USULAN INVESTASI
+                                SETUJUI USULAN INVESTASI
                             </a>
                         </td>
                     </tr>

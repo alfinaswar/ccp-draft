@@ -269,7 +269,6 @@ class UsulanInvestasiController extends Controller
      */
     public function store(Request $request)
     {
-        // dd($request->all());
         $validatedData = $request->validate([
             'IdPengajuan' => 'required|integer',
             'PengajuanItemId' => 'required|integer',
@@ -284,10 +283,9 @@ class UsulanInvestasiController extends Controller
             'Alasan' => 'nullable|string',
             'items' => 'required|array',
         ]);
-        // dd($request->all());
+
         $cekjenis = PengajuanPembelian::find($request->IdPengajuan);
         $barang = $cekjenis->getPengajuanItem[0]->id;
-        // Calculate total from itemAcc[0]['Total'] (string like "330.000.000"), numeric only
         $totalNumeric = null;
         if (isset($request->itemAcc[0]['Total'])) {
             $totalNumeric = preg_replace('/[^0-9]/', '', $request->itemAcc[0]['Total']);
@@ -313,9 +311,8 @@ class UsulanInvestasiController extends Controller
                     $jenisForm = '13';
                 }
             }
-            // dd($jenisForm . 'else');
         }
-        // dd($jenisForm . 'akhir');
+
         $usulan = UsulanInvestasi::with('getBarang', 'getPerusahaan')->updateOrCreate(
             [
                 'IdPengajuan' => $request->IdPengajuan ?? null,
@@ -366,7 +363,6 @@ class UsulanInvestasiController extends Controller
                 ]);
             }
         }
-        // dd($usulan->JenisForm);
 
         $Form = MasterForm::with([
             'getApproval' => function ($q) use ($usulan) {
@@ -376,7 +372,7 @@ class UsulanInvestasiController extends Controller
         ])
             ->where('id', $usulan->JenisForm)
             ->first();
-        // dd($Form);
+
         foreach ($Form->getApproval as $approvalSetting) {
             $approval = DokumenApproval::updateOrCreate(
                 [
@@ -402,17 +398,18 @@ class UsulanInvestasiController extends Controller
                 ]
             );
         }
+
         $approvalDocs = DokumenApproval::where([
             'JenisFormId' => $usulan->JenisForm,
             'DokumenId' => $usulan->id,
         ])->orderBy('Urutan', 'asc')->get();
-        // dd($approvalDocs);
+
         $approval2 = DokumenApproval::with('getUser', 'getJabatan', 'getDepartemen')
             ->where('JenisFormId', $usulan->JenisForm)
             ->where('DokumenId', $usulan->id)
             ->orderBy('Urutan', 'asc')
             ->get();
-        // dd($approvalDocs);
+
         foreach ($approval2 as $item) {
             if ($item->Status == 'Approved') {
                 $qrCode = QrCode::create(route('approval.validasi', $item->ApprovalToken))
@@ -426,47 +423,64 @@ class UsulanInvestasiController extends Controller
             }
         }
 
-        // note: sudah simpan penilai ke dokumen approvals pada bagian atas, tidak perlu kirim email
+        // Kirim minimal ke penilai dengan urutan 1
+        $firstApproval = $approval2->where('Urutan', 1)->first();
 
-        $idPengajuan = $request->IdPengajuan;
-        $idPengajuanItem = $request->PengajuanItemId;
+        if ($firstApproval && filter_var($firstApproval->Email, FILTER_VALIDATE_EMAIL)) {
+            $idPengajuan = $request->IdPengajuan;
+            $idPengajuanItem = $request->PengajuanItemId;
 
-        $dataRekom = Rekomendasi::with('getRekomedasiDetail.getBarang', 'getRekomedasiDetail.getNamaVendor')->where('IdPengajuan', $idPengajuan)->first();
-        $VendorAcc = Rekomendasi::with([
-            'getRekomedasiDetail' => function ($query2) {
-                $query2->where('Rekomendasi', 1);
-            },
-            'getRekomedasiDetail.getNamaVendor'
-        ])
-            ->where('PengajuanItemId', $barang)
-            ->first();
-        $CariPengajuanItem = PengajuanItem::with('getRekomendasi')->find($barang);
-        $Acc = $VendorAcc->getRekomedasiDetail[0]->IdVendor ?? null;
-        $NamaBarangAcc = $VendorAcc->getRekomedasiDetail[0]->NamaPermintaan ?? null;
-        $data2 = PengajuanPembelian::with([
-            'getVendor' => function ($query2) use ($Acc) {
-                $query2->where('NamaVendor', $Acc);
-            },
-            'getVendor.getVendorDetail' => function ($query) use ($NamaBarangAcc) {
-                $query->where('NamaBarang', $NamaBarangAcc);
-            },
-            'getRekomendasi' => function ($query) {
-                $query->with([
-                    'getRekomedasiDetail' => function ($query2) {
-                        $query2->where('Rekomendasi', 1);
-                    }
-                ]);
+            $dataRekom = Rekomendasi::with('getRekomedasiDetail.getBarang', 'getRekomedasiDetail.getNamaVendor')->where('IdPengajuan', $idPengajuan)->first();
+            $VendorAcc = Rekomendasi::with([
+                'getRekomedasiDetail' => function ($query2) {
+                    $query2->where('Rekomendasi', 1);
+                },
+                'getRekomedasiDetail.getNamaVendor'
+            ])
+                ->where('PengajuanItemId', $barang)
+                ->first();
+            $Acc = $VendorAcc->getRekomedasiDetail[0]->IdVendor ?? null;
+            $NamaBarangAcc = $VendorAcc->getRekomedasiDetail[0]->NamaPermintaan ?? null;
+            $data2 = PengajuanPembelian::with([
+                'getVendor' => function ($query2) use ($Acc) {
+                    $query2->where('NamaVendor', $Acc);
+                },
+                'getVendor.getVendorDetail' => function ($query) use ($NamaBarangAcc) {
+                    $query->where('NamaBarang', $NamaBarangAcc);
+                },
+                'getRekomendasi' => function ($query) {
+                    $query->with([
+                        'getRekomedasiDetail' => function ($query2) {
+                            $query2->where('Rekomendasi', 1);
+                        }
+                    ]);
+                }
+            ])->find($request->IdPengajuan);
+
+            try {
+                Mail::to($firstApproval->Email)
+                    ->send(new NotifFui(
+                        $usulan,
+                        $VendorAcc,
+                        $firstApproval,
+                        $approval2,
+                        $dataRekom,
+                        $data2
+                    ));
+                $firstApproval->StatusEmail = 'Terkirim';
+                $firstApproval->save();
+            } catch (\Exception $e) {
+                Log::error('Email gagal: ' . $firstApproval->Email);
+                Log::error($e->getMessage());
+                $firstApproval->StatusEmail = 'Gagal Kirim';
+                $firstApproval->save();
             }
-        ])->find($request->IdPengajuan);
+        }
 
-        // Tidak kirim email ke penilai di sini, hanya membuat dokumen approvals
-        // $approval2 sudah berisi penilai, tidak perlu kirim email NotifFui di sini
-
-        $pengajuan = PengajuanPembelian::find($idPengajuan);
-        // dd($pengajuan);
-        // $this->savePdfToStorage($pengajuan->id, $pengajuan->id);
-        $this->pdfGenerator->generateAll($pengajuan->id);
+        $pengajuan = PengajuanPembelian::find($request->IdPengajuan);
         $kodePengajuan = $pengajuan ? $pengajuan->KodePengajuan : null;
+        $this->pdfGenerator->generateAll($pengajuan->id);
+
         AktivitasPengajuan::create([
             'KodePengajuan' => $kodePengajuan ?? null,
             'Jenis' => 'FUI',
@@ -675,20 +689,36 @@ class UsulanInvestasiController extends Controller
     {
         $penilai = DokumenApproval::with('getUser')->where('ApprovalToken', $token)->firstOrFail();
 
-        if ($penilai->UserId == 81) {
-            $usulan = UsulanInvestasi::find($penilai->DokumenId);
-            $kodePengajuan = null;
-            if ($usulan) {
-                $pengajuan = PengajuanPembelian::find($usulan->IdPengajuan);
-                if ($pengajuan) {
-                    $kodePengajuan = $pengajuan->KodePengajuan;
-                    $pengajuan->AccCeo = 'Y';
-                    $pengajuan->Status = 'Disetujui CEO';
-                    $pengajuan->TanggalAccCeo = Carbon::now();
-                    $pengajuan->save();
-                } else {
-                    $kodePengajuan = $usulan->id ?? null;
-                }
+        // Cek jenis dari PengajuanPembelian melalui usulan
+        $usulan = UsulanInvestasi::find($penilai->DokumenId);
+        $pengajuan = null;
+        $jenisPengajuan = null;
+        $kodePengajuan = null;
+        if ($usulan) {
+            $pengajuan = PengajuanPembelian::find($usulan->IdPengajuan);
+            if ($pengajuan) {
+                $jenisPengajuan = $pengajuan->Jenis;
+                $kodePengajuan = $pengajuan->KodePengajuan;
+            } else {
+                $kodePengajuan = $usulan->id ?? null;
+            }
+        }
+
+        // Cari apakah MASIH ADA approval di atas urutan saat ini, status-nya masih pending
+        $ada_atasan_pending = DokumenApproval::where('DokumenId', $penilai->DokumenId)
+            ->where('JenisFormId', $penilai->JenisFormId)
+            ->where('Urutan', '<', $penilai->Urutan)
+            ->where('Status', 'Pending')
+            ->exists();
+
+        // Jika SUDAH TIDAK ADA urutan di atasnya (semua sebelumnya sudah approve/terbuka)
+        if (!$ada_atasan_pending) {
+            // Update AccCeo dan TanggalAccCeo pada pengajuan
+            if ($pengajuan) {
+                $pengajuan->AccCeo = 'Y';
+                $pengajuan->TanggalAccCeo = Carbon::now();
+                $pengajuan->Status = 'Disetujui CEO';
+                $pengajuan->save();
             }
 
             $penilai->update([
@@ -712,21 +742,16 @@ class UsulanInvestasiController extends Controller
                     ])
                     ->log('CEO Menyetujui Dokumen dengan Nomor pengajuan: ' . $kodePengajuan);
             }
+        } else {
+            // Normal approval, mark as Approved
+            $penilai->update([
+                'Status' => 'Approved',
+                'TanggalApprove' => Carbon::now(),
+            ]);
         }
-        $penilai->update([
-            'Status' => 'Approved',
-            'TanggalApprove' => Carbon::now(),
-        ]);
 
-        $pengajuan = null;
-        $kodePengajuan = null;
-        if ($penilai->DokumenId ?? false) {
-            $usulan = UsulanInvestasi::find($penilai->DokumenId);
-            if ($usulan) {
-                $pengajuan = PengajuanPembelian::find($usulan->IdPengajuan);
-                $kodePengajuan = $pengajuan ? $pengajuan->KodePengajuan : ($usulan->id ?? null);
-            }
-        }
+        // Mendapatkan info pengajuan & kode pengajuan untuk aktivitas pengajuan
+        // $pengajuan dan $kodePengajuan sudah di-assign di awal
         AktivitasPengajuan::create([
             'KodePengajuan' => $kodePengajuan,
             'Jenis' => 'FUI',
@@ -734,6 +759,8 @@ class UsulanInvestasiController extends Controller
             'UserCreate' => $penilai->Nama ?? '-',
         ]);
 
+        // Email approval selanjutnya jika ada,
+        // JIKA Jenis BUKAN 1 DAN urutan sekarang = 1, JANGAN DITERUSKAN ke urutan berikutnya
         $approvalSelanjutnya = DokumenApproval::where('DokumenId', $penilai->DokumenId)
             ->where('JenisFormId', $penilai->JenisFormId)
             ->where('Urutan', '>', $penilai->Urutan)
@@ -741,8 +768,12 @@ class UsulanInvestasiController extends Controller
             ->orderBy('Urutan')
             ->first();
 
-        if ($approvalSelanjutnya) {
-            // Kirim notifikasi email ke approval selanjutnya (contoh trigger event/email)
+        $skipNotifikasi = false;
+        if ($jenisPengajuan !== null && $jenisPengajuan != 1 && $penilai->Urutan == 1) {
+            $skipNotifikasi = true;
+        }
+
+        if ($approvalSelanjutnya && !$skipNotifikasi) {
             try {
                 if ($approvalSelanjutnya->Email) {
                     Mail::to($approvalSelanjutnya->Email)
