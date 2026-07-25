@@ -1030,9 +1030,10 @@ class PengajuanPembelianController extends Controller
             AktivitasPengajuan::create([
                 'KodePengajuan' => $pengajuan->KodePengajuan,
                 'Jenis' => 'Pengajuan Pembelian',
-                'Keterangan' => 'Menolak pengajuan pembelian dengan nomor ' . $pengajuan->KodePengajuan,
+                'Keterangan' => 'Menolak pengajuan pembelian dengan nomor ' . $pengajuan->KodePengajuan . '. Keterangan: ' . ($request->Keterangan ?? '-'),
                 'UserCreate' => auth()->user()->name,
             ]);
+
             return redirect()->back()->with('success', 'Pengajuan Berhasil Ditolak, Segera Informasikan Ke Pengaju');
 
         }

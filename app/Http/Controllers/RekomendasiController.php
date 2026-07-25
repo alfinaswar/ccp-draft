@@ -126,7 +126,6 @@ class RekomendasiController extends Controller
                         $namaBarang = $item->getBarang->Nama ?? '-';
                         $merek = $item->getBarang->getMerk->Nama ?? '';
                         $tipe = $item->getBarang->Tipe ?? null;
-
                     }
                     return $namaBarang . ' / ' . $merek . ' / ' . $tipe;
                 })
