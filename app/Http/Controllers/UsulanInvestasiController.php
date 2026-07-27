@@ -132,16 +132,17 @@ class UsulanInvestasiController extends Controller
         $basePublicPath = public_path('storage/rekap-file/pengajuan-' . $idPengajuan . '/');
 
         if ($jenis == 1) {
-            $fileName = 'fs-' . $idPengajuan . '.pdf';
+            $fileName = 'fui-' . $idPengajuan . '.pdf';
             $fullPath = $basePublicPath . $fileName;
             if (!file_exists($fullPath)) {
-                $fileName = 'fui-' . $idPengajuan . '.pdf';
+                $fileName = 'fs-' . $idPengajuan . '.pdf';
                 $fullPath = $basePublicPath . $fileName;
             }
         } else {
             $fileName = 'fui-' . $idPengajuan . '.pdf';
             $fullPath = $basePublicPath . $fileName;
         }
+
         // dd($fullPath);
         // dd(file_exists($fullPath));
 
