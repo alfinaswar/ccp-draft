@@ -56,7 +56,7 @@ class NotifApprovalPresentasi extends Mailable
         // HANYA ATTACH FILE fs-{id}.pdf
         // ==========================================
         $idPengajuan = $this->rekomendasi->id;
-        $fsFileName = ($this->rekomendasi->Jenis == 1 ? 'fs-' : 'fui-') . $idPengajuan . '.pdf';
+        $fsFileName = ($this->rekomendasi->Jenis == 1 ? 'fui-' : 'fs-') . $idPengajuan . '.pdf';
         $fsFullPath = storage_path('app/public/rekap-file/pengajuan-' . $idPengajuan . '/' . $fsFileName);
 
         if (file_exists($fsFullPath) && filesize($fsFullPath) > 0) {
