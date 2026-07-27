@@ -414,10 +414,9 @@
 
                             @foreach ($approval as $item)
                                 @if (
-                                    ($item->UserId ?? null) != 81 &&
-                                        auth()->id() == ($item->UserId ?? null) &&
-                                        $item->Status != 'Approved' &&
-                                        !empty($item->ApprovalToken))
+                                    auth()->id() == ($item->UserId ?? null) &&
+                                    $item->Status != 'Approved' &&
+                                    !empty($item->ApprovalToken))
                                     <a href="{{ route('usulan-investasi.approve', $item->ApprovalToken) }}"
                                         class="btn btn-primary me-2 swal-confirm-btn" data-title="Konfirmasi"
                                         data-text="Apakah Anda yakin ingin menyetujui sebagai {{ $item->getJabatan->Nama ?? $item->JenisUser }}?">
@@ -425,6 +424,7 @@
                                         Setujui
                                     </a>
                                 @endif
+
                             @endforeach
 
                         </div>
