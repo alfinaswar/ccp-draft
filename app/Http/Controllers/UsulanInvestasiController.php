@@ -703,55 +703,55 @@ class UsulanInvestasiController extends Controller
                 $kodePengajuan = $usulan->id ?? null;
             }
         }
-
-        // Cari apakah MASIH ADA approval di atas urutan saat ini, status-nya masih pending
-        $ada_atasan_pending = DokumenApproval::where('DokumenId', $penilai->DokumenId)
+        $ada_approval_sebelumnya_pending = DokumenApproval::where('DokumenId', $penilai->DokumenId)
             ->where('JenisFormId', $penilai->JenisFormId)
             ->where('Urutan', '<', $penilai->Urutan)
             ->where('Status', 'Pending')
             ->exists();
 
-        // Jika SUDAH TIDAK ADA urutan di atasnya (semua sebelumnya sudah approve/terbuka)
-        if (!$ada_atasan_pending) {
-            // Update AccCeo dan TanggalAccCeo pada pengajuan
-            if ($pengajuan) {
-                $pengajuan->AccCeo = 'Y';
-                $pengajuan->TanggalAccCeo = Carbon::now();
-                $pengajuan->Status = 'Disetujui CEO';
-                $pengajuan->save();
-            }
+        if (!$ada_approval_sebelumnya_pending) {
+
+            $masih_ada_urutan_lebih_besar_pending = DokumenApproval::where('DokumenId', $penilai->DokumenId)
+                ->where('JenisFormId', $penilai->JenisFormId)
+                ->where('Urutan', '>', $penilai->Urutan)
+                ->where('Status', 'Pending')
+                ->exists();
 
             $penilai->update([
                 'Status' => 'Approved',
                 'TanggalApprove' => Carbon::now(),
             ]);
 
-            AktivitasPengajuan::create([
-                'KodePengajuan' => $kodePengajuan ?? null,
-                'Jenis' => 'Persetujuan CEO',
-                'Keterangan' => 'Arfan Awaloeddin (CEO) telah menyetujui Dokumen dengan Nomor Pengajuan: ' . ($kodePengajuan ?? '-'),
-                'UserCreate' => 'Arfan Awaloeddin',
-            ]);
+            if (!$masih_ada_urutan_lebih_besar_pending) {
+                if ($pengajuan) {
+                    $pengajuan->AccCeo = 'Y';
+                    $pengajuan->TanggalAccCeo = Carbon::now();
+                    $pengajuan->Status = 'Disetujui CEO';
+                    $pengajuan->save();
+                }
 
-            if (function_exists('activity')) {
-                activity('approval_fui_ceo')
-                    ->causedBy($penilai->UserId)
-                    ->withProperties([
-                        'approval_token' => $token,
-                        'keterangan' => 'CEO Menyetujui Dokumen dengan Nomor pengajuan: ' . $kodePengajuan,
-                    ])
-                    ->log('CEO Menyetujui Dokumen dengan Nomor pengajuan: ' . $kodePengajuan);
+                AktivitasPengajuan::create([
+                    'KodePengajuan' => $kodePengajuan ?? null,
+                    'Jenis' => 'Persetujuan CEO',
+                    'Keterangan' => 'Arfan Awaloeddin (CEO) telah menyetujui Dokumen dengan Nomor Pengajuan: ' . ($kodePengajuan ?? '-'),
+                    'UserCreate' => 'Arfan Awaloeddin',
+                ]);
+
+                if (function_exists('activity')) {
+                    activity('approval_fui_ceo')
+                        ->causedBy($penilai->UserId)
+                        ->withProperties([
+                            'approval_token' => $token,
+                            'keterangan' => 'CEO Menyetujui Dokumen dengan Nomor pengajuan: ' . $kodePengajuan,
+                        ])
+                        ->log('CEO Menyetujui Dokumen dengan Nomor pengajuan: ' . $kodePengajuan);
+                }
             }
         } else {
-            // Normal approval, mark as Approved
-            $penilai->update([
-                'Status' => 'Approved',
-                'TanggalApprove' => Carbon::now(),
+            return view('emails.setelah-approval', compact('penilai'))->with([
+                'message' => 'Approval tidak dapat diproses sebelum urutan sebelumnya menyetujui.'
             ]);
         }
-
-        // Mendapatkan info pengajuan & kode pengajuan untuk aktivitas pengajuan
-        // $pengajuan dan $kodePengajuan sudah di-assign di awal
         AktivitasPengajuan::create([
             'KodePengajuan' => $kodePengajuan,
             'Jenis' => 'FUI',
@@ -759,13 +759,11 @@ class UsulanInvestasiController extends Controller
             'UserCreate' => $penilai->Nama ?? '-',
         ]);
 
-        // Email approval selanjutnya jika ada,
-        // JIKA Jenis BUKAN 1 DAN urutan sekarang = 1, JANGAN DITERUSKAN ke urutan berikutnya
         $approvalSelanjutnya = DokumenApproval::where('DokumenId', $penilai->DokumenId)
             ->where('JenisFormId', $penilai->JenisFormId)
             ->where('Urutan', '>', $penilai->Urutan)
             ->where('Status', 'Pending')
-            ->orderBy('Urutan')
+            ->orderBy('Urutan', 'asc')
             ->first();
 
         $skipNotifikasi = false;
