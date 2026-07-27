@@ -44,6 +44,7 @@ class PengajuanPembelianController extends Controller
     public function index(Request $request)
     {
         if ($request->ajax()) {
+            // dd($request->tanggal_presentasi);
             $kodePerusahaan = auth()->user()->kodeperusahaan;
             $user = auth()->user();
             $hiddenStatuses = ['Selesai', 'Ditolak CEO', 'Disetujui CEO'];
@@ -61,6 +62,9 @@ class PengajuanPembelianController extends Controller
                 } else {
                     $data->whereNotIn('Status', $hiddenStatuses);
                 }
+                if ($request->filled('tanggal_presentasi')) {
+                    $data->where('TanggalPresentasi', $request->tanggal_presentasi);
+                }
             } elseif ($user->hasRole('SMI')) {
                 $data = PengajuanPembelian::with(['getPerusahaan', 'getJenisPermintaan', 'getPengajuanItem', 'getPermintaan'])
                     ->where('KodePerusahaan', $kodePerusahaan)
@@ -70,6 +74,9 @@ class PengajuanPembelianController extends Controller
                     $data->where('Status', $request->status);
                 } else {
                     $data->whereNotIn('Status', $hiddenStatuses);
+                }
+                if ($request->filled('tanggal_presentasi')) {
+                    $data->where('TanggalPresentasi', $request->tanggal_presentasi);
                 }
             } elseif ($user->hasRole('LOGUM')) {
                 $data = PengajuanPembelian::with(['getPerusahaan', 'getJenisPermintaan', 'getPengajuanItem', 'getPermintaan'])
@@ -82,6 +89,9 @@ class PengajuanPembelianController extends Controller
                 } else {
                     $data->whereNotIn('Status', $hiddenStatuses);
                 }
+                if ($request->filled('tanggal_presentasi')) {
+                    $data->where('TanggalPresentasi', $request->tanggal_presentasi);
+                }
             } else {
                 $data = PengajuanPembelian::with(['getPerusahaan', 'getJenisPermintaan', 'getPengajuanItem', 'getPermintaan'])
                     ->where('KodePerusahaan', $kodePerusahaan)
@@ -89,6 +99,10 @@ class PengajuanPembelianController extends Controller
                 if ($request->filled('jenis')) {
                     $data->where('Jenis', $request->jenis);
                 }
+                if ($request->filled('tanggal_presentasi')) {
+                    $data->where('TanggalPresentasi', $request->tanggal_presentasi);
+                }
+
                 if ($request->filled('status')) {
                     $data->where('Status', $request->status);
                 } else {

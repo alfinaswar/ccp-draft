@@ -48,7 +48,7 @@
                             @endphp
 
                             @if ($user->hasRole('Admin') || $user->hasRole('CCP') || $user->hasRole('CEO') || $user->hasRole('Group Head'))
-                                <div class="col-md-4">
+                                <div class="col-md-3">
                                     <label for="filter-perusahaan" class="form-label">Filter Perusahaan</label>
                                     <select class="form-select select2" id="filter-perusahaan" name="perusahaan">
                                         <option value="">-- Semua Perusahaan --</option>
@@ -59,7 +59,7 @@
                                 </div>
                             @endif
 
-                            <div class="col-md-4">
+                            <div class="col-md-3">
                                 <label for="filter-jenis" class="form-label">Filter Jenis Permintaan</label>
                                 <select class="form-select select2" id="filter-jenis" name="jenis">
                                     <option value="">-- Semua Jenis --</option>
@@ -68,7 +68,7 @@
                                     @endforeach
                                 </select>
                             </div>
-                            <div class="col-md-4">
+                            <div class="col-md-3">
                                 <label for="filter-status" class="form-label">Filter Status</label>
                                 <select class="form-select select2" id="filter-status" name="status">
                                     <option value="">Semua Status</option>
@@ -83,7 +83,12 @@
                                     <option value="Ditolak">Ditolak</option>
                                 </select>
                             </div>
-                            <div class="col-md-4 text-start pt-2 pt-md-0 mt-3">
+                            <!-- Tambah filter tanggal presentasi -->
+                            <div class="col-md-3 mt-3 mt-md-0">
+                                <label for="filter-tanggal-presentasi" class="form-label">Filter Tanggal Presentasi</label>
+                                <input type="date" class="form-control" id="filter-tanggal-presentasi" name="tanggal_presentasi" />
+                            </div>
+                            <div class="col-md-3 text-start pt-2 pt-md-0 mt-3">
                                 <button type="button" id="reset-filter" class="btn btn-secondary mt-3 mt-md-0">
                                     <i class="fa fa-sync-alt"></i> Reset Filter
                                 </button>
@@ -171,7 +176,7 @@
                 });
 
                 // Filter Function
-                function loadDataTable(jenis = '', status = '') {
+                function loadDataTable(jenis = '', status = '', tanggal_presentasi = '') {
                     $('#pengajuanTable').DataTable({
                         responsive: true,
                         serverSide: true,
@@ -183,6 +188,7 @@
                                 d.jenis = $('#filter-jenis').val();
                                 d.status = $('#filter-status').val();
                                 d.perusahaan = $('#filter-perusahaan').val();
+                                d.tanggal_presentasi = $('#filter-tanggal-presentasi').val();
                             },
                         },
                         language: {
@@ -257,7 +263,7 @@
                 loadDataTable();
 
                 // Filter event
-                $('#filter-jenis, #filter-status, #filter-perusahaan').on('change', function() {
+                $('#filter-jenis, #filter-status, #filter-perusahaan, #filter-tanggal-presentasi').on('change', function() {
                     $('#pengajuanTable').DataTable().ajax.reload();
                 });
 
@@ -266,6 +272,7 @@
                     $('#filter-jenis').val('').trigger('change');
                     $('#filter-status').val('').trigger('change');
                     $('#filter-perusahaan').val('').trigger('change');
+                    $('#filter-tanggal-presentasi').val('').trigger('change');
                     $('#pengajuanTable').DataTable().ajax.reload();
                 });
             });

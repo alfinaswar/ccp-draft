@@ -486,41 +486,33 @@
                                                                     {{ $item->TanggalApprove ? \Carbon\Carbon::parse($item->TanggalApprove)->format('d-m-Y H:i') : '-' }}
                                                                 </td>
                                                                 <td>
-                                                                    @if ($item->UserId == 81)
-                                                                        <span class="text-muted">Notifikasi Akan dikirim
-                                                                            kan oleh ccp
-                                                                            setelah presentasi</span>
-                                                                    @else
-                                                                        @php
-                                                                            $approvalUrl = route(
-                                                                                'usulan-investasi.SebelumApprove',
-                                                                                $item->ApprovalToken ?? '',
-                                                                            );
-                                                                            $templateText = "Yth. Bapak/Ibu {$item->Nama},\n\nMohon untuk melakukan approval Formulir Usulan Investasi pada link berikut:\n{$approvalUrl}\n\nTerima kasih.";
-                                                                        @endphp
-                                                                        @if ($prevApproved)
-                                                                            @if ($item->Status !== 'Approved')
-                                                                                <button type="button"
-                                                                                    class="btn btn-outline-primary btn-sm"
-                                                                                    onclick="navigator.clipboard.writeText(`{{ $templateText }}`); Swal.fire('Disalin!','Template link approval beserta kata-kata telah disalin ke clipboard!','success')">
-                                                                                    <i class="fa fa-copy"></i> Salin Link
-                                                                                    Approval
-                                                                                </button>
-                                                                            @else
-                                                                                <span class="text-muted">Sudah disetujui -
-                                                                                    tidak bisa salin lagi</span>
+                                                                    @php
+                                                                        $approvalUrl = route('usulan-investasi.SebelumApprove', $item->ApprovalToken ?? '');
+                                                                        $templateText = "Yth. Bapak/Ibu {$item->Nama},\n\nMohon untuk melakukan approval Formulir Usulan Investasi pada link berikut:\n{$approvalUrl}\n\nTerima kasih.";
+                                                                    @endphp
+
+                                                                    @if ($prevApproved)
+                                                                        @if ($item->Status !== 'Approved')
+                                                                            <button type="button"
+                                                                                class="btn btn-outline-primary btn-sm"
+                                                                                onclick="navigator.clipboard.writeText(`{{ $templateText }}`); Swal.fire('Disalin!','Template link approval beserta kata-kata telah disalin ke clipboard!','success')">
+                                                                                <i class="fa fa-copy"></i> Salin Link
+                                                                                Approval
+                                                                            </button>
+                                                                            @if ($item->UserId == 81)
+                                                                                <div><span class="text-muted">Notifikasi Akan dikirimkan oleh ccp setelah presentasi</span></div>
                                                                             @endif
                                                                         @else
-                                                                            <span class="text-muted">Approval sebelumnya
-                                                                                harus disetujui</span>
+                                                                            <span class="text-muted">Sudah disetujui - tidak bisa salin lagi</span>
                                                                         @endif
+                                                                    @else
+                                                                        <span class="text-muted">Approval sebelumnya harus disetujui</span>
                                                                     @endif
                                                                 </td>
                                                             </tr>
                                                             @php
                                                                 // Only approvals with Status == 'Approved' count as allowed to proceed
-                                                                $prevApproved =
-                                                                    $prevApproved && $item->Status === 'Approved';
+                                                                $prevApproved = $prevApproved && $item->Status === 'Approved';
                                                             @endphp
                                                         @endforeach
                                                     @else
@@ -531,6 +523,7 @@
                                                     @endif
                                                 </tbody>
                                             </table>
+
                                         </div>
                                     </div>
                                 </div>
