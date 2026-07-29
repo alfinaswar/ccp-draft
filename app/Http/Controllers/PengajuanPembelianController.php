@@ -169,11 +169,14 @@ class PengajuanPembelianController extends Controller
                 ->addColumn('action', function ($row) {
                     $id = encrypt($row->id);
 
-                    $buttonDelete = '
-                        <button class="btn btn-md btn-danger btn-delete" data-id="' . $id . '" title="Hapus">
-                            <i class="fa fa-trash"></i>
-                        </button>
-                    ';
+                    $buttonDelete = '';
+                    if ($row->Status === 'Draft') {
+                        $buttonDelete = '
+                            <button class="btn btn-md btn-danger btn-delete" data-id="' . $id . '" title="Hapus">
+                                <i class="fa fa-trash"></i>
+                            </button>
+                        ';
+                    }
 
                     $buttonTracking = '
                         <a href="' . route('rekomendasi.tracking', $id) . '" class="btn btn-md btn-warning" title="Tracking Progres" target="_blank">
@@ -183,6 +186,7 @@ class PengajuanPembelianController extends Controller
 
                     return $buttonDelete . ' ' . $buttonTracking;
                 })
+
                 ->addColumn('CekStatus', function ($row) {
                     $html = '-';
                     // if ($row->Jenis == 1) {

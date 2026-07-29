@@ -71,13 +71,13 @@
                             <div class="col-md-3">
                                 <label for="filter-status" class="form-label">Filter Status</label>
                                 <select class="form-select select2" id="filter-status" name="status">
-                                    <option value="">Semua Status</option>
+                                    <option value="">Pilih Status</option>
                                     <option value="Diajukan">Diajukan Ke CCP</option>
                                     <option value="Dalam Review">Dalam Review CCP</option>
-                                    <option value="Selesai Review">Selesai Review</option>
-                                    <option value="Menunggu Rekomendasi GH">Menunggu Rekomendasi GH</option>
+                                    <option value="Selesai Review">Selesai Review CCP</option>
+                                    <option value="Menunggu Rekomendasi GH">Menunggu Rekomendasi GH CCP</option>
                                     <option value="Siap Presentasi">Siap Presentasi</option>
-                                    <option value="Selesai">Selesai</option>
+                                    <option value="Selesai">Selesai Presentasi Komite</option>
                                     <option value="Ditolak CEO">Ditolak CEO</option>
                                     <option value="Disetujui CEO">Disetujui CEO</option>
                                     <option value="Ditolak">Ditolak</option>

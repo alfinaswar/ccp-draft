@@ -48,16 +48,16 @@
                                 <div class="col-md-3">
                                     <label for="filterStatus" class="form-label mb-0">Status</label>
                                     <select class="form-select select2" id="filterStatus" name="status">
-                                        <option value="">Semua Status</option>
-                                        <option value="Diajukan">Diajukan Ke CCP</option>
-                                        <option value="Dalam Review">Dalam Review CCP</option>
-                                        <option value="Selesai Review">Selesai Review</option>
-                                        <option value="Menunggu Rekomendasi GH">Menunggu Rekomendasi GH</option>
-                                        <option value="Siap Presentasi">Siap Presentasi</option>
-                                        <option value="Selesai">Selesai</option>
-                                        <option value="Ditolak CEO">Ditolak CEO</option>
-                                        <option value="Disetujui CEO">Disetujui CEO</option>
-                                        <option value="Ditolak">Ditolak</option>
+                                       <option value="">Pilih Status</option>
+                                    <option value="Diajukan">Diajukan Ke CCP</option>
+                                    <option value="Dalam Review">Dalam Review CCP</option>
+                                    <option value="Selesai Review">Selesai Review CCP</option>
+                                    <option value="Menunggu Rekomendasi GH">Menunggu Rekomendasi GH CCP</option>
+                                    <option value="Siap Presentasi">Siap Presentasi</option>
+                                    <option value="Selesai">Selesai Presentasi Komite</option>
+                                    <option value="Ditolak CEO">Ditolak CEO</option>
+                                    <option value="Disetujui CEO">Disetujui CEO</option>
+                                    <option value="Ditolak">Ditolak</option>
 
                                     </select>
                                 </div>
