@@ -237,12 +237,17 @@
                                         <tr>
                                             @foreach ($approval as $item)
                                                 <td class="text-center" style="height:80px; vertical-align: top;">
-                                                    @if ($item->Status == 'Approved' && isset($item->qrCode))
+                                                    @if ($item->Status == 'Approved' && !empty($item->qrCode))
                                                         <img src="data:image/png;base64,{{ $item->qrCode }}"
                                                             alt="QR Code" style="width:80px; height:80px;"><br>
+                                                    @elseif ($item->Status == 'Approved')
+                                                        <span class="text-danger" style="font-size:11px;">QR code tidak tersedia</span>
+                                                    @else
+                                                        <span style="font-size:11px;">{{ $item->Status ?? '-' }}</span>
                                                     @endif
                                                 </td>
                                             @endforeach
+
                                         </tr>
                                         <tr>
                                             @foreach ($approval as $item)
@@ -313,6 +318,119 @@
             </div>
         </div>
     </div>
+          @if (!empty($htagpa))
+                <div class="col-sm-12">
+                    <div class="card">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h5 class="card-title mb-0">Status Approval</h5>
+                            {{-- @if (!empty($approval) && count($approval) > 0)
+                                <a href="{{ route('htagpa.kirim-ulang-notifikasi', $htagpa->id) }}"
+                                    class="btn btn-primary" id="btnKonfirmasiKirimUlang">
+                                    <i class="fa fa-paper-plane me-1"></i> Kirim Ulang Notifikasi
+                                </a>
+                            @endif --}}
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <div class="card mb-3 border-info">
+                                    <div class="card-body">
+                                        <h6 class="card-title fw-bold text-info mb-2">
+                                            Informasi Penggunaan Link Approval
+                                        </h6>
+                                        <p class="card-text mb-0">
+                                            Anda juga dapat menyalin link approval agar dapat langsung dibagikan melalui
+                                            WhatsApp atau media lainnya, sehingga penilai yang belum merespon dapat segera
+                                            mengambil tindakan.<br>
+
+                                        </p>
+                                    </div>
+                                </div>
+
+
+                                <table class="table align-middle">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>No</th>
+                                            <th>Nama</th>
+                                            <th>Email</th>
+                                            <th>Urutan</th>
+                                            <th>Status</th>
+                                            <th>Status Email</th>
+                                            <th>TanggalApprove</th>
+                                            <th>Aksi</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @if ($approval && count($approval) > 0)
+                                            @php
+                                                $canCopy = true;
+                                            @endphp
+                                            @foreach ($approval as $key => $item)
+                                                <tr>
+                                                    <td>{{ $key + 1 }}</td>
+                                                    <td>{{ $item->Nama }}</td>
+                                                    <td>{{ $item->Email }}</td>
+                                                    <td>{{ $item->Urutan }}</td>
+                                                    <td>
+                                                        <span
+                                                            class="badge
+                                                            @if ($item->Status == 'Approved') bg-success
+                                                            @elseif($item->Status == 'Pending') bg-warning text-dark
+                                                            @elseif($item->Status == 'Rejected') bg-danger
+                                                            @else bg-secondary @endif">
+                                                            {{ $item->Status }}
+                                                        </span>
+                                                    </td>
+                                                    <td>{{ $item->StatusEmail }}</td>
+                                                    <td>
+                                                        {{ $item->TanggalApprove ? \Carbon\Carbon::parse($item->TanggalApprove)->format('d-m-Y H:i') : '-' }}
+                                                    </td>
+                                                     <td>
+                                                        @php
+                                                            $approvalUrl = route('htagpa.sebelum-approve', $item->ApprovalToken ?? '');
+                                                            $templateText = "Yth. Bapak/Ibu {$item->Nama},\n\nMohon untuk melakukan approval Formulir HTA/GPA pada link berikut:\n{$approvalUrl}\n\nTerima kasih.";
+                                                        @endphp
+
+                                                        @if ($canCopy)
+                                                            @if ($item->Status !== 'Approved')
+                                                                <button type="button"
+                                                                    class="btn btn-outline-primary btn-sm"
+                                                                    onclick="navigator.clipboard.writeText(`{{ $templateText }}`); Swal.fire('Disalin!','Template link approval beserta kata-kata telah disalin ke clipboard!','success')">
+                                                                    <i class="fa fa-copy"></i> Salin Link Approval
+                                                                </button>
+                                                                @if ($item->UserId == 81)
+                                                                    <div><span class="text-muted">Notifikasi Akan dikirimkan oleh ccp setelah presentasi</span></div>
+                                                                @endif
+                                                            @else
+                                                                <span class="text-muted">Sudah disetujui - tidak bisa salin lagi</span>
+                                                            @endif
+                                                        @else
+                                                            <span class="text-muted">Approval sebelumnya harus disetujui</span>
+                                                        @endif
+                                                    </td>
+
+                                                </tr>
+                                                @if ($item->Status !== 'Approved')
+                                                    @php
+                                                        $canCopy = false;
+                                                    @endphp
+                                                @endif
+                                            @endforeach
+                                        @else
+                                            <tr>
+                                                <td colspan="17" class="text-center">Belum ada data approval.</td>
+                                            </tr>
+                                        @endif
+                                    </tbody>
+                                </table>
+
+
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            @endif
     <div class="modal fade" id="modalJustifikasi" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content border-0 shadow-sm">
@@ -333,6 +451,8 @@
                             <textarea class="form-control @error('justifikasi') is-invalid @enderror" id="justifikasi" name="justifikasi"
                                 rows="4" placeholder="Contoh: Spesifikasi alat sesuai kebutuhan, harga kompetitif, vendor terpercaya, dll."
                                 required></textarea>
+
+
                             @error('justifikasi')
                                 <div class="invalid-feedback d-block">{{ $message }}</div>
                             @enderror

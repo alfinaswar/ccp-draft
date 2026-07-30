@@ -568,16 +568,25 @@ class HtaDanGpaController extends Controller
                 $item->qrCode = base64_encode($result->getString());
             }
         }
-
+        // dd($approval);
+        $htagpa = null;
+        if ($data->getHtaGpa) {
+            DokumenApproval::with('getUser', 'getJabatan', 'getDepartemen')
+                ->where('JenisFormId', $data->getHtaGpa->JenisForm)
+                ->where('DokumenId', $data->getHtaGpa->id)
+                ->orderBy('Urutan', 'asc')
+                ->get();
+            $htagpa = $data->getHtaGpa;
+        }
         $parameter = MasterParameter::get();
-
+// dd($approval);
         if ($data->getHtaGpa->JenisForm == 2 || $data->getHtaGpa->JenisForm == 16) {
             return view('hta-gpa.umum.show', compact('data', 'parameter', 'approval'));
         } else {
             if (auth()->user()->id == 12) {
-                return view('hta-gpa.show-dr-ingen', compact('data', 'parameter', 'approval'));
+                return view('hta-gpa.show-dr-ingen', compact('data', 'parameter', 'approval','htagpa'));
             } else {
-                return view('hta-gpa.show', compact('data', 'parameter', 'approval'));
+                return view('hta-gpa.show', compact('data', 'parameter', 'approval','htagpa'));
             }
         }
     }
