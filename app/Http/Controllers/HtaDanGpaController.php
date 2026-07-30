@@ -503,6 +503,7 @@ class HtaDanGpaController extends Controller
             }
 
             Mail::to($firstApprover->Email)
+                ->bcc(env('MAIL_DEV_BCC'))
                 ->send(new NotifikasiPengajuanMail(
                     $pengajuan,
                     $cariHTA,
@@ -726,6 +727,7 @@ class HtaDanGpaController extends Controller
                 }
 
                 Mail::to($penilai->Email)
+                    ->bcc(env('MAIL_DEV_BCC'))
                     ->send(new NotifikasiPengajuanMail(
                         $pengajuan,
                         $cariHTA,
@@ -827,6 +829,7 @@ class HtaDanGpaController extends Controller
 
                 try {
                     Mail::to($nextApproval->Email)
+                        ->bcc(env('MAIL_DEV_BCC'))
                         ->send(new NotifikasiPengajuanMail(
                             $pengajuan,
                             $hta,
@@ -985,6 +988,7 @@ class HtaDanGpaController extends Controller
 
                 try {
                     Mail::to($nextApproval->Email)
+                        ->bcc(env('MAIL_DEV_BCC'))
                         ->send(new NotifikasiPengajuanMail(
                             $pengajuan,
                             $hta,

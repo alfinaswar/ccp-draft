@@ -303,7 +303,7 @@
                                                     <tr>
                                                         <th>No.</th>
                                                         <th>Barang</th>
-                                                        <th>Merek</th>
+                                                        <th>Merek / Tipe</th>
                                                         <th>Jumlah</th>
                                                         <th>Harga Satuan</th>
                                                         <th>Jenis Diskon</th>
@@ -346,7 +346,12 @@
                                                                 </td>
 
                                                                 <td>
-                                                                    <span>{{ optional($barangMaster?->getMerk)->Nama ?? '-' }}</span>
+                                                                    <span>
+                                                                        {{ optional($barangMaster?->getMerk)->Nama ?? '-' }} /
+
+                                                                            {{ $barangMaster?->Tipe ?? '-' }}
+
+                                                                    </span>
                                                                 </td>
                                                                 <td>
                                                                     <span>{{ $jumlah }}</span>

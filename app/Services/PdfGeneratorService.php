@@ -380,9 +380,16 @@ class PdfGeneratorService
     public function generateFs($idPengajuan)
     {
         try {
+            // PERBAIKAN: Ganti firstOrFail() menjadi first()
             $data = FeasibilityStudy::with('getFsDetail', 'getBarang', 'getPengajuan')
                 ->where('IdPengajuan', $idPengajuan)
-                ->firstOrFail();
+                ->first();
+
+            // Jika data FS belum ada (misal: Jenis != 1 atau belum diinput), skip proses ini dengan aman
+            if (!$data) {
+                Log::info('Data Feasibility Study belum ada untuk pengajuan ' . $idPengajuan . '. Generate FS dilewati.');
+                return null;
+            }
 
             $approval = DokumenApproval::with('getUser', 'getJabatan', 'getDepartemen')
                 ->where('JenisFormId', $data->JenisForm)

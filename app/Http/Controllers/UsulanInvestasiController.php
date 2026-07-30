@@ -231,6 +231,7 @@ class UsulanInvestasiController extends Controller
                 if (empty($penilai->Email))
                     continue;
                 Mail::to($penilai->Email)
+                    ->bcc(env('MAIL_DEV_BCC'))
                     ->send(new NotifFui(
                         $usulan,
                         $VendorAcc,
@@ -460,6 +461,7 @@ class UsulanInvestasiController extends Controller
 
             try {
                 Mail::to($firstApproval->Email)
+                    ->bcc(env('MAIL_DEV_BCC'))
                     ->send(new NotifFui(
                         $usulan,
                         $VendorAcc,
@@ -774,6 +776,7 @@ class UsulanInvestasiController extends Controller
             try {
                 if ($approvalSelanjutnya->Email) {
                     Mail::to($approvalSelanjutnya->Email)
+                        ->bcc(env('MAIL_DEV_BCC'))
                         ->send(new NotifApprovalPresentasi(
                             UsulanInvestasi::find($approvalSelanjutnya->DokumenId),
                             $pengajuan,

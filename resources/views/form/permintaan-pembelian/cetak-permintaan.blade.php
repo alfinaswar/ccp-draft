@@ -133,7 +133,7 @@
                         {{ is_numeric($detail->Jumlah) ? number_format($detail->Jumlah, 0, ',', '.') : $detail->Jumlah }}
                     </td>
                     <td>
-                        {{ $detail->getBarang->getSatuan->NamaSatuan }}
+                        {{ $detail->getSatuan->NamaSatuan }}
                     </td>
                     <td>
                         @if (isset($data->getDiajukanOleh->name))

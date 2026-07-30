@@ -109,6 +109,7 @@ class FeasibilityStudyController extends Controller
                 if (empty($penilai->Email))
                     continue;
                 Mail::to($penilai->Email)
+                    ->bcc(env('MAIL_DEV_BCC'))
                     ->send(new NotifFs(
                         $header,
                         $penilai,
@@ -375,6 +376,7 @@ class FeasibilityStudyController extends Controller
 
         foreach ($emailsToSend as $penilai) {
             Mail::to($penilai->Email)
+                ->bcc(env('MAIL_DEV_BCC'))
                 ->send(new NotifFs(
                     $header,
                     $penilai,
@@ -560,6 +562,7 @@ class FeasibilityStudyController extends Controller
                 // dd(123);
                 try {
                     Mail::to($nextApproval->Email)
+                        ->bcc(env('MAIL_DEV_BCC'))
                         ->send(new NotifFs(
                             $fs,
                             $nextApproval,
