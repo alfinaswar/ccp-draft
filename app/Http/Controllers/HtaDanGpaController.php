@@ -881,6 +881,10 @@ class HtaDanGpaController extends Controller
         $penilai = DokumenApproval::with(['getDokumenHTAGPA.getPengajuan'])
             ->where('ApprovalToken', $token)
             ->firstOrFail();
+        $ListApproval = DokumenApproval::with(['getDokumenHTAGPA.getPengajuan'])
+        ->where('DokumenId', $penilai->DokumenId)
+        ->where('JenisFormId', $penilai->JenisFormId)
+        ->get();
         // Cek apakah sudah diapprove/direject sebelumnya
         if ($penilai->Status !== 'Pending') {
             return view('emails.setelah-approval', compact('penilai'))->with([
@@ -888,7 +892,7 @@ class HtaDanGpaController extends Controller
             ]);
         }
 
-        return view('emails.sebelum-approve', compact('penilai'));
+        return view('emails.sebelum-approve', compact('penilai','ListApproval'));
     }
 
     public function submitJustifikasi(Request $request, $token)

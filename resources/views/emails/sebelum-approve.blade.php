@@ -163,6 +163,27 @@
             padding-right: 4px;
             display: inline-block;
         }
+        .previous-justifikasi-box {
+            background-color: #f4f7fb;
+            border-left: 4px solid #989898;
+            border-radius: 6px;
+            padding: 1rem 1.25rem;
+            margin-bottom: 1.7rem;
+        }
+        .previous-justifikasi-title {
+            font-weight: 600;
+            font-size: 0.94rem;
+            color: #475569;
+            margin-bottom: 0.2rem;
+            letter-spacing: 0.1px;
+            display: flex;
+            align-items: center;
+            gap: 7px;
+        }
+        .previous-justifikasi-content {
+            font-size: 0.99rem;
+            color: #273143;
+        }
     </style>
 </head>
 
@@ -203,8 +224,7 @@
                                     <span class="colon">:</span>
                                 </div>
                             </dt>
-                            <dd class="col-sm-8">{{ $penilai->getDokumenHTAGPA->getPengajuan->KodePengajuan ?? '-' }}
-                            </dd>
+                            <dd class="col-sm-8">{{ $penilai->getDokumenHTAGPA->getPengajuan->KodePengajuan ?? '-' }}</dd>
 
                             <dt class="col-sm-4">
                                 <div class="dt-align-colon">
@@ -225,6 +245,38 @@
                             <dd class="col-sm-8">{{ $penilai->getDokumenHTAGPA->getPengajuan->created_at ?? '-' }}</dd>
                         </dl>
                     </div>
+
+                    {{-- Tampilkan Justifikasi Sebelumnya --}}
+                    @if(isset($ListApproval) && is_iterable($ListApproval) && count($ListApproval) > 0)
+                        <div class="previous-justifikasi-box mb-4">
+                            <div class="previous-justifikasi-title">
+                                <i class="ti ti-archive me-1"></i>
+                                Riwayat Justifikasi Approval Sebelumnya
+                            </div>
+                            <div class="previous-justifikasi-content">
+                                <ul class="list-group">
+                                    @foreach($ListApproval as $approval)
+                                        <li class="list-group-item">
+                                            <strong>
+                                                {{ $approval->Nama ?? ($approval->getUser->name ?? '-') }}
+                                                :
+                                            </strong>
+                                            <span>{{ $approval->Justifikasi ?? '(Tidak ada justifikasi)' }}</span>
+                                            @if(isset($approval->TanggalApproval))
+                                                <br>
+                                                <small class="text-muted">
+                                                    Pada {{ \Carbon\Carbon::parse($approval->TanggalApproval)->format('d M Y H:i') }}
+                                                </small>
+                                            @endif
+                                        </li>
+                                    @endforeach
+                                </ul>
+                            </div>
+                        </div>
+                    @endif
+
+
+
 
                     {{-- Info Approver --}}
                     <div class="alert alert-warning-custom d-flex align-items-start mb-4">
