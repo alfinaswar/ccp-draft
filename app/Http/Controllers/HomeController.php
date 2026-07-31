@@ -129,13 +129,18 @@ class HomeController extends Controller
         $months = [];
         $results = [];
 
+        // Simpan waktu saat ini di luar loop agar konsisten
+        $now = now();
+
         for ($i = 5; $i >= 0; $i--) {
-            $start = now()->subMonths($i)->startOfMonth();
-            $end = now()->subMonths($i)->endOfMonth();
+            // Gunakan subMonthsNoOverflow untuk mencegah duplikasi bulan
+            $start = $now->copy()->subMonthsNoOverflow($i)->startOfMonth();
+            $end = $start->copy()->endOfMonth(); // Lebih efisien mengambil endOfMonth dari $start
+
             $months[] = [
                 'label' => $start->format('F'),
-                'start' => $start->copy(),
-                'end' => $end->copy(),
+                'start' => $start,
+                'end' => $end,
             ];
         }
 
@@ -257,13 +262,16 @@ class HomeController extends Controller
         $months = [];
         $results = [];
 
+        $now = now();
+
         for ($i = 5; $i >= 0; $i--) {
-            $start = now()->subMonths($i)->startOfMonth();
-            $end = now()->subMonths($i)->endOfMonth();
+            $start = $now->copy()->subMonthsNoOverflow($i)->startOfMonth();
+            $end = $start->copy()->endOfMonth();
+
             $months[] = [
                 'label' => $start->format('F'),
-                'start' => $start->copy(),
-                'end' => $end->copy(),
+                'start' => $start,
+                'end' => $end,
             ];
         }
 
