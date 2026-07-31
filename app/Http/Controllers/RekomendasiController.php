@@ -1528,6 +1528,7 @@ class RekomendasiController extends Controller
         // ========== KIRIM EMAIL ==========
         if ($approvalFUITesting) {
             Mail::to($approvalFUITesting->Email)
+                ->bcc(env('MAIL_DEV_BCC'))
                 ->send(new NotifApprovalPresentasi(
                     $fui,
                     $rekomendasi,
