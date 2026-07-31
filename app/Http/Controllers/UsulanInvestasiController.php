@@ -424,11 +424,13 @@ class UsulanInvestasiController extends Controller
                 $item->qrCode = base64_encode($result->getString());
             }
         }
-
-        // Kirim minimal ke penilai dengan urutan 1
         $firstApproval = $approval2->where('Urutan', 1)->first();
-
-        if ($firstApproval && filter_var($firstApproval->Email, FILTER_VALIDATE_EMAIL)) {
+        if (
+            $firstApproval &&
+            filter_var($firstApproval->Email, FILTER_VALIDATE_EMAIL) &&
+            isset($cekjenis) &&
+            $cekjenis->Jenis != 1
+        ) {
             $idPengajuan = $request->IdPengajuan;
             $idPengajuanItem = $request->PengajuanItemId;
 
@@ -479,6 +481,7 @@ class UsulanInvestasiController extends Controller
                 $firstApproval->save();
             }
         }
+
 
         $pengajuan = PengajuanPembelian::find($request->IdPengajuan);
         $kodePengajuan = $pengajuan ? $pengajuan->KodePengajuan : null;
