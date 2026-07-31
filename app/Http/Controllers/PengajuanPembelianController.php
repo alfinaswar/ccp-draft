@@ -1305,6 +1305,8 @@ class PengajuanPembelianController extends Controller
                 }
 
             } elseif ($data->Jenis != 1) {
+                // dd('aasdsad');
+                $errors = [];
                 $cekFui = $data->getPengajuanItem[0]->getFui;
                 $cek = $data->getPengajuanItem[0]->getFs;
 
@@ -1323,13 +1325,27 @@ class PengajuanPembelianController extends Controller
                     return $item->Status === 'Approved';
                 });
 
-                // 2. Cek FUI (HANYA wajib ada datanya, TIDAK perlu cek approval)
+                // 2. Cek FUI (Usulan Investasi) - Minimal harus diapprove oleh urutan 1
                 if (empty($cekFui)) {
                     return back()->with('error', 'FUI belum diisi. Proses tidak dapat diteruskan.');
                 }
-                // ✅ Approval FUI TIDAK dicek lagi
 
-                $errors = [];
+                $approvalFUI = DokumenApproval::with('getUser', 'getJabatan', 'getDepartemen')
+                    ->where('JenisFormId', $cekFui->JenisForm)
+                    ->where('DokumenId', $cekFui->id)
+                    ->orderBy('Urutan', 'asc')
+                    ->get();
+
+                $approverUrutan1 = $approvalFUI->firstWhere('Urutan', 1);
+
+                // Hanya cek urutan 1 saja
+                if (!$approverUrutan1 || $approverUrutan1->Status !== 'Approved') {
+                    $name = $approverUrutan1 && $approverUrutan1->getUser ? $approverUrutan1->getUser->name : 'Pengguna terkait';
+                    $errors[] = "Persetujuan Usulan Investasi (FUI) urutan 1 atas nama <b>{$name}</b> belum approve.";
+                }
+
+
+
 
                 // 3. Cek Approval HTA / GPA
                 if (!$semuaApprovedHTA) {
