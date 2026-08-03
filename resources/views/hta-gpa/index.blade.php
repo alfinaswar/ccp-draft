@@ -434,30 +434,31 @@
                             <!-- Ajukan Button trigger modal -->
                             @php
                                 $showAjukan = false;
-                                $filledFileCount = 0;
-                                foreach ($data->getHtaGpa->getDetailHta ?? [] as $detail) {
-                                    if (!empty($detail->File)) {
-                                        $filledFileCount++;
+                                $filledVendor = false;
+                                foreach ($data->getVendor as $idx => $v) {
+                                    if (!is_null($v->getHtaGpa->Nilai2 ?? null)) {
+                                        $filledVendor = true;
+                                        break;
                                     }
                                 }
-                                if ($filledFileCount >= 2) {
-                                    // Cek kalau approval urutan 1 tokennya sudah ada, maka jangan tampilkan tombol
-                                    $approvalUrutan1 = null;
-                                    if (!empty($approval)) {
-                                        foreach ($approval as $item) {
-                                            if (($item->Urutan ?? null) == 1) {
-                                                $approvalUrutan1 = $item;
-                                                break;
-                                            }
+                                // Cek approval urutan 1
+                                $approvalUrutan1 = null;
+                                if (!empty($approval)) {
+                                    foreach ($approval as $item) {
+                                        if (($item->Urutan ?? null) == 1) {
+                                            $approvalUrutan1 = $item;
+                                            break;
                                         }
                                     }
-                                    if (empty($approvalUrutan1) || empty($approvalUrutan1->ApprovalToken)) {
-                                        $showAjukan = true;
-                                    }
+                                }
+                                if (
+                                    $filledVendor &&
+                                    (empty($approvalUrutan1) || empty($approvalUrutan1->ApprovalToken))
+                                ) {
+                                    $showAjukan = true;
                                 }
                             @endphp
-
-                            @if ($showAjukan)
+                            @if ($showAjukan && ($data->Status ?? '') !== 'Ditolak' && ($data->getHtaGpa->Status ?? '') !== 'Final')
                                 <button type="button" id="btnAjukan" class="btn btn-success me-2"
                                     data-bs-toggle="modal" data-bs-target="#modalPenilai">
                                     <i class="fa fa-paper-plane me-1"></i> Ajukan & Kirim Email
