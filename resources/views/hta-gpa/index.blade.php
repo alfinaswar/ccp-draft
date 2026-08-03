@@ -434,19 +434,34 @@
                             <!-- Ajukan Button trigger modal -->
                             @php
                                 $showAjukan = false;
+                                $hasApprovalToken = false;
                                 foreach ($data->getVendor as $idx => $v) {
-                                    if (!is_null($v->getHtaGpa->Nilai2 ?? null)) {
-                                        $showAjukan = true;
+                                    // Cek ApprovalToken di getHtaGpa jika ada
+                                    if (!empty($v->getHtaGpa->ApprovalToken ?? null)) {
+                                        $hasApprovalToken = true;
                                         break;
                                     }
                                 }
+                                if (!$hasApprovalToken) {
+                                    foreach ($data->getVendor as $idx => $v) {
+                                        if (!is_null($v->getHtaGpa->Nilai2 ?? null)) {
+                                            $showAjukan = true;
+                                            break;
+                                        }
+                                    }
+                                }
                             @endphp
-                            @if ($showAjukan && ($data->Status ?? '') !== 'Ditolak' && ($data->getHtaGpa->Status ?? '') !== 'Final')
+                            @if (
+                                $showAjukan &&
+                                    !$hasApprovalToken &&
+                                    ($data->Status ?? '') !== 'Ditolak' &&
+                                    ($data->getHtaGpa->Status ?? '') !== 'Final')
                                 <button type="button" id="btnAjukan" class="btn btn-success me-2"
                                     data-bs-toggle="modal" data-bs-target="#modalPenilai">
                                     <i class="fa fa-paper-plane me-1"></i> Ajukan & Kirim Email
                                 </button>
                             @endif
+
 
                             <a href="{{ route('ajukan.show', encrypt($data->id)) }}" class="btn btn-secondary">
                                 <i class="fa fa-arrow-left me-1"></i> Kembali
