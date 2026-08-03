@@ -539,11 +539,12 @@ class HtaDanGpaController extends Controller
         $data = PengajuanPembelian::with([
             'getVendor.getVendorDetail',
             'getHtaGpa.getDetailHta' => function ($query) use ($idPengajuanItem) {
-                $query->where('PengajuanItemId', $idPengajuanItem);
+                $query->where('PengajuanItemId', $idPengajuanItem)->latest();
             },
             'getVendor.getHtaGpa' => function ($query) use ($idPengajuanItem) {
-                $query->where('PengajuanItemId', $idPengajuanItem);
+                $query->where('PengajuanItemId', $idPengajuanItem)->latest();
             },
+
             'getJenisPermintaan.getForm',
             'getPengajuanItem' => function ($query) use ($idPengajuanItem) {
                 $query->where('id', $idPengajuanItem)->with('getBarang.getMerk');
