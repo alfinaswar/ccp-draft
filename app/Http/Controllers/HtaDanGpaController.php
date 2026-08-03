@@ -203,9 +203,10 @@ class HtaDanGpaController extends Controller
         AktivitasPengajuan::create([
             'KodePengajuan' => $kodePengajuan,
             'Jenis' => 'HTA-GPA',
-            'Keterangan' => 'HTA/GPA dengan nomor ' . $kodePengajuan . ' telah berstatus Siap Presentasi',
+            'Keterangan' => 'Data GPA berhasil diperbarui dan seluruh data vendor beserta detail telah tersimpan.',
             'UserCreate' => auth()->user()->name,
         ]);
+
         activity('hta')
             ->causedBy(auth()->user())
             ->performedOn($header)
@@ -324,7 +325,7 @@ class HtaDanGpaController extends Controller
         AktivitasPengajuan::create([
             'KodePengajuan' => $kodePengajuan,
             'Jenis' => 'HTA-GPA',
-            'Keterangan' => 'HTA/GPA dengan nomor ' . $kodePengajuan . ' telah berstatus Siap Presentasi',
+            'Keterangan' => 'Data GPA berhasil diperbarui dan seluruh data vendor beserta detail telah tersimpan.',
             'UserCreate' => auth()->user()->name,
         ]);
 
