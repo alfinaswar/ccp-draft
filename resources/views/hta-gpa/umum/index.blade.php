@@ -222,7 +222,19 @@
                                     }
                                 }
                                 if ($filledFileCount >= 2) {
-                                    $showAjukan = true;
+                                    // Cek kalau approval urutan 1 tokennya sudah ada, maka jangan tampilkan tombol
+                                    $approvalUrutan1 = null;
+                                    if (!empty($approval)) {
+                                        foreach ($approval as $item) {
+                                            if (($item->Urutan ?? null) == 1) {
+                                                $approvalUrutan1 = $item;
+                                                break;
+                                            }
+                                        }
+                                    }
+                                    if (empty($approvalUrutan1) || empty($approvalUrutan1->ApprovalToken)) {
+                                        $showAjukan = true;
+                                    }
                                 }
                             @endphp
 
@@ -232,6 +244,7 @@
                                     <i class="fa fa-paper-plane me-1"></i> Ajukan & Kirim Email
                                 </button>
                             @endif
+
                             <a href="{{ route('ajukan.show', encrypt($data->id)) }}" class="btn btn-secondary">
                                 <i class="fa fa-arrow-left me-1"></i> Kembali
                             </a>
@@ -253,92 +266,7 @@
                 }
             @endphp
 
-            @if (!empty($htagpa))
-                <div class="col-sm-12">
-                    <div class="card">
-                        <div class="card-header d-flex justify-content-between align-items-center">
-                            <h5 class="card-title mb-0">Status Approval</h5>
-                            {{-- @if (!empty($approval) && count($approval) > 0)
-                                <a href="{{ route('htagpa.kirim-ulang-notifikasi', $htagpa->id) }}"
-                                    class="btn btn-primary" id="btnKonfirmasiKirimUlang">
-                                    <i class="fa fa-paper-plane me-1"></i> Kirim Ulang Notifikasi
-                                </a>
-                            @endif --}}
-                        </div>
-                        <div class="card-body">
-                            <div class="alert alert-info d-flex align-items-center mb-3" role="alert">
-                                <i class="fa fa-info-circle me-2"></i>
-                                {{-- <span>
-                                    Gunakan fitur <strong>Kirim Ulang Notifikasi</strong> untuk mengirim ulang email
-                                    approval ke penilai yang statusnya masih <strong>Pending</strong>, tanpa membatalkan
-                                    status approval yang sudah ada sebelumnya.
-                                </span> --}}
-                            </div>
-                            <div class="table-responsive">
-                                <table class="table align-middle">
-                                    <thead class="table-light">
-                                        <tr>
-                                            <th>No</th>
-                                            <th>Nama</th>
-                                            <th>Email</th>
-                                            <th>Urutan</th>
-                                            <th>Status</th>
-                                            <th>Status Email</th>
-                                            <th>TanggalApprove</th>
-                                            <th>Aksi</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        @if ($approval && count($approval) > 0)
-                                            @foreach ($approval as $key => $item)
-                                                <tr>
-                                                    <td>{{ $key + 1 }}</td>
-                                                    <td>{{ $item->Nama }}</td>
-                                                    <td>{{ $item->Email }}</td>
-                                                    <td>{{ $item->Urutan }}</td>
-                                                    <td>
-                                                        <span
-                                                            class="badge
-                                            @if ($item->Status == 'Approved') bg-success
-                                            @elseif($item->Status == 'Pending') bg-warning text-dark
-                                            @elseif($item->Status == 'Rejected') bg-danger
-                                            @else bg-secondary @endif">
-                                                            {{ $item->Status }}
-                                                        </span>
-                                                    </td>
-                                                    <td>{{ $item->StatusEmail }}</td>
-                                                    <td>
-                                                        {{ $item->TanggalApprove ? \Carbon\Carbon::parse($item->TanggalApprove)->format('d-m-Y H:i') : '-' }}
-                                                    </td>
-                                                    <td>
-                                                        {{-- Button Salin Link Approval --}}
-                                                        @php
-                                                            $approvalUrl = route(
-                                                                'htagpa.approve',
-                                                                $item->ApprovalToken ?? '',
-                                                            );
-                                                        @endphp
-                                                        <button type="button" class="btn btn-outline-primary btn-sm"
-                                                            onclick="navigator.clipboard.writeText('{{ $approvalUrl }}'); Swal.fire('Disalin!','Link approval telah disalin ke clipboard!','success')">
-                                                            <i class="fa fa-copy"></i> Salin Link Approval
-                                                        </button>
-                                                    </td>
-                                                </tr>
-                                            @endforeach
-                                        @else
-                                            <tr>
-                                                <td colspan="17" class="text-center">Belum ada data approval.</td>
-                                            </tr>
-                                        @endif
-                                    </tbody>
-                                </table>
 
-                            </div>
-
-                        </div>
-                    </div>
-                </div>
-            @endif
 
             <form id="formAjukanHtaGpa" action="{{ route('htagpa.ajukan') }}" method="POST" style="display:none;">
                 @csrf

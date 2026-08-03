@@ -52,6 +52,9 @@ class HtaDanGpaController extends Controller
                 $query->where('id', $idPengajuanItem)->with('getBarang.getMerk');
             }
         ])->find($idPengajuan);
+        if (empty($data->getVendor) || count($data->getVendor) < 2) {
+            return redirect()->back()->with('error', 'Minimal ada 2 vendor, tolong tambahkan vendor pembanding');
+        }
 
         $approval = null;
         $htagpa = null;
@@ -119,6 +122,7 @@ class HtaDanGpaController extends Controller
                 'IdBarang' => $request->vendor[0]['IdBarang'],
                 'UserCreate' => auth()->user()->name,
                 'KodePerusahaan' => auth()->user()->kodeperusahaan,
+                'Status' => 'Diajukan',
                 'DiajukanOleh' => auth()->user()->id,
                 'DiajukanPada' => now(),
             ]
@@ -442,6 +446,7 @@ class HtaDanGpaController extends Controller
                 'Nama' => $request->NamaPenilaiManual[$key] ?? $userName,
                 'Email' => $request->EmailPenilai[$key],
                 'Urutan' => $approval->Urutan,
+                'StatusEmail' => 'Terkirim',
                 'ApprovalToken' => str_replace('-', '', Str::uuid()),
                 'UserUpdate' => auth()->user()->name,
             ]);
@@ -544,12 +549,16 @@ class HtaDanGpaController extends Controller
             'getVendor.getHtaGpa' => function ($query) use ($idPengajuanItem) {
                 $query->where('PengajuanItemId', $idPengajuanItem)->latest();
             },
-
             'getJenisPermintaan.getForm',
             'getPengajuanItem' => function ($query) use ($idPengajuanItem) {
                 $query->where('id', $idPengajuanItem)->with('getBarang.getMerk');
             }
         ])->find($idPengajuan);
+        // dd($data);
+        // Cek jika data vendor masih kosong, redirect back
+        // if (empty($data->getVendor) || count($data->getVendor) < 2) {
+        //     return redirect()->back()->with('error', 'Data vendor kurang dari 2. Data vendor belum lengkap.');
+        // }
 
         $approval = DokumenApproval::with('getUser', 'getJabatan', 'getDepartemen')
             ->where('JenisFormId', $data->getHtaGpa->JenisForm)
@@ -581,14 +590,14 @@ class HtaDanGpaController extends Controller
             $htagpa = $data->getHtaGpa;
         }
         $parameter = MasterParameter::get();
-// dd($approval);
+        // dd($approval);
         if ($data->getHtaGpa->JenisForm == 2 || $data->getHtaGpa->JenisForm == 16) {
-            return view('hta-gpa.umum.show', compact('data', 'parameter', 'approval','htagpa'));
+            return view('hta-gpa.umum.show', compact('data', 'parameter', 'approval', 'htagpa'));
         } else {
             if (auth()->user()->id == 12) {
-                return view('hta-gpa.show-dr-ingen', compact('data', 'parameter', 'approval','htagpa'));
+                return view('hta-gpa.show-dr-ingen', compact('data', 'parameter', 'approval', 'htagpa'));
             } else {
-                return view('hta-gpa.show', compact('data', 'parameter', 'approval','htagpa'));
+                return view('hta-gpa.show', compact('data', 'parameter', 'approval', 'htagpa'));
             }
         }
     }
@@ -883,9 +892,9 @@ class HtaDanGpaController extends Controller
             ->where('ApprovalToken', $token)
             ->firstOrFail();
         $ListApproval = DokumenApproval::with(['getDokumenHTAGPA.getPengajuan'])
-        ->where('DokumenId', $penilai->DokumenId)
-        ->where('JenisFormId', $penilai->JenisFormId)
-        ->get();
+            ->where('DokumenId', $penilai->DokumenId)
+            ->where('JenisFormId', $penilai->JenisFormId)
+            ->get();
         // Cek apakah sudah diapprove/direject sebelumnya
         if ($penilai->Status !== 'Pending') {
             return view('emails.setelah-approval', compact('penilai'))->with([
@@ -893,7 +902,7 @@ class HtaDanGpaController extends Controller
             ]);
         }
 
-        return view('emails.sebelum-approve', compact('penilai','ListApproval'));
+        return view('emails.sebelum-approve', compact('penilai', 'ListApproval'));
     }
 
     public function submitJustifikasi(Request $request, $token)

@@ -187,12 +187,6 @@
             <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h5 class="card-title mb-0">Status Approval</h5>
-                    {{-- @if (!empty($approval) && count($approval) > 0)
-                                <a href="{{ route('htagpa.kirim-ulang-notifikasi', $htagpa->id) }}"
-                                    class="btn btn-primary" id="btnKonfirmasiKirimUlang">
-                                    <i class="fa fa-paper-plane me-1"></i> Kirim Ulang Notifikasi
-                                </a>
-                            @endif --}}
                 </div>
                 <div class="card-body">
                     <div class="table-responsive">
@@ -205,11 +199,9 @@
                                     Anda juga dapat menyalin link approval agar dapat langsung dibagikan melalui
                                     WhatsApp atau media lainnya, sehingga penilai yang belum merespon dapat segera
                                     mengambil tindakan.<br>
-
                                 </p>
                             </div>
                         </div>
-
 
                         <table class="table align-middle">
                             <thead class="table-light">
@@ -226,9 +218,6 @@
                             </thead>
                             <tbody>
                                 @if ($approval && count($approval) > 0)
-                                    @php
-                                        $canCopy = true;
-                                    @endphp
                                     @foreach ($approval as $key => $item)
                                         <tr>
                                             <td>{{ $key + 1 }}</td>
@@ -238,10 +227,10 @@
                                             <td>
                                                 <span
                                                     class="badge
-                                                            @if ($item->Status == 'Approved') bg-success
-                                                            @elseif($item->Status == 'Pending') bg-warning text-dark
-                                                            @elseif($item->Status == 'Rejected') bg-danger
-                                                            @else bg-secondary @endif">
+                                                        @if ($item->Status == 'Approved') bg-success
+                                                        @elseif($item->Status == 'Pending') bg-warning text-dark
+                                                        @elseif($item->Status == 'Rejected') bg-danger
+                                                        @else bg-secondary @endif">
                                                     {{ $item->Status }}
                                                 </span>
                                             </td>
@@ -251,6 +240,16 @@
                                             </td>
                                             <td>
                                                 @php
+                                                    // Logic: Tidak bisa salin link approval jika approval sebelumnya masih Pending
+                                                    $bolehSalin = true;
+                                                    if ($key > 0) {
+                                                        for ($i = 0; $i < $key; $i++) {
+                                                            if (($approval[$i]->Status ?? '') === 'Pending') {
+                                                                $bolehSalin = false;
+                                                                break;
+                                                            }
+                                                        }
+                                                    }
                                                     $approvalUrl = route(
                                                         'htagpa.sebelum-approve',
                                                         $item->ApprovalToken ?? '',
@@ -258,7 +257,7 @@
                                                     $templateText = "Yth. Bapak/Ibu {$item->Nama},\n\nMohon untuk melakukan approval Formulir HTA/GPA pada link berikut:\n{$approvalUrl}\n\nTerima kasih.";
                                                 @endphp
 
-                                                @if ($canCopy)
+                                                @if ($bolehSalin)
                                                     @if ($item->Status !== 'Approved')
                                                         <button type="button" class="btn btn-outline-primary btn-sm"
                                                             onclick="navigator.clipboard.writeText(`{{ $templateText }}`); Swal.fire('Disalin!','Template link approval beserta kata-kata telah disalin ke clipboard!','success')">
@@ -273,16 +272,13 @@
                                                             lagi</span>
                                                     @endif
                                                 @else
-                                                    <span class="text-muted">Approval sebelumnya harus disetujui</span>
+                                                    <span class="text-muted">Approval sebelumnya harus <b>tidak</b> Pending
+                                                        (harus Approved/Rejected)
+                                                        sebelum bisa menyalin link approval
+                                                        selanjutnya</span>
                                                 @endif
                                             </td>
-
                                         </tr>
-                                        @if ($item->Status !== 'Approved')
-                                            @php
-                                                $canCopy = false;
-                                            @endphp
-                                        @endif
                                     @endforeach
                                 @else
                                     <tr>
@@ -291,10 +287,7 @@
                                 @endif
                             </tbody>
                         </table>
-
-
                     </div>
-
                 </div>
             </div>
         </div>
