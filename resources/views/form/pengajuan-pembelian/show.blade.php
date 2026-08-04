@@ -693,6 +693,7 @@
                                                     <td class="text-center">
                                                         @php
                                                             $hasHta = $item->getHtaGpa ? true : false;
+                                                            $htaFinal = $hasHta && isset($item->getHtaGpa->Status) && strtolower($item->getHtaGpa->Status) == 'final';
                                                         @endphp
                                                         @if (!$hasHta)
                                                             <a href="{{ route('htagpa.form-hta', [$data->id, $item->id]) }}"
@@ -701,7 +702,7 @@
                                                                 Lengkapi HTA
                                                             </a>
                                                         @else
-                                                            @if ($data->Status == 'Draft' || $data->Status == 'Selesai Review' || $data->Status == 'Ditolak')
+                                                            @if (($data->Status == 'Draft' || $data->Status == 'Selesai Review' || $data->Status == 'Ditolak') && !$htaFinal)
                                                                 <a href="{{ route('htagpa.form-hta', [$data->id, $item->id]) }}"
                                                                     class="btn btn-warning">
                                                                     <i class="fa fa-exclamation-circle"></i>
@@ -720,6 +721,7 @@
                                                             </a>
                                                         @endif
                                                     </td>
+
                                                     <!-- Feasibility Study -->
                                                     <td class="text-center">
                                                         @php

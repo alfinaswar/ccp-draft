@@ -241,6 +241,7 @@ class HtaDanGpaController extends Controller
                 'IdVendor' => $request->vendor[0]['IdVendor'],
                 'IdBarang' => $request->vendor[0]['IdBarang'],
                 'UserCreate' => auth()->user()->name,
+                'Status' => 'Final',
                 'KodePerusahaan' => auth()->user()->kodeperusahaan,
                 'DiajukanOleh' => auth()->user()->id,
                 'DiajukanPada' => now(),
@@ -761,8 +762,8 @@ class HtaDanGpaController extends Controller
                 $penilai->StatusEmail = 'Terkirim';
                 $penilai->save();
 
-                $cariHTA->Status = 'Final';
-                $cariHTA->save();
+                // $cariHTA->Status = 'Final';
+                // $cariHTA->save();
             } catch (\Exception $e) {
                 // dd($e);
                 $penilai->StatusEmail = 'Gagal Kirim';
@@ -1034,8 +1035,8 @@ class HtaDanGpaController extends Controller
             }
         } else {
             if ($hta) {
-                $hta->Status = 'Final';
-                $hta->save();
+                // $hta->Status = 'Final';
+                // $hta->save();
             }
         }
 

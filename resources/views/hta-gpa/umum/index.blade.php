@@ -78,20 +78,17 @@
                         </table>
                     </div>
 
-                    <div class="alert alert-warning d-flex align-items-center" role="alert" style="min-height: 70px;">
-                        <i class="fa fa-exclamation-circle me-2" style="align-self: center; font-size: 1.6rem;"></i>
-                        <div class="d-flex align-items-center" style="min-height: 50px;">
-                            <ol class="mb-0 ps-2">
-                                <li>Isi HTA secara lengkap untuk seluruh Vendor sekaligus. Anda dapat upload dokumen sekali
-                                    saja untuk dua vendor.</li>
-                                <li>Semua kolom HTA wajib diisi.</li>
-                                <li>Jika {{ auth()->user()->name }} sedang sibuk, Anda dapat menyimpan data sebagai draft
-                                    terlebih dahulu dan melanjutkan pengisian di lain waktu.</li>
-                                <li><strong>Tombol <u>Kirim</u> dan <u>Ajukan</u> akan muncul setelah Anda upload data untuk
-                                        <u>seluruh vendor</u>.</strong></li>
-                            </ol>
+                    <div class="alert alert-warning d-flex align-items-start" role="alert" style="min-height: 80px; background-color: #fffbe6; border-left: 6px solid #ffcc00; font-size: 1.08rem;">
+                        <i class="fa fa-exclamation-triangle me-3" style="align-self: center; font-size: 2rem; color: #ff9900;"></i>
+                        <div>
+                            <ul class="mb-0 ps-2" style="list-style-type: disc;">
+                                <li>Periksa kembali file yang akan diunggah. Pastikan semua data sudah benar sebelum mengirim.</li>
+                                <li><strong>Tombol <u>Kirim</u> dan <u>Ajukan</u> hanya akan terlihat jika semua data vendor sudah terisi lengkap dan file sudah diupload.</strong></li>
+                            </ul>
                         </div>
                     </div>
+
+
 
                     <form id="formHtaGpa" action="{{ route('htagpa.store-umum') }}" method="POST"
                         enctype="multipart/form-data">
