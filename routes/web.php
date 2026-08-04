@@ -27,6 +27,7 @@ use App\Http\Controllers\ProductController;
 use App\Http\Controllers\RekomendasiController;
 use App\Http\Controllers\RkapController;
 use App\Http\Controllers\RoleController;
+use App\Http\Controllers\TiketTroubleController;
 use App\Http\Controllers\TutupPengajuanController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\UsulanInventasiController;
@@ -333,6 +334,15 @@ Route::group(['middleware' => ['auth']], function () {
         Route::get('/cetak/{idPengajuan}/{idPengajuanItem}', [CekPengajuanController::class, 'cetak'])->name('cek-pengajuan.cetak');
         Route::delete('/delete/{id}', [CekPengajuanController::class, 'destroy'])->name('cek-pengajuan.destroy');
         Route::get('/kirim-ulang-notifikasi-fs/{id}', [FeasibilityStudyController::class, 'kirimUlangNotifikasi'])->name('fs.kirim-ulang-notifikasi');
+    });
+    Route::prefix('support')->group(function () {
+        Route::get('/create-ticket', [TiketTroubleController::class, 'create'])->name('ticket.create');
+        Route::post('/ticketing/trouble', [TiketTroubleController::class, 'store'])->name('ticket.store');
+        Route::get('/ticket', [TiketTroubleController::class, 'index'])->name('ticket.index');
+        Route::get('/ticket/{tiketTrouble}/edit', [TiketTroubleController::class, 'edit'])->name('ticket.edit');
+        Route::put('/ticket/{tiketTrouble}', [TiketTroubleController::class, 'update'])->name('ticket.update');
+        Route::delete('/ticket/{tiketTrouble}', [TiketTroubleController::class, 'destroy'])->name('ticket.delete');
+        Route::get('/ticket/{tiketTrouble}', [TiketTroubleController::class, 'show'])->name('ticket.show');
     });
     Route::prefix('pengaturan/pengajuan')->group(function () {
         Route::get('/', [TutupPengajuanController::class, 'index'])->name('pengaturan.index');

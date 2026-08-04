@@ -997,7 +997,7 @@ class HtaDanGpaController extends Controller
         if ($nextApproval) {
             // $this->savePdfToStorage($pengajuan->id, $pengajuan->PengajuanItemId);
             $this->pdfGenerator->generateAll($pengajuan->id);
-            if (!empty($nextApproval->Email) && $nextApproval->UserId != 5) {
+            if (!empty($nextApproval->Email)) {
                 $parameter = MasterParameter::get();
                 $approval2 = DokumenApproval::with('getUser', 'getJabatan', 'getDepartemen')
                     ->where('JenisFormId', $penilai->JenisFormId)

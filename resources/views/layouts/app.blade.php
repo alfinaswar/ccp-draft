@@ -34,7 +34,24 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     {{-- //summernote --}}
     @stack('css')
+<style>
+    .btn-ticket-trouble {
+    background: linear-gradient(135deg, #4e73df, #224abe);
+    color: white;
+    border: none;
+    border-radius: 50px;
+    padding: 8px 18px;
+    font-weight: 600;
+    box-shadow: 0 4px 12px rgba(78, 115, 223, 0.35);
+    transition: all 0.3s ease;
+}
 
+.btn-ticket-trouble:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(78, 115, 223, 0.45);
+    color: white;
+}
+</style>
 </head>
 
 <body>
@@ -75,10 +92,15 @@
             <!-- Header Menu -->
             <ul class="nav user-menu">
 
-
-                <li class="nav-item nav-searchinputs">
-
-                </li>
+<li class="nav-item nav-searchinputs">
+    {{-- <button
+        class="btn btn-ticket-trouble"
+        onclick="window.open('{{ route('ticket.index') }}', '_blank');"
+        type="button"
+    >
+        <i class="bi bi-headset"></i> Buat Ticket Trouble
+    </button> --}}
+</li>
 
 
                 <li class="nav-item dropdown">
