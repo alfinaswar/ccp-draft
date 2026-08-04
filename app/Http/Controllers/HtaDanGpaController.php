@@ -410,7 +410,7 @@ class HtaDanGpaController extends Controller
             ->where('IdPengajuan', $request->IdPengajuan)
             ->where('PengajuanItemId', $request->PengajuanItemId)
             ->first();
-        // dd($cariHTA);
+
         if (!$cariHTA) {
             return redirect()->back()->with('error', 'Data HTA tidak ditemukan.');
         }
@@ -420,42 +420,48 @@ class HtaDanGpaController extends Controller
             'DokumenId' => $cariHTA->id,
         ])->orderBy('Urutan', 'asc')->get();
 
+        $sudahAdaToken = $approvalDocs && $approvalDocs->count() > 0 && $approvalDocs->where('ApprovalToken', '!=', '')->count() > 0;
+        // JANGAN simpan/update data approval baru jika sudah ada token, agar token tidak berubah
+        if (!$sudahAdaToken) {
+            // dd($sudahAdaToken);
+            foreach ($approvalDocs as $key => $approval) {
+                $namaPenilai = $request->NamaPenilai[$key] ?? null;
+                $userId = null;
+                $userName = null;
+
+                if ($namaPenilai && strpos($namaPenilai, ',') !== false) {
+                    [$userId, $userName] = explode(',', $namaPenilai, 2);
+                } else {
+                    $userId = $namaPenilai;
+                    $userName = null;
+                }
+
+                $approval->update([
+                    'JenisUser' => $request->TipeInputPenilai[$key],
+                    'JabatanId' => $request->JabatanId[$key],
+                    'DepartemenId' => $request->DepartemenId[$key],
+                    'NamaJabatan' => $approval->NamaJabatan,
+                    'UserId' => $userId,
+                    'Nama' => $request->NamaPenilaiManual[$key] ?? $userName,
+                    'Email' => $request->EmailPenilai[$key],
+                    'Urutan' => $approval->Urutan,
+                    'StatusEmail' => 'Terkirim',
+                    'ApprovalToken' => str_replace('-', '', Str::uuid()),
+                    'UserUpdate' => auth()->user()->name,
+                ]);
+            }
+        }
+// dd(123);
+        // Ambil ulang data lengkap dengan relasi untuk digunakan di email & QR
         $approval2 = DokumenApproval::with('getUser', 'getJabatan', 'getDepartemen')
             ->where('JenisFormId', $cariHTA->JenisForm)
             ->where('DokumenId', $cariHTA->id)
             ->orderBy('Urutan', 'asc')
             ->get();
 
-        foreach ($approvalDocs as $key => $approval) {
-            $namaPenilai = $request->NamaPenilai[$key] ?? null;
-            $userId = null;
-            $userName = null;
-
-            if ($namaPenilai && strpos($namaPenilai, ',') !== false) {
-                [$userId, $userName] = explode(',', $namaPenilai, 2);
-            } else {
-                $userId = $namaPenilai;
-                $userName = null;
-            }
-
-            $approval->update([
-                'JenisUser' => $request->TipeInputPenilai[$key],
-                'JabatanId' => $request->JabatanId[$key],
-                'DepartemenId' => $request->DepartemenId[$key],
-                'NamaJabatan' => $approval->NamaJabatan,
-                'UserId' => $userId,
-                'Nama' => $request->NamaPenilaiManual[$key] ?? $userName,
-                'Email' => $request->EmailPenilai[$key],
-                'Urutan' => $approval->Urutan,
-                'StatusEmail' => 'Terkirim',
-                'ApprovalToken' => str_replace('-', '', Str::uuid()),
-                'UserUpdate' => auth()->user()->name,
-            ]);
-        }
-
         $idPengajuan = $request->IdPengajuan;
         $idPengajuanItem = $request->PengajuanItemId;
-        // $permintaan =
+
         $pengajuan = PengajuanPembelian::with([
             'getVendor.getVendorDetail',
             'getHtaGpa' => function ($query) use ($idPengajuanItem) {
@@ -482,8 +488,8 @@ class HtaDanGpaController extends Controller
                 ->orderBy('Urutan', 'asc')
                 ->get();
 
-            // Generate QR code untuk setiap approval
-            foreach ($ApprovalPermintaan as $item) {
+            // PERBAIKAN BUG: Looping dari $approval3, bukan $ApprovalPermintaan
+            foreach ($approval3 as $item) {
                 if ($item->Status == 'Approved') {
                     $qrCode = QrCode::create(route('approval.validasi', $item->ApprovalToken))
                         ->setSize(80)
@@ -494,11 +500,17 @@ class HtaDanGpaController extends Controller
 
                     $item->qrCode = base64_encode($result->getString());
                 }
+                // Masukkan object $item ke dalam collection $ApprovalPermintaan
+                $ApprovalPermintaan->push($item);
             }
         }
+
         $parameter = MasterParameter::get();
-        $firstApprover = $approvalDocs->first();
-        if ($firstApprover && !empty($firstApprover->Email) && $firstApprover->UserId != 2) {
+
+        // Gunakan $approval2 (yang sudah di-reload) agar data sinkron dengan DB
+        $firstApprover = $approval2->first();
+
+        if ($firstApprover && !empty($firstApprover->Email)) {
             $fileLampiran = [];
             if ($cariHTA->JenisForm == '2' || $cariHTA->JenisForm == '16') {
                 foreach ($cariHTA->getDetailHta as $detail) {
@@ -519,7 +531,6 @@ class HtaDanGpaController extends Controller
                     $fileLampiran,
                     $ApprovalPermintaan,
                     $permintaan
-                    // $permintaan,
                 ));
         }
 
