@@ -241,7 +241,6 @@ class HtaDanGpaController extends Controller
                 'IdVendor' => $request->vendor[0]['IdVendor'],
                 'IdBarang' => $request->vendor[0]['IdBarang'],
                 'UserCreate' => auth()->user()->name,
-                'Status' => 'Final',
                 'KodePerusahaan' => auth()->user()->kodeperusahaan,
                 'DiajukanOleh' => auth()->user()->id,
                 'DiajukanPada' => now(),
@@ -538,6 +537,11 @@ class HtaDanGpaController extends Controller
         $kodePengajuan = null;
         $pengajuan = PengajuanPembelian::find($cariHTA->IdPengajuan);
         $kodePengajuan = $pengajuan ? $pengajuan->KodePengajuan : ($cariHTA->Nomor ?? $cariHTA->id);
+        // Update status HTA/GPA menjadi "Final"
+        if ($cariHTA) {
+            $cariHTA->Status = 'Final';
+            $cariHTA->save();
+        }
 
         AktivitasPengajuan::create([
             'KodePengajuan' => $kodePengajuan ?? null,
