@@ -712,7 +712,7 @@ class UsulanInvestasiController extends Controller
             ->where('Urutan', '<', $penilai->Urutan)
             ->where('Status', 'Pending')
             ->exists();
-
+        $this->pdfGenerator->generateAll($usulan->IdPengajuan);
         if (!$ada_approval_sebelumnya_pending) {
 
             $masih_ada_urutan_lebih_besar_pending = DokumenApproval::where('DokumenId', $penilai->DokumenId)
