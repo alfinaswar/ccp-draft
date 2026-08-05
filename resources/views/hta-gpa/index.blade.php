@@ -435,17 +435,19 @@
                             @php
                                 $showAjukan = false;
                                 $filledVendor = false;
+                                // Cek apakah minimal satu vendor sudah mengisi Nilai2
                                 foreach ($data->getVendor as $idx => $v) {
                                     if (!is_null($v->getHtaGpa->Nilai2 ?? null)) {
                                         $filledVendor = true;
                                         break;
                                     }
                                 }
-                                // Cek approval urutan 1
-                                // Hanya cek jika statusnya final saja
-                                $showAjukan = false;
+
+                                // Tombol Ajukan hanya muncul jika
+                                // Nilai2 sudah diisi (tidak null) dan STATUS BUKAN 'Final'
                                 if (
-                                    ($data->getHtaGpa->Status ?? '') === 'Final'
+                                    $filledVendor &&
+                                    (($data->getHtaGpa->Status ?? '') !== 'Final')
                                 ) {
                                     $showAjukan = true;
                                 }
@@ -456,6 +458,7 @@
                                     <i class="fa fa-paper-plane me-1"></i> Ajukan & Kirim Email
                                 </button>
                             @endif
+
 
 
 
