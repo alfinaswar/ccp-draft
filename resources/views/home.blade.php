@@ -213,8 +213,7 @@
                     title: {
                         text: 'Jumlah Pengajuan'
                     },
-                    tickAmount: 5,
-                    stepSize: 5,
+
                     labels: {
                         formatter: function(val) {
                             return Math.round(val);
@@ -293,8 +292,7 @@
                     title: {
                         text: 'Jumlah Pengajuan'
                     },
-                    tickAmount: 5,
-                    stepSize: 5,
+
                     labels: {
                         formatter: function(val) {
                             return Math.round(val);
