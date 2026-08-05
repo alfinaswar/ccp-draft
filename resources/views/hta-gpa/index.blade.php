@@ -442,28 +442,21 @@
                                     }
                                 }
                                 // Cek approval urutan 1
-                                $approvalUrutan1 = null;
-                                if (!empty($approval)) {
-                                    foreach ($approval as $item) {
-                                        if (($item->Urutan ?? null) == 1) {
-                                            $approvalUrutan1 = $item;
-                                            break;
-                                        }
-                                    }
-                                }
+                                // Hanya cek jika statusnya final saja
+                                $showAjukan = false;
                                 if (
-                                    $filledVendor &&
-                                    (empty($approvalUrutan1) || empty($approvalUrutan1->ApprovalToken))
+                                    ($data->getHtaGpa->Status ?? '') === 'Final'
                                 ) {
                                     $showAjukan = true;
                                 }
                             @endphp
-                            @if ($showAjukan && ($data->Status ?? '') !== 'Ditolak' && ($data->getHtaGpa->Status ?? '') !== 'Final')
+                            @if ($showAjukan)
                                 <button type="button" id="btnAjukan" class="btn btn-success me-2"
                                     data-bs-toggle="modal" data-bs-target="#modalPenilai">
                                     <i class="fa fa-paper-plane me-1"></i> Ajukan & Kirim Email
                                 </button>
                             @endif
+
 
 
                             <a href="{{ route('ajukan.show', encrypt($data->id)) }}" class="btn btn-secondary">

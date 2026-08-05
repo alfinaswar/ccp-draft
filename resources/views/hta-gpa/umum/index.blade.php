@@ -218,21 +218,11 @@
                                         $filledFileCount++;
                                     }
                                 }
-                                if ($filledFileCount >= 2) {
-                                    // Cek kalau approval urutan 1 tokennya sudah ada, maka jangan tampilkan tombol
-                                    $approvalUrutan1 = null;
-                                    if (!empty($approval)) {
-                                        foreach ($approval as $item) {
-                                            if (($item->Urutan ?? null) == 1) {
-                                                $approvalUrutan1 = $item;
-                                                break;
-                                            }
-                                        }
-                                    }
-                                    if (empty($approvalUrutan1) || empty($approvalUrutan1->ApprovalToken)) {
-                                        $showAjukan = true;
-                                    }
+                                // Tampilkan tombol Ajukan hanya jika statusnya belum Final
+                                if (($data->getHtaGpa->Status ?? null) !== 'Final') {
+                                    $showAjukan = true;
                                 }
+
                             @endphp
 
                             @if ($showAjukan)
