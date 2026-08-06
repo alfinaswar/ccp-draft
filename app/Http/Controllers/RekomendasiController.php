@@ -1505,6 +1505,7 @@ class RekomendasiController extends Controller
 
         $rekomendasi = PengajuanPembelian::find($id);
         // dd($rekomendasi);
+        // dd($rekomendasi);
         if (!$rekomendasi) {
             return redirect()->back()->with('error', 'Rekomendasi tidak ditemukan.');
         }

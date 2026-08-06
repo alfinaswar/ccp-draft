@@ -56,17 +56,42 @@ class NotifApprovalPresentasi extends Mailable
         // HANYA ATTACH FILE fs-{id}.pdf
         // ==========================================
         $idPengajuan = $this->rekomendasi->id;
-        $fsFileName = ($this->rekomendasi->Jenis == 1 ? 'fui-' : 'fs-') . $idPengajuan . '.pdf';
-        $fsFullPath = storage_path('app/public/rekap-file/pengajuan-' . $idPengajuan . '/' . $fsFileName);
 
-        if (file_exists($fsFullPath) && filesize($fsFullPath) > 0) {
-            $mailable->attach($fsFullPath, [
-                'as' => $fsFileName,
-                'mime' => 'application/pdf',
-            ]);
-            Log::info('Lampiran FS berhasil di-attach: ' . $fsFullPath);
+        if ($this->rekomendasi->Jenis == 1) {
+            $fsFileName = 'fs-' . $idPengajuan . '.pdf';
+            $fsFullPath = storage_path('app/public/rekap-file/pengajuan-' . $idPengajuan . '/' . $fsFileName);
+            if (file_exists($fsFullPath) && filesize($fsFullPath) > 0) {
+                $mailable->attach($fsFullPath, [
+                    'as' => $fsFileName,
+                    'mime' => 'application/pdf',
+                ]);
+                Log::info('Lampiran FS berhasil di-attach: ' . $fsFullPath);
+            } else {
+                // Kalau FS tidak ada, lampirkan FUI
+                $fuiFileName = 'fui-' . $idPengajuan . '.pdf';
+                $fuiFullPath = storage_path('app/public/rekap-file/pengajuan-' . $idPengajuan . '/' . $fuiFileName);
+                if (file_exists($fuiFullPath) && filesize($fuiFullPath) > 0) {
+                    $mailable->attach($fuiFullPath, [
+                        'as' => $fuiFileName,
+                        'mime' => 'application/pdf',
+                    ]);
+                    Log::info('Lampiran FUI berhasil di-attach (FS tidak ditemukan): ' . $fuiFullPath);
+                } else {
+                    Log::warning('File FS dan FUI tidak ditemukan atau kosong: ' . $fsFullPath . ', ' . $fuiFullPath);
+                }
+            }
         } else {
-            Log::warning('File FS tidak ditemukan atau kosong: ' . $fsFullPath);
+            $fuiFileName = 'fui-' . $idPengajuan . '.pdf';
+            $fuiFullPath = storage_path('app/public/rekap-file/pengajuan-' . $idPengajuan . '/' . $fuiFileName);
+            if (file_exists($fuiFullPath) && filesize($fuiFullPath) > 0) {
+                $mailable->attach($fuiFullPath, [
+                    'as' => $fuiFileName,
+                    'mime' => 'application/pdf',
+                ]);
+                Log::info('Lampiran FUI berhasil di-attach: ' . $fuiFullPath);
+            } else {
+                Log::warning('File FUI tidak ditemukan atau kosong: ' . $fuiFullPath);
+            }
         }
 
         return $mailable;
