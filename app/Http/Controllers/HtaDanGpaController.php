@@ -797,6 +797,14 @@ class HtaDanGpaController extends Controller
     public function approve($token)
     {
         $penilai = DokumenApproval::with('getUser')->where('ApprovalToken', $token)->firstOrFail();
+        if (!$penilai) {
+            return view('errors.proses-verifikasi');
+        }
+        if ($penilai->Status !== 'Pending') {
+            return view('emails.setelah-approval', compact('penilai'))->with([
+                'message' => 'Persetujuan sudah diproses sebelumnya.'
+            ]);
+        }
 
         if ($penilai->Status !== 'Pending') {
             return view('emails.setelah-approval', compact('penilai'))->with([
@@ -907,7 +915,10 @@ class HtaDanGpaController extends Controller
     {
         $penilai = DokumenApproval::with(['getDokumenHTAGPA.getPengajuan'])
             ->where('ApprovalToken', $token)
-            ->firstOrFail();
+            ->first();
+        if (!$penilai) {
+            return view('errors.proses-verifikasi');
+        }
         $ListApproval = DokumenApproval::with(['getDokumenHTAGPA.getPengajuan'])
             ->where('DokumenId', $penilai->DokumenId)
             ->where('JenisFormId', $penilai->JenisFormId)
@@ -925,6 +936,9 @@ class HtaDanGpaController extends Controller
     public function submitJustifikasi(Request $request, $token)
     {
         $penilai = DokumenApproval::with('getDokumenHTAGPA')->where('ApprovalToken', $token)->first();
+        if (!$penilai) {
+            return view('errors.proses-verifikasi');
+        }
         if (!$penilai || $penilai->Status !== 'Pending') {
             return redirect()->back()->with('error', 'Approval sudah diproses sebelumnya.');
         }

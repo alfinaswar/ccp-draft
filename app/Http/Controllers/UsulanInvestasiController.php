@@ -693,7 +693,10 @@ class UsulanInvestasiController extends Controller
     // }
     public function approve($token)
     {
-        $penilai = DokumenApproval::with('getUser')->where('ApprovalToken', $token)->firstOrFail();
+        $penilai = DokumenApproval::with('getUser')->where('ApprovalToken', $token)->first();
+        if (!$penilai) {
+            return view('errors.proses-verifikasi');
+        }
         $usulan = UsulanInvestasi::find($penilai->DokumenId);
         $pengajuan = null;
         $jenisPengajuan = null;
