@@ -138,7 +138,7 @@
                                                 ada)</span></strong></label>
                                     <input type="text" name="Npwp"
                                         class="form-control @error('Npwp') is-invalid @enderror" id="npwp"
-                                        placeholder="NPWP Vendor" value="{{ old('Npwp') }}">
+                                        placeholder="NPWP Vendor" value="{{ old('Npwp', $vendor->Npwp) }}">
                                     @error('Npwp')
                                         <div class="text-danger mt-1">
                                             {{ $message }}
@@ -152,7 +152,7 @@
                                                 ada)</span></strong></label>
                                     <input type="text" name="Nib"
                                         class="form-control @error('Nib') is-invalid @enderror" id="nib"
-                                        placeholder="NIB Vendor" value="{{ old('Nib') }}">
+                                        placeholder="NIB Vendor" value="{{ old('Nib', $vendor->Nib) }}">
                                     @error('Nib')
                                         <div class="text-danger mt-1">
                                             {{ $message }}
