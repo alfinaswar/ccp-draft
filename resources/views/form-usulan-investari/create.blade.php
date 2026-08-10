@@ -24,6 +24,7 @@
                     @csrf
                     <input type="hidden" value="{{ $data->id }}" name="IdPengajuan">
                     <input type="hidden" value="{{ $PengajuanItemId }}" name="PengajuanItemId">
+                    <input type="hidden" id="hiddenIdDirektur" name="DirekturId" value="">
                     <div class="card-body">
                         <div class="row mb-4">
                             <div class="col-md-6">
@@ -534,6 +535,7 @@
 
     </div>
 @endsection
+@include('form-usulan-investari.modal-pilih-direktur')
 @push('js')
     @if (Session::get('success'))
         <script>
@@ -560,8 +562,151 @@
             });
         </script>
     @endif
-    <script>
+        <script>
         document.addEventListener('DOMContentLoaded', function() {
+            // Ambil nilai Jenis dari backend (pastikan variabel $data tersedia)
+            const jenisPengajuan = {{ $data->Jenis ?? 1 }};
+
+            const form = document.getElementById('formUsulanInvestasi');
+            const btnSimpan = document.getElementById('btnSimpanUsulan');
+            const hiddenIdDirektur = document.getElementById('hiddenIdDirektur');
+
+            let isSubmitting = false;
+
+            // --- FUNGSI DISABLE/ENABLE INPUT (Tetap sama seperti sebelumnya) ---
+            function disableInputActions() {
+                window.onkeydown = function(e) { if (!e || (e.key && e.key === "F5")) return true; e.preventDefault(); return false; };
+                window.onkeypress = function(e) { e.preventDefault(); return false; };
+                window.onkeyup = function(e) { e.preventDefault(); return false; };
+                window.onmousedown = function(e) { e.preventDefault(); return false; };
+                window.onmouseup = function(e) { e.preventDefault(); return false; };
+                window.onclick = function(e) { e.preventDefault(); return false; };
+                window.oncontextmenu = function(e) { e.preventDefault(); return false; };
+                document.body.style.pointerEvents = "none";
+                setTimeout(function() {
+                    var swal = document.querySelector('.swal2-container');
+                    if (swal) swal.style.pointerEvents = 'auto';
+                }, 100);
+            }
+
+            function enableInputActions() {
+                window.onkeydown = null; window.onkeypress = null; window.onkeyup = null;
+                window.onmousedown = null; window.onmouseup = null; window.onclick = null;
+                window.oncontextmenu = null; document.body.style.pointerEvents = "";
+            }
+
+            // --- FUNGSI PROSES FINAL SUBMIT (SweetAlert + Submit) ---
+            function processFinalSubmission() {
+                if (isSubmitting) return;
+
+                Swal.fire({
+                    title: "Konfirmasi Simpan",
+                    html: "Apakah anda yakin ingin menyimpan Usulan Investasi ini?<br><small>Notifikasi akan dikirim ke email terkait.</small>",
+                    icon: "question",
+                    showCancelButton: true,
+                    confirmButtonText: "Ya, Simpan",
+                    cancelButtonText: "Batal",
+                    confirmButtonColor: "#3085d6",
+                    cancelButtonColor: "#d33",
+                }).then(function(result) {
+                    if (result.isConfirmed) {
+                        let detik = 0;
+                        let interval;
+                        Swal.fire({
+                            title: 'Mengirim notifikasi email...',
+                            html: `<b>Harap tunggu <span id="timerSimpan">0</span> detik.</b><br>
+                                <small>Usulan dalam proses penyimpanan dan mengirim notifikasi ke email terkait.<br>Silakan tunggu sampai proses selesai.<br><b>Selama proses berjalan, keyboard & mouse dinonaktifkan</b></small>
+                                <br><br><div class="spinner-border text-success" role="status"><span class="visually-hidden">Loading...</span></div>`,
+                            allowOutsideClick: false,
+                            allowEscapeKey: false,
+                            showConfirmButton: false,
+                            didOpen: () => {
+                                Swal.showLoading();
+                                var el = document.getElementById('timerSimpan');
+                                detik = 0;
+                                interval = setInterval(function() {
+                                    detik++;
+                                    if (el) el.textContent = detik;
+                                }, 1000);
+                                disableInputActions();
+                            },
+                            willClose: () => {
+                                clearInterval(interval);
+                                enableInputActions();
+                            }
+                        });
+                        isSubmitting = true;
+                        setTimeout(function() {
+                            form.submit();
+                        }, 800);
+                    }
+                });
+            }
+
+            // --- EVENT LISTENER UTAMA FORM SUBMIT ---
+            if (form && btnSimpan) {
+                form.addEventListener('submit', function(e) {
+                    if (isSubmitting) {
+                        e.preventDefault();
+                        return;
+                    }
+
+                    // CEK KONDISI: Jika Jenis BUKAN 1, tampilkan modal dulu
+                    if (jenisPengajuan != 1) {
+                        e.preventDefault(); // Cegah submit langsung
+                        const modalDirektur = new bootstrap.Modal(document.getElementById('modalDirektur'));
+                        modalDirektur.show();
+                        return; // Stop eksekusi di sini, tunggu aksi user di modal
+                    }
+
+                    // Jika Jenis == 1, langsung lanjut ke proses final
+                    e.preventDefault();
+                    processFinalSubmission();
+                });
+            }
+
+            // --- LOGIKA DI DALAM MODAL DIREKTUR ---
+            const btnLanjutSimpan = document.getElementById('btnLanjutSimpan');
+            const selectDirektur = document.getElementById('selectDirektur');
+            const errorDirektur = document.getElementById('errorDirektur');
+
+            if (btnLanjutSimpan) {
+                btnLanjutSimpan.addEventListener('click', function() {
+                    const selectedValue = selectDirektur.value;
+
+                    // Validasi: Harus dipilih
+                    if (!selectedValue) {
+                        selectDirektur.classList.add('is-invalid');
+                        errorDirektur.style.display = 'block';
+                        return;
+                    }
+
+                    // Jika valid, masukkan nilai ke hidden input form utama
+                    if (hiddenIdDirektur) {
+                        hiddenIdDirektur.value = selectedValue;
+                    }
+
+                    // Tutup modal
+                    const modalEl = document.getElementById('modalDirektur');
+                    const modalInstance = bootstrap.Modal.getInstance(modalEl);
+                    modalInstance.hide();
+
+                    // Lanjutkan ke proses submit utama (SweetAlert + Submit)
+                    processFinalSubmission();
+                });
+            }
+
+            // Hapus error styling saat user mulai memilih
+            if (selectDirektur) {
+                selectDirektur.addEventListener('change', function() {
+                    if (this.value) {
+                        this.classList.remove('is-invalid');
+                        errorDirektur.style.display = 'none';
+                    }
+                });
+            }
+
+            // --- FORMAT RUPIAH (Tetap sama seperti sebelumnya) ---
             function formatRupiah(angka, prefix) {
                 var number_string = angka.replace(/[^,\d]/g, '').toString(),
                     split = number_string.split(','),
@@ -573,7 +718,6 @@
                     var separator = sisa ? '.' : '';
                     rupiah += separator + ribuan.join('.');
                 }
-
                 rupiah = split[1] !== undefined ? rupiah + ',' + split[1] : rupiah;
                 return prefix === undefined ? rupiah : (rupiah ? prefix + ' ' + rupiah : '');
             }
@@ -586,152 +730,9 @@
                     let formatted = formatRupiah(value, 'Rp');
                     this.value = formatted;
                     let newLength = formatted.length;
-                    this.setSelectionRange(caret + (newLength - oldLength), caret + (newLength -
-                        oldLength));
+                    this.setSelectionRange(caret + (newLength - oldLength), caret + (newLength - oldLength));
                 });
             });
-
-            var form = document.getElementById('formUsulanInvestasi');
-            var btnSimpan = document.getElementById('btnSimpanUsulan');
-            var isSubmitting = false;
-
-            function disableInputActions() {
-                window.onkeydown = function(e) {
-                    if (!e || (e.key && e.key === "F5")) return true;
-                    e.preventDefault();
-                    return false;
-                };
-                window.onkeypress = function(e) {
-                    e.preventDefault();
-                    return false;
-                };
-                window.onkeyup = function(e) {
-                    e.preventDefault();
-                    return false;
-                };
-                window.onmousedown = function(e) {
-                    e.preventDefault();
-                    return false;
-                };
-                window.onmouseup = function(e) {
-                    e.preventDefault();
-                    return false;
-                };
-                window.onclick = function(e) {
-                    e.preventDefault();
-                    return false;
-                };
-                window.oncontextmenu = function(e) {
-                    e.preventDefault();
-                    return false;
-                };
-                document.body.style.pointerEvents = "none";
-                setTimeout(function() {
-                    var swal = document.querySelector('.swal2-container');
-                    if (swal) swal.style.pointerEvents = 'auto';
-                }, 100);
-            }
-
-            function enableInputActions() {
-                window.onkeydown = null;
-                window.onkeypress = null;
-                window.onkeyup = null;
-                window.onmousedown = null;
-                window.onmouseup = null;
-                window.onclick = null;
-                window.oncontextmenu = null;
-                document.body.style.pointerEvents = "";
-            }
-
-            if (form && btnSimpan) {
-                form.addEventListener('submit', function(e) {
-                    if (isSubmitting) {
-                        e.preventDefault();
-                        return;
-                    }
-                    e.preventDefault();
-                    Swal.fire({
-                        title: "Konfirmasi Simpan",
-                        html: "Apakah anda yakin ingin menyimpan Usulan Investasi ini?<br><small>Notifikasi akan dikirim ke email terkait.</small>",
-                        icon: "question",
-                        showCancelButton: true,
-                        confirmButtonText: "Ya, Simpan",
-                        cancelButtonText: "Batal",
-                        confirmButtonColor: "#3085d6",
-                        cancelButtonColor: "#d33",
-                    }).then(function(result) {
-                        if (result.isConfirmed) {
-                            let detik = 0;
-                            let interval;
-                            Swal.fire({
-                                title: 'Mengirim notifikasi email...',
-                                html: `<b>Harap tunggu <span id="timerSimpan">0</span> detik.</b><br>
-                                    <small>Usulan dalam proses penyimpanan dan mengirim notifikasi ke email terkait.<br>Silakan tunggu sampai proses selesai.<br><b>Selama proses berjalan, keyboard & mouse dinonaktifkan</b></small>
-                                    <br><br><div class="spinner-border text-success" role="status"><span class="visually-hidden">Loading...</span></div>`,
-                                allowOutsideClick: false,
-                                allowEscapeKey: false,
-                                showConfirmButton: false,
-                                didOpen: () => {
-                                    Swal.showLoading();
-                                    var el = document.getElementById('timerSimpan');
-                                    detik = 0;
-                                    interval = setInterval(function() {
-                                        detik++;
-                                        if (el) el.textContent = detik;
-                                    }, 1000);
-                                    disableInputActions();
-                                },
-                                willClose: () => {
-                                    clearInterval(interval);
-                                    enableInputActions();
-                                }
-                            });
-                            isSubmitting = true;
-                            setTimeout(function() {
-                                form.submit();
-                            }, 800);
-                        }
-                    });
-                });
-            }
-        });
-    </script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const btn = document.getElementById('btnKonfirmasiKirimUlang');
-            if (btn) {
-                btn.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    Swal.fire({
-                        title: 'Kirim Ulang Notifikasi?',
-                        text: 'Anda yakin ingin mengirim ulang notifikasi approval yang masih pending?',
-                        icon: 'question',
-                        showCancelButton: true,
-                        confirmButtonColor: '#3085d6',
-                        cancelButtonColor: '#d33',
-                        confirmButtonText: 'Ya, Kirim!',
-                        cancelButtonText: 'Batal'
-                    }).then((result) => {
-                        if (result.isConfirmed) {
-                            Swal.fire({
-                                title: 'Mengirim Notifikasi...',
-                                html: `<b>Mohon tunggu, proses pengiriman email sedang berlangsung.</b>`,
-                                allowOutsideClick: false,
-                                allowEscapeKey: false,
-                                showConfirmButton: false,
-                                didOpen: () => {
-                                    Swal
-                                        .showLoading();
-                                    setTimeout(() => {
-                                        window.location.href = btn.getAttribute(
-                                            'href');
-                                    }, 500);
-                                }
-                            });
-                        }
-                    });
-                });
-            }
         });
     </script>
 @endpush

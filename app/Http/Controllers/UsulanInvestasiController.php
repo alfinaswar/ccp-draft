@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Mail\NotifApprovalPresentasi;
 use App\Mail\NotifFui;
+use App\Mail\NotifMengetahuiDirektur;
 use App\Models\AktivitasPengajuan;
 use App\Models\DokumenApproval;
 use App\Models\MasterBarang;
@@ -269,240 +270,489 @@ class UsulanInvestasiController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
-    {
-        $validatedData = $request->validate([
-            'IdPengajuan' => 'required|integer',
-            'PengajuanItemId' => 'required|integer',
-            'Tanggal' => 'required|date',
-            'Divisi' => 'nullable|integer',
-            'NamaKadiv' => 'nullable|integer',
-            'Kategori' => 'nullable|string',
-            'Tanggal2' => 'nullable|date',
-            'Divisi2' => 'nullable|integer',
-            'NamaKadiv2' => 'nullable|integer',
-            'Kategori2' => 'nullable|string',
-            'Alasan' => 'nullable|string',
-            'items' => 'required|array',
-        ]);
+    // public function store(Request $request)
+    // {
+    //     $validatedData = $request->validate([
+    //         'IdPengajuan' => 'required|integer',
+    //         'PengajuanItemId' => 'required|integer',
+    //         'Tanggal' => 'required|date',
+    //         'Divisi' => 'nullable|integer',
+    //         'NamaKadiv' => 'nullable|integer',
+    //         'Kategori' => 'nullable|string',
+    //         'Tanggal2' => 'nullable|date',
+    //         'Divisi2' => 'nullable|integer',
+    //         'NamaKadiv2' => 'nullable|integer',
+    //         'Kategori2' => 'nullable|string',
+    //         'Alasan' => 'nullable|string',
+    //         'items' => 'required|array',
+    //     ]);
 
-        $cekjenis = PengajuanPembelian::find($request->IdPengajuan);
-        $barang = $cekjenis->getPengajuanItem[0]->id;
-        $totalNumeric = null;
-        if (isset($request->itemAcc[0]['Total'])) {
-            $totalNumeric = preg_replace('/[^0-9]/', '', $request->itemAcc[0]['Total']);
-        }
-        $jenisForm = null;
-        if ($cekjenis->Jenis == 1) {
-            if ($totalNumeric !== null && $totalNumeric !== '') {
-                if ($totalNumeric < 50000000) {
-                    $jenisForm = '7';
-                } elseif ($totalNumeric >= 50000000 && $totalNumeric <= 100000000) {
-                    $jenisForm = '11';
-                } elseif ($totalNumeric > 100000000) {
-                    $jenisForm = '12';
+    //     $cekjenis = PengajuanPembelian::find($request->IdPengajuan);
+    //     $barang = $cekjenis->getPengajuanItem[0]->id;
+    //     $totalNumeric = null;
+    //     if (isset($request->itemAcc[0]['Total'])) {
+    //         $totalNumeric = preg_replace('/[^0-9]/', '', $request->itemAcc[0]['Total']);
+    //     }
+    //     $jenisForm = null;
+    //     if ($cekjenis->Jenis == 1) {
+    //         if ($totalNumeric !== null && $totalNumeric !== '') {
+    //             if ($totalNumeric < 50000000) {
+    //                 $jenisForm = '7';
+    //             } elseif ($totalNumeric >= 50000000 && $totalNumeric <= 100000000) {
+    //                 $jenisForm = '11';
+    //             } elseif ($totalNumeric > 100000000) {
+    //                 $jenisForm = '12';
+    //             }
+    //         }
+    //     } else {
+    //         if ($totalNumeric !== null && $totalNumeric !== '') {
+    //             if ($totalNumeric < 50000000) {
+    //                 $jenisForm = '14';
+    //             } elseif ($totalNumeric >= 50000000 && $totalNumeric <= 100000000) {
+    //                 $jenisForm = '15';
+    //             } elseif ($totalNumeric > 100000000) {
+    //                 $jenisForm = '13';
+    //             }
+    //         }
+    //     }
+    //     // dd($request->all());
+    //     $usulan = UsulanInvestasi::with('getBarang', 'getPerusahaan')->updateOrCreate(
+    //         [
+    //             'IdPengajuan' => $request->IdPengajuan ?? null,
+    //             'PengajuanItemId' => $request->PengajuanItemId ?? null,
+    //         ],
+    //         [
+    //             'JenisForm' => $jenisForm,
+    //             'IdVendor' => isset($request->itemAcc[0]['Vendor']) ? $request->itemAcc[0]['Vendor'] : null,
+    //             'IdBarang' => isset($request->itemAcc[0]['NamaBarang']) ? $request->itemAcc[0]['NamaBarang'] : null,
+    //             'Tanggal' => $request->Tanggal ?? null,
+    //             'NamaKadiv' => $request->NamaKadiv ?? null,
+    //             'Divisi' => $request->Divisi ?? null,
+    //             'Kategori' => $request->Kategori ?? null,
+    //             'Tanggal2' => $request->Tanggal2 ?? null,
+    //             'NamaKadiv2' => $request->NamaKadiv2 ?? null,
+    //             'Divisi2' => $request->Divisi2 ?? null,
+    //             'Kategori2' => $request->Kategori2 ?? null,
+    //             'Alasan' => $request->Alasan ?? null,
+    //             'BiayaAkhir' => isset($request->items[0]['Total']) ? preg_replace('/[^0-9]/', '', $request->items[0]['Total']) : 0,
+    //             'VendorDipilih' => isset($request->itemAcc[0]['Vendor']) ? $request->itemAcc[0]['Vendor'] : 0,
+    //             'HargaDiskonPpn' => 0,
+    //             'Total' => isset($request->items[0]['Total']) ? preg_replace('/[^0-9]/', '', $request->items[0]['Total']) : 0,
+    //             'SudahRkap' => $request->SudahRkap ?? null,
+    //             'SisaBudget' => isset($request->SisaBudget) ? preg_replace('/[^0-9]/', '', $request->SisaBudget) : null,
+    //             'SudahRkap2' => $request->SudahRkap2 ?? null,
+    //             'SisaBudget2' => isset($request->SisaBudget2) ? preg_replace('/[^0-9]/', '', $request->SisaBudget2) : null,
+    //             'DiajukanOleh' => auth()->user()->id ?? null,
+    //             'KodePerusahaan' => auth()->user()->kodeperusahaan ?? null,
+    //             'DiajukanPada' => now(),
+    //         ]
+    //     );
+
+    //     if (!empty($request->items) && is_array($request->items)) {
+    //         UsulanInvestasiDetail::where('IdUsulan', $usulan->id ?? null)->delete();
+    //         foreach ($request->items as $item) {
+    //             UsulanInvestasiDetail::create([
+    //                 'IdUsulan' => $usulan->id ?? null,
+    //                 'NamaBarang' => $item['NamaBarang'] ?? null,
+    //                 'Vendor' => isset($request->items[0]['Vendor']) ? $request->itemAcc[0]['Vendor'] : 0,
+    //                 'Jumlah' => 1,
+    //                 'Harga' => isset($item['Harga']) ? preg_replace('/[^0-9]/', '', $item['Harga']) : null,
+    //                 'HargaNego' => isset($item['HargaNego']) ? preg_replace('/[^0-9]/', '', $item['HargaNego']) : null,
+    //                 'Diskon' => 0,
+    //                 'Ppn' => 0,
+    //                 'Total' => isset($item['Total']) ? preg_replace('/[^0-9]/', '', $item['Total']) : null,
+    //                 'UserCreate' => auth()->user()->name ?? null,
+    //                 'UserUpdate' => null,
+    //             ]);
+    //         }
+    //     }
+
+    //     $Form = MasterForm::with([
+    //         'getApproval' => function ($q) use ($usulan) {
+    //             $q->where('KodePerusahaan', $usulan->KodePerusahaan);
+    //         },
+    //         'getApproval.getUser'
+    //     ])
+    //         ->where('id', $usulan->JenisForm)
+    //         ->first();
+
+    //     foreach ($Form->getApproval as $approvalSetting) {
+    //         $approval = DokumenApproval::updateOrCreate(
+    //             [
+    //                 'JenisFormId' => $usulan->JenisForm,
+    //                 'DokumenId' => $usulan->id,
+    //                 'Urutan' => $approvalSetting->Urutan ?? null,
+    //             ],
+    //             [
+    //                 'JenisUser' => $approvalSetting->JenisUser ?? 'Master',
+    //                 'DepartemenId' => $approvalSetting->Departemen ?? null,
+    //                 'PerusahaanId' => $approvalSetting->KodePerusahaan,
+    //                 'JabatanId' => $approvalSetting->JabatanId ?? null,
+    //                 'NamaJabatan' => $approvalSetting->NamaJabatan ?? null,
+    //                 'UserId' => $approvalSetting->UserId ?? null,
+    //                 'Nama' => $approvalSetting->getUser->name ?? null,
+    //                 'Email' => $approvalSetting->getUser->email ?? null,
+    //                 'Status' => 'Pending',
+    //                 'TanggalApprove' => null,
+    //                 'ApprovalToken' => str_replace('-', '', Str::uuid()),
+    //                 'Catatan' => null,
+    //                 'Ttd' => null,
+    //                 'UserCreate' => auth()->user()->name,
+    //             ]
+    //         );
+    //     }
+
+    //     $approvalDocs = DokumenApproval::where([
+    //         'JenisFormId' => $usulan->JenisForm,
+    //         'DokumenId' => $usulan->id,
+    //     ])->orderBy('Urutan', 'asc')->get();
+
+    //     $approval2 = DokumenApproval::with('getUser', 'getJabatan', 'getDepartemen')
+    //         ->where('JenisFormId', $usulan->JenisForm)
+    //         ->where('DokumenId', $usulan->id)
+    //         ->orderBy('Urutan', 'asc')
+    //         ->get();
+
+    //     foreach ($approval2 as $item) {
+    //         if ($item->Status == 'Approved') {
+    //             $qrCode = QrCode::create(route('approval.validasi', $item->ApprovalToken))
+    //                 ->setSize(300)
+    //                 ->setMargin(10);
+
+    //             $writer = new PngWriter();
+    //             $result = $writer->write($qrCode);
+
+    //             $item->qrCode = base64_encode($result->getString());
+    //         }
+    //     }
+    //     $firstApproval = $approval2->where('Urutan', 1)->first();
+    //     if (
+    //         $firstApproval &&
+    //         filter_var($firstApproval->Email, FILTER_VALIDATE_EMAIL) &&
+    //         isset($cekjenis) &&
+    //         $cekjenis->Jenis != 1
+    //     ) {
+    //         $idPengajuan = $request->IdPengajuan;
+    //         $idPengajuanItem = $request->PengajuanItemId;
+
+    //         $dataRekom = Rekomendasi::with('getRekomedasiDetail.getBarang', 'getRekomedasiDetail.getNamaVendor')->where('IdPengajuan', $idPengajuan)->first();
+    //         $VendorAcc = Rekomendasi::with([
+    //             'getRekomedasiDetail' => function ($query2) {
+    //                 $query2->where('Rekomendasi', 1);
+    //             },
+    //             'getRekomedasiDetail.getNamaVendor'
+    //         ])
+    //             ->where('PengajuanItemId', $barang)
+    //             ->first();
+    //         $Acc = $VendorAcc->getRekomedasiDetail[0]->IdVendor ?? null;
+    //         $NamaBarangAcc = $VendorAcc->getRekomedasiDetail[0]->NamaPermintaan ?? null;
+    //         $data2 = PengajuanPembelian::with([
+    //             'getVendor' => function ($query2) use ($Acc) {
+    //                 $query2->where('NamaVendor', $Acc);
+    //             },
+    //             'getVendor.getVendorDetail' => function ($query) use ($NamaBarangAcc) {
+    //                 $query->where('NamaBarang', $NamaBarangAcc);
+    //             },
+    //             'getRekomendasi' => function ($query) {
+    //                 $query->with([
+    //                     'getRekomedasiDetail' => function ($query2) {
+    //                         $query2->where('Rekomendasi', 1);
+    //                     }
+    //                 ]);
+    //             }
+    //         ])->find($request->IdPengajuan);
+
+    //         try {
+    //             Mail::to($firstApproval->Email)
+    //                 ->bcc(env('MAIL_DEV_BCC'))
+    //                 ->send(new NotifMengetahuiDirektur(
+    //                     $usulan,
+    //                     $VendorAcc,
+    //                     $firstApproval,
+    //                     $approval2,
+    //                     $dataRekom,
+    //                     $data2
+    //                 ));
+    //             $firstApproval->StatusEmail = 'Terkirim';
+    //             $firstApproval->save();
+    //         } catch (\Exception $e) {
+    //             Log::error('Email gagal: ' . $firstApproval->Email);
+    //             Log::error($e->getMessage());
+    //             $firstApproval->StatusEmail = 'Gagal Kirim';
+    //             $firstApproval->save();
+    //         }
+    //     }
+
+
+    //     $pengajuan = PengajuanPembelian::find($request->IdPengajuan);
+    //     $kodePengajuan = $pengajuan ? $pengajuan->KodePengajuan : null;
+    //     $this->pdfGenerator->generateAll($pengajuan->id);
+
+    //     AktivitasPengajuan::create([
+    //         'KodePengajuan' => $kodePengajuan ?? null,
+    //         'Jenis' => 'FUI',
+    //         'Keterangan' => 'Pembuatan Form Usulan Investasi (FUI) untuk nomor pengajuan ' . ($kodePengajuan ?? '-') . ' sudah dibuat',
+    //         'UserCreate' => auth()->user()->name,
+    //     ]);
+    //     activity('usulan_investasi')
+    //         ->causedBy(auth()->user())
+    //         ->performedOn($usulan)
+    //         ->withProperties([
+    //             'attributes' => $usulan->toArray()
+    //         ])
+    //         ->log('Memperbarui data Usulan Investasi dengan kode ' . ($cekjenis->NomorPengajuan ?? $usulan->id));
+    //     return redirect()->back()->with('success', 'Usulan Investasi berhasil disimpan.');
+    // }
+        public function store(Request $request)
+        {
+            $validatedData = $request->validate([
+                'IdPengajuan' => 'required|integer',
+                'PengajuanItemId' => 'required|integer',
+                'DirekturId' => 'nullable|integer', // 1. Tambahkan validasi DirekturId
+                'Tanggal' => 'required|date',
+                'Divisi' => 'nullable|integer',
+                'NamaKadiv' => 'nullable|integer',
+                'Kategori' => 'nullable|string',
+                'Tanggal2' => 'nullable|date',
+                'Divisi2' => 'nullable|integer',
+                'NamaKadiv2' => 'nullable|integer',
+                'Kategori2' => 'nullable|string',
+                'Alasan' => 'nullable|string',
+                'items' => 'required|array',
+            ]);
+
+            $cekjenis = PengajuanPembelian::find($request->IdPengajuan);
+            // Gunakan PengajuanItemId dari request agar lebih aman daripada hardcode index 0
+            $pengajuanItemId = $request->PengajuanItemId;
+
+            $totalNumeric = null;
+            if (isset($request->itemAcc[0]['Total'])) {
+                $totalNumeric = preg_replace('/[^0-9]/', '', $request->itemAcc[0]['Total']);
+            }
+
+            $jenisForm = null;
+            if ($cekjenis && $cekjenis->Jenis == 1) {
+                if ($totalNumeric !== null && $totalNumeric !== '') {
+                    if ($totalNumeric < 50000000) {
+                        $jenisForm = '7';
+                    } elseif ($totalNumeric >= 50000000 && $totalNumeric <= 100000000) {
+                        $jenisForm = '11';
+                    } elseif ($totalNumeric > 100000000) {
+                        $jenisForm = '12';
+                    }
+                }
+            } else {
+                if ($totalNumeric !== null && $totalNumeric !== '') {
+                    if ($totalNumeric < 50000000) {
+                        $jenisForm = '14';
+                    } elseif ($totalNumeric >= 50000000 && $totalNumeric <= 100000000) {
+                        $jenisForm = '15';
+                    } elseif ($totalNumeric > 100000000) {
+                        $jenisForm = '13';
+                    }
                 }
             }
-        } else {
-            if ($totalNumeric !== null && $totalNumeric !== '') {
-                if ($totalNumeric < 50000000) {
-                    $jenisForm = '14';
-                } elseif ($totalNumeric >= 50000000 && $totalNumeric <= 100000000) {
-                    $jenisForm = '15';
-                } elseif ($totalNumeric > 100000000) {
-                    $jenisForm = '13';
-                }
-            }
-        }
 
-        $usulan = UsulanInvestasi::with('getBarang', 'getPerusahaan')->updateOrCreate(
-            [
-                'IdPengajuan' => $request->IdPengajuan ?? null,
-                'PengajuanItemId' => $request->PengajuanItemId ?? null,
-            ],
-            [
-                'JenisForm' => $jenisForm,
-                'IdVendor' => isset($request->itemAcc[0]['Vendor']) ? $request->itemAcc[0]['Vendor'] : null,
-                'IdBarang' => isset($request->itemAcc[0]['NamaBarang']) ? $request->itemAcc[0]['NamaBarang'] : null,
-                'Tanggal' => $request->Tanggal ?? null,
-                'NamaKadiv' => $request->NamaKadiv ?? null,
-                'Divisi' => $request->Divisi ?? null,
-                'Kategori' => $request->Kategori ?? null,
-                'Tanggal2' => $request->Tanggal2 ?? null,
-                'NamaKadiv2' => $request->NamaKadiv2 ?? null,
-                'Divisi2' => $request->Divisi2 ?? null,
-                'Kategori2' => $request->Kategori2 ?? null,
-                'Alasan' => $request->Alasan ?? null,
-                'BiayaAkhir' => isset($request->items[0]['Total']) ? preg_replace('/[^0-9]/', '', $request->items[0]['Total']) : 0,
-                'VendorDipilih' => isset($request->itemAcc[0]['Vendor']) ? $request->itemAcc[0]['Vendor'] : 0,
-                'HargaDiskonPpn' => 0,
-                'Total' => isset($request->items[0]['Total']) ? preg_replace('/[^0-9]/', '', $request->items[0]['Total']) : 0,
-                'SudahRkap' => $request->SudahRkap ?? null,
-                'SisaBudget' => isset($request->SisaBudget) ? preg_replace('/[^0-9]/', '', $request->SisaBudget) : null,
-                'SudahRkap2' => $request->SudahRkap2 ?? null,
-                'SisaBudget2' => isset($request->SisaBudget2) ? preg_replace('/[^0-9]/', '', $request->SisaBudget2) : null,
-                'DiajukanOleh' => auth()->user()->id ?? null,
-                'KodePerusahaan' => auth()->user()->kodeperusahaan ?? null,
-                'DiajukanPada' => now(),
-            ]
-        );
-
-        if (!empty($request->items) && is_array($request->items)) {
-            UsulanInvestasiDetail::where('IdUsulan', $usulan->id ?? null)->delete();
-            foreach ($request->items as $item) {
-                UsulanInvestasiDetail::create([
-                    'IdUsulan' => $usulan->id ?? null,
-                    'NamaBarang' => $item['NamaBarang'] ?? null,
-                    'Vendor' => isset($request->items[0]['Vendor']) ? $request->itemAcc[0]['Vendor'] : 0,
-                    'Jumlah' => 1,
-                    'Harga' => isset($item['Harga']) ? preg_replace('/[^0-9]/', '', $item['Harga']) : null,
-                    'HargaNego' => isset($item['HargaNego']) ? preg_replace('/[^0-9]/', '', $item['HargaNego']) : null,
-                    'Diskon' => 0,
-                    'Ppn' => 0,
-                    'Total' => isset($item['Total']) ? preg_replace('/[^0-9]/', '', $item['Total']) : null,
-                    'UserCreate' => auth()->user()->name ?? null,
-                    'UserUpdate' => null,
-                ]);
-            }
-        }
-
-        $Form = MasterForm::with([
-            'getApproval' => function ($q) use ($usulan) {
-                $q->where('KodePerusahaan', $usulan->KodePerusahaan);
-            },
-            'getApproval.getUser'
-        ])
-            ->where('id', $usulan->JenisForm)
-            ->first();
-
-        foreach ($Form->getApproval as $approvalSetting) {
-            $approval = DokumenApproval::updateOrCreate(
+            $usulan = UsulanInvestasi::with('getBarang', 'getPerusahaan')->updateOrCreate(
                 [
-                    'JenisFormId' => $usulan->JenisForm,
-                    'DokumenId' => $usulan->id,
-                    'Urutan' => $approvalSetting->Urutan ?? null,
+                    'IdPengajuan' => $request->IdPengajuan ?? null,
+                    'PengajuanItemId' => $request->PengajuanItemId ?? null,
                 ],
                 [
-                    'JenisUser' => $approvalSetting->JenisUser ?? 'Master',
-                    'DepartemenId' => $approvalSetting->Departemen ?? null,
-                    'PerusahaanId' => $approvalSetting->KodePerusahaan,
-                    'JabatanId' => $approvalSetting->JabatanId ?? null,
-                    'NamaJabatan' => $approvalSetting->NamaJabatan ?? null,
-                    'UserId' => $approvalSetting->UserId ?? null,
-                    'Nama' => $approvalSetting->getUser->name ?? null,
-                    'Email' => $approvalSetting->getUser->email ?? null,
-                    'Status' => 'Pending',
-                    'TanggalApprove' => null,
-                    'ApprovalToken' => str_replace('-', '', Str::uuid()),
-                    'Catatan' => null,
-                    'Ttd' => null,
-                    'UserCreate' => auth()->user()->name,
+                    'JenisForm' => $jenisForm,
+                    'IdVendor' => isset($request->itemAcc[0]['Vendor']) ? $request->itemAcc[0]['Vendor'] : null,
+                    'IdBarang' => isset($request->itemAcc[0]['NamaBarang']) ? $request->itemAcc[0]['NamaBarang'] : null,
+                    'Tanggal' => $request->Tanggal ?? null,
+                    'NamaKadiv' => $request->NamaKadiv ?? null,
+                    'Divisi' => $request->Divisi ?? null,
+                    'Kategori' => $request->Kategori ?? null,
+                    'Tanggal2' => $request->Tanggal2 ?? null,
+                    'NamaKadiv2' => $request->NamaKadiv2 ?? null,
+                    'Divisi2' => $request->Divisi2 ?? null,
+                    'Kategori2' => $request->Kategori2 ?? null,
+                    'Alasan' => $request->Alasan ?? null,
+                    'BiayaAkhir' => isset($request->items[0]['Total']) ? preg_replace('/[^0-9]/', '', $request->items[0]['Total']) : 0,
+                    'VendorDipilih' => isset($request->itemAcc[0]['Vendor']) ? $request->itemAcc[0]['Vendor'] : 0,
+                    'HargaDiskonPpn' => 0,
+                    'Total' => isset($request->items[0]['Total']) ? preg_replace('/[^0-9]/', '', $request->items[0]['Total']) : 0,
+                    'SudahRkap' => $request->SudahRkap ?? null,
+                    'SisaBudget' => isset($request->SisaBudget) ? preg_replace('/[^0-9]/', '', $request->SisaBudget) : null,
+                    'SudahRkap2' => $request->SudahRkap2 ?? null,
+                    'SisaBudget2' => isset($request->SisaBudget2) ? preg_replace('/[^0-9]/', '', $request->SisaBudget2) : null,
+                    'DiajukanOleh' => auth()->user()->id ?? null,
+                    'KodePerusahaan' => auth()->user()->kodeperusahaan ?? null,
+                    'DiajukanPada' => now(),
                 ]
             );
-        }
 
-        $approvalDocs = DokumenApproval::where([
-            'JenisFormId' => $usulan->JenisForm,
-            'DokumenId' => $usulan->id,
-        ])->orderBy('Urutan', 'asc')->get();
-
-        $approval2 = DokumenApproval::with('getUser', 'getJabatan', 'getDepartemen')
-            ->where('JenisFormId', $usulan->JenisForm)
-            ->where('DokumenId', $usulan->id)
-            ->orderBy('Urutan', 'asc')
-            ->get();
-
-        foreach ($approval2 as $item) {
-            if ($item->Status == 'Approved') {
-                $qrCode = QrCode::create(route('approval.validasi', $item->ApprovalToken))
-                    ->setSize(300)
-                    ->setMargin(10);
-
-                $writer = new PngWriter();
-                $result = $writer->write($qrCode);
-
-                $item->qrCode = base64_encode($result->getString());
-            }
-        }
-        $firstApproval = $approval2->where('Urutan', 1)->first();
-        if (
-            $firstApproval &&
-            filter_var($firstApproval->Email, FILTER_VALIDATE_EMAIL) &&
-            isset($cekjenis) &&
-            $cekjenis->Jenis != 1
-        ) {
-            $idPengajuan = $request->IdPengajuan;
-            $idPengajuanItem = $request->PengajuanItemId;
-
-            $dataRekom = Rekomendasi::with('getRekomedasiDetail.getBarang', 'getRekomedasiDetail.getNamaVendor')->where('IdPengajuan', $idPengajuan)->first();
-            $VendorAcc = Rekomendasi::with([
-                'getRekomedasiDetail' => function ($query2) {
-                    $query2->where('Rekomendasi', 1);
-                },
-                'getRekomedasiDetail.getNamaVendor'
-            ])
-                ->where('PengajuanItemId', $barang)
-                ->first();
-            $Acc = $VendorAcc->getRekomedasiDetail[0]->IdVendor ?? null;
-            $NamaBarangAcc = $VendorAcc->getRekomedasiDetail[0]->NamaPermintaan ?? null;
-            $data2 = PengajuanPembelian::with([
-                'getVendor' => function ($query2) use ($Acc) {
-                    $query2->where('NamaVendor', $Acc);
-                },
-                'getVendor.getVendorDetail' => function ($query) use ($NamaBarangAcc) {
-                    $query->where('NamaBarang', $NamaBarangAcc);
-                },
-                'getRekomendasi' => function ($query) {
-                    $query->with([
-                        'getRekomedasiDetail' => function ($query2) {
-                            $query2->where('Rekomendasi', 1);
-                        }
+            if (!empty($request->items) && is_array($request->items)) {
+                UsulanInvestasiDetail::where('IdUsulan', $usulan->id ?? null)->delete();
+                foreach ($request->items as $item) {
+                    UsulanInvestasiDetail::create([
+                        'IdUsulan' => $usulan->id ?? null,
+                        'NamaBarang' => $item['NamaBarang'] ?? null,
+                        'Vendor' => isset($request->itemAcc[0]['Vendor']) ? $request->itemAcc[0]['Vendor'] : 0,
+                        'Jumlah' => 1,
+                        'Harga' => isset($item['Harga']) ? preg_replace('/[^0-9]/', '', $item['Harga']) : null,
+                        'HargaNego' => isset($item['HargaNego']) ? preg_replace('/[^0-9]/', '', $item['HargaNego']) : null,
+                        'Diskon' => 0,
+                        'Ppn' => 0,
+                        'Total' => isset($item['Total']) ? preg_replace('/[^0-9]/', '', $item['Total']) : null,
+                        'UserCreate' => auth()->user()->name ?? null,
+                        'UserUpdate' => null,
                     ]);
                 }
-            ])->find($request->IdPengajuan);
-
-            try {
-                Mail::to($firstApproval->Email)
-                    ->bcc(env('MAIL_DEV_BCC'))
-                    ->send(new NotifFui(
-                        $usulan,
-                        $VendorAcc,
-                        $firstApproval,
-                        $approval2,
-                        $dataRekom,
-                        $data2
-                    ));
-                $firstApproval->StatusEmail = 'Terkirim';
-                $firstApproval->save();
-            } catch (\Exception $e) {
-                Log::error('Email gagal: ' . $firstApproval->Email);
-                Log::error($e->getMessage());
-                $firstApproval->StatusEmail = 'Gagal Kirim';
-                $firstApproval->save();
             }
-        }
 
-
-        $pengajuan = PengajuanPembelian::find($request->IdPengajuan);
-        $kodePengajuan = $pengajuan ? $pengajuan->KodePengajuan : null;
-        $this->pdfGenerator->generateAll($pengajuan->id);
-
-        AktivitasPengajuan::create([
-            'KodePengajuan' => $kodePengajuan ?? null,
-            'Jenis' => 'FUI',
-            'Keterangan' => 'Pembuatan Form Usulan Investasi (FUI) untuk nomor pengajuan ' . ($kodePengajuan ?? '-') . ' sudah dibuat',
-            'UserCreate' => auth()->user()->name,
-        ]);
-        activity('usulan_investasi')
-            ->causedBy(auth()->user())
-            ->performedOn($usulan)
-            ->withProperties([
-                'attributes' => $usulan->toArray()
+            $Form = MasterForm::with([
+                'getApproval' => function ($q) use ($usulan) {
+                    $q->where('KodePerusahaan', $usulan->KodePerusahaan);
+                },
+                'getApproval.getUser'
             ])
-            ->log('Memperbarui data Usulan Investasi dengan kode ' . ($cekjenis->NomorPengajuan ?? $usulan->id));
-        return redirect()->back()->with('success', 'Usulan Investasi berhasil disimpan.');
-    }
+                ->where('id', $usulan->JenisForm)
+                ->first();
 
+            if ($Form && $Form->getApproval) {
+                foreach ($Form->getApproval as $approvalSetting) {
+                    DokumenApproval::updateOrCreate(
+                        [
+                            'JenisFormId' => $usulan->JenisForm,
+                            'DokumenId' => $usulan->id,
+                            'Urutan' => $approvalSetting->Urutan ?? null,
+                        ],
+                        [
+                            'JenisUser' => $approvalSetting->JenisUser ?? 'Master',
+                            'DepartemenId' => $approvalSetting->Departemen ?? null,
+                            'PerusahaanId' => $approvalSetting->KodePerusahaan,
+                            'JabatanId' => $approvalSetting->JabatanId ?? null,
+                            'NamaJabatan' => $approvalSetting->NamaJabatan ?? null,
+                            'UserId' => $approvalSetting->UserId ?? null,
+                            'Nama' => $approvalSetting->getUser->name ?? null,
+                            'Email' => $approvalSetting->getUser->email ?? null,
+                            'Status' => 'Pending',
+                            'TanggalApprove' => null,
+                            'ApprovalToken' => str_replace('-', '', Str::uuid()),
+                            'Catatan' => null,
+                            'Ttd' => null,
+                            'UserCreate' => auth()->user()->name,
+                        ]
+                    );
+                }
+            }
+
+            $approval2 = DokumenApproval::with('getUser', 'getJabatan', 'getDepartemen')
+                ->where('JenisFormId', $usulan->JenisForm)
+                ->where('DokumenId', $usulan->id)
+                ->orderBy('Urutan', 'asc')
+                ->get();
+
+            foreach ($approval2 as $item) {
+                if ($item->Status == 'Approved') {
+                    $qrCode = QrCode::create(route('approval.validasi', $item->ApprovalToken))
+                        ->setSize(300)
+                        ->setMargin(10);
+
+                    $writer = new PngWriter();
+                    $result = $writer->write($qrCode);
+
+                    $item->qrCode = base64_encode($result->getString());
+                }
+            }
+            // 3. LOGIKA PENGIRIMAN EMAIL KHUSUS DIREKTUR
+            // Cek apakah DirekturId diisi dan tidak kosong
+            if (!empty($request->DirekturId)) {
+                // dd($request->DirekturId);
+                // Cari data user berdasarkan DirekturId
+                $direkturUser = User::find($request->DirekturId);
+// dd($direkturUser);
+                // Pastikan user ditemukan dan memiliki email yang valid
+                if ($direkturUser && filter_var($direkturUser->email, FILTER_VALIDATE_EMAIL)) {
+
+                    $dataRekom = Rekomendasi::with('getRekomedasiDetail.getBarang', 'getRekomedasiDetail.getNamaVendor')
+                        ->where('IdPengajuan', $request->IdPengajuan)
+                        ->first();
+
+                    $VendorAcc = Rekomendasi::with([
+                        'getRekomedasiDetail' => function ($query2) {
+                            $query2->where('Rekomendasi', 1);
+                        },
+                        'getRekomedasiDetail.getNamaVendor'
+                    ])
+                        ->where('PengajuanItemId', $pengajuanItemId)
+                        ->first();
+
+                    $Acc = $VendorAcc->getRekomedasiDetail[0]->IdVendor ?? null;
+                    $NamaBarangAcc = $VendorAcc->getRekomedasiDetail[0]->NamaPermintaan ?? null;
+
+                    $data2 = PengajuanPembelian::with([
+                        'getVendor' => function ($query2) use ($Acc) {
+                            $query2->where('NamaVendor', $Acc);
+                        },
+                        'getVendor.getVendorDetail' => function ($query) use ($NamaBarangAcc) {
+                            $query->where('NamaBarang', $NamaBarangAcc);
+                        },
+                        'getRekomendasi' => function ($query) {
+                            $query->with([
+                                'getRekomedasiDetail' => function ($query2) {
+                                $query2->where('Rekomendasi', 1);
+                            }
+                            ]);
+                        }
+                    ])->find($request->IdPengajuan);
+
+                    try {
+                        // Kirim email ke email Direktur yang dipilih
+                        Mail::to($direkturUser->email)
+                            ->bcc(env('MAIL_DEV_BCC'))
+                            ->send(new NotifMengetahuiDirektur(
+                                $usulan,
+                                $VendorAcc,
+                                $direkturUser, // Kirim object user direktur sebagai pengganti $firstApproval
+                                $approval2,
+                                $dataRekom,
+                                $data2,
+
+                            ));
+
+                        // Opsional: Update status di approval pertama jika diperlukan untuk tracking
+                        $firstApproval = $approval2->where('Urutan', 1)->first();
+                        if ($firstApproval) {
+                            $firstApproval->StatusEmail = 'Terkirim';
+                            $firstApproval->save();
+                        }
+
+                    } catch (\Exception $e) {
+                        Log::error('Email gagal ke Direktur (' . $direkturUser->email . '): ' . $e->getMessage());
+                    }
+                }
+            }
+
+            $pengajuan = PengajuanPembelian::find($request->IdPengajuan);
+            $kodePengajuan = $pengajuan ? $pengajuan->KodePengajuan : null;
+
+            // Pastikan method generateAll ada dan bisa dipanggil
+            if (isset($this->pdfGenerator)) {
+                $this->pdfGenerator->generateAll($pengajuan->id);
+            }
+
+            AktivitasPengajuan::create([
+                'KodePengajuan' => $kodePengajuan ?? null,
+                'Jenis' => 'FUI',
+                'Keterangan' => 'Pembuatan Form Usulan Investasi (FUI) untuk nomor pengajuan ' . ($kodePengajuan ?? '-') . ' sudah dibuat',
+                'UserCreate' => auth()->user()->name,
+            ]);
+
+            activity('usulan_investasi')
+                ->causedBy(auth()->user())
+                ->performedOn($usulan)
+                ->withProperties([
+                    'attributes' => $usulan->toArray()
+                ])
+                ->log('Memperbarui data Usulan Investasi dengan kode ' . ($cekjenis->NomorPengajuan ?? $usulan->id));
+
+            return redirect()->back()->with('success', 'Usulan Investasi berhasil disimpan.');
+        }
     /**
      * Display the specified resource.
      */
@@ -693,6 +943,7 @@ class UsulanInvestasiController extends Controller
     // }
     public function approve($token)
     {
+        // dd($token);
         $penilai = DokumenApproval::with('getUser')->where('ApprovalToken', $token)->first();
         if (!$penilai) {
             return view('errors.proses-verifikasi');

@@ -212,17 +212,25 @@
                             <!-- Ajukan Button trigger modal -->
                             @php
                                 $showAjukan = false;
-                                $filledFileCount = 0;
-                                foreach ($data->getHtaGpa->getDetailHta ?? [] as $detail) {
-                                    if (!empty($detail->File)) {
-                                        $filledFileCount++;
+                                $allFilesFilled = true;
+                                $details = $data->getHtaGpa->getDetailHta ?? [];
+
+                                // Cek apakah semua detail ada File-nya
+                                if (empty($details)) {
+                                    $allFilesFilled = false;
+                                } else {
+                                    foreach ($details as $detail) {
+                                        if (empty($detail->File)) {
+                                            $allFilesFilled = false;
+                                            break;
+                                        }
                                     }
                                 }
-                                // Tampilkan tombol Ajukan hanya jika statusnya belum Final
-                                if (($data->getHtaGpa->Status ?? null) !== 'Final') {
+
+                                // Tampilkan tombol Ajukan hanya jika statusnya belum Final DAN semua File sudah diisi
+                                if (($data->getHtaGpa->Status ?? null) !== 'Final' && $allFilesFilled) {
                                     $showAjukan = true;
                                 }
-
                             @endphp
 
                             @if ($showAjukan)
@@ -231,6 +239,7 @@
                                     <i class="fa fa-paper-plane me-1"></i> Ajukan & Kirim Email
                                 </button>
                             @endif
+
 
                             <a href="{{ route('ajukan.show', encrypt($data->id)) }}" class="btn btn-secondary">
                                 <i class="fa fa-arrow-left me-1"></i> Kembali

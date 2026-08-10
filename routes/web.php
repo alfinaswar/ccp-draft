@@ -72,6 +72,7 @@ Route::get('/approval/hta-gpa/{token}/reject', [HtaDanGpaController::class, 'rej
 // End HTA dan GPA
 Route::get('/preview-approval/{id}', [UsulanInvestasiController::class, 'SebelumApprove'])->name('usulan-investasi.SebelumApprove');
 Route::get('/approval/usulan-investasi/{token}/approve', [UsulanInvestasiController::class, 'approve'])->name('usulan-investasi.approve');
+Route::get('/approval/usulan-investasi/{token}/approve-direktur', [UsulanInvestasiController::class, 'approveDirektur'])->name('usulan-investasi.approve-direktur');
 Route::get('/approval/usulan-investasi/{token}/reject', [UsulanInvestasiController::class, 'reject'])->name('usulan-investasi.reject');
 // Route::get('/approval/fisibility-studi/{token}/approve', [FeasibilityStudyController::class, 'approve'])->name('fs.approve');
 

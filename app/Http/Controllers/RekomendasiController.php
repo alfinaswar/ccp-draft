@@ -1522,7 +1522,7 @@ class RekomendasiController extends Controller
         $approvalFUITesting = DokumenApproval::with('getUser', 'getJabatan', 'getDepartemen')
             ->where('JenisFormId', $fui->JenisForm)
             ->where('DokumenId', $fui->id)
-            ->where('Status', 'Pending')
+            // ->where('Status', 'Pending')
             ->orderBy('Urutan', 'asc')
             ->first();
         $this->pdfGenerator->generateAll($rekomendasi->id);
@@ -1547,7 +1547,8 @@ class RekomendasiController extends Controller
         AktivitasPengajuan::create([
             'KodePengajuan' => $kodePengajuan ?? null,
             'Jenis' => 'Rekomendasi',
-            'Keterangan' => 'Tanggal presentasi untuk nomor pengajuan ' . ($kodePengajuan ?? '-') . ' telah diperbarui',
+            'Keterangan' => 'Tanggal presentasi untuk nomor pengajuan ' . ($kodePengajuan ?? '-') . ' telah diperbarui dan telah dikirim ke urutan 1 (Direktur)',
+
             'UserCreate' => auth()->user()->name,
         ]);
         return redirect()->back()->with('success', 'Tanggal presentasi berhasil diperbarui dan email notifikasi telah dikirim.');
