@@ -723,7 +723,7 @@ class UsulanInvestasiController extends Controller
                         }
 
                     } catch (\Exception $e) {
-                        dd($e);
+                        // dd($e);
                         Log::error('Email gagal ke Direktur (' . $direkturUser->email . '): ' . $e->getMessage());
                     }
                 }
