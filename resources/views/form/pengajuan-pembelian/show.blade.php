@@ -807,12 +807,19 @@
                                                         <i class="fa fa-exclamation-circle"></i> Lengkapi HTA
                                                     </a>
                                                 @else
-                                                    @if (($data->Status == 'Draft' || $data->Status == 'Selesai Review' || $data->Status == 'Ditolak') && !$htaFinal)
+                                                    @if (($data->Status == 'Draft' || $data->Status == 'Selesai Review') && !$htaFinal)
                                                         <a href="{{ route('htagpa.form-hta', [$data->id, $item->id]) }}"
                                                            class="btn btn-warning btn-sm mb-2 w-100">
                                                             <i class="fa fa-exclamation-circle"></i> Ubah HTA
                                                         </a>
+                                                    @elseif ($data->Status == 'Ditolak' && $htaFinal)
+                                                        {{-- Tetap tampilkan meski final dan ditolak --}}
+                                                        <a href="{{ route('htagpa.form-hta', [$data->id, $item->id]) }}"
+                                                           class="btn btn-warning btn-sm mb-2 w-100" style="pointer-events:none;opacity:0.8;">
+                                                            <i class="fa fa-exclamation-circle"></i> HTA Final (Ditolak)
+                                                        </a>
                                                     @endif
+
                                                     <div class="d-flex gap-1">
                                                         <a href="{{ route('htagpa.show', [$data->id, $item->id]) }}"
                                                            class="btn btn-success btn-sm flex-fill">
