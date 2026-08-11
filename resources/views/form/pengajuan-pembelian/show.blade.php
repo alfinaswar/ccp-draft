@@ -815,9 +815,10 @@
                                                     @elseif ($data->Status == 'Ditolak' && $htaFinal)
                                                         {{-- Tetap tampilkan meski final dan ditolak --}}
                                                         <a href="{{ route('htagpa.form-hta', [$data->id, $item->id]) }}"
-                                                           class="btn btn-warning btn-sm mb-2 w-100" style="pointer-events:none;opacity:0.8;">
+                                                           class="btn btn-warning btn-sm mb-2 w-100">
                                                             <i class="fa fa-exclamation-circle"></i> HTA Final (Ditolak)
                                                         </a>
+
                                                     @endif
 
                                                     <div class="d-flex gap-1">
