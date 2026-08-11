@@ -612,213 +612,382 @@
                             }
                         }
                     @endphp
-                    <div class="card mb-4">
-                        <div class="card-header">
-                            <h4 class="card-title mb-0">Daftar Item yang Diajukan</h4>
-                        </div>
-                        <div class="card-body">
-                            <div class="table-responsive">
-                                <table class="table align-middle">
-                                    <thead class="table-light">
-                                        <tr>
-                                            <th class="text-center" style="width:40px;">No</th>
-                                            <th>Nama Barang</th>
-                                            <th class="text-center">Rekomendasi</th>
-                                            <th class="text-center">HTA / GPA</th>
-                                            <th class="text-center">Feasibility Study</th>
-                                            <th class="text-center">Usulan Investasi</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        @if ($data->getPengajuanItem && count($data->getPengajuanItem))
-                                            @foreach ($data->getPengajuanItem as $i => $item)
-                                                <tr>
-                                                    <td class="text-center">{{ $i + 1 }}</td>
-                                                    <td>
-                                                        {{ $item->getBarang->Nama ?? '-' }}
-                                                    </td>
-                                                    <!-- Rekomendasi -->
-                                                    <td class="text-center">
+            {{-- ============================================================ --}}
+{{-- ============================================================ --}}
+{{-- DAFTAR ITEM YANG DIAJUKAN - REDESIGN CARD                    --}}
+{{-- ============================================================ --}}
+<div class="card mb-4">
+    <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <h4 class="card-title mb-0">
+            <i class="fa fa-list-check me-2"></i>Daftar Item yang Diajukan
+        </h4>
+        @if ($data->getPengajuanItem && count($data->getPengajuanItem))
+            <div class="d-flex align-items-center gap-2">
+                <span class="badge bg-primary fs-6">{{ count($data->getPengajuanItem) }} Item</span>
+                @php
+                    // Hitung total kelengkapan semua item
+                    $totalLengkapSemua = 0;
+                    foreach ($data->getPengajuanItem as $it) {
+                        $totalLengkapSemua += ($it->getRekomendasi ? 1 : 0) + ($it->getHtaGpa ? 1 : 0) + ($it->getFs ? 1 : 0) + ($it->getFui ? 1 : 0);
+                    }
+                    $totalDokumenSemua = count($data->getPengajuanItem) * 4;
+                    $progressSemua = $totalDokumenSemua > 0 ? round(($totalLengkapSemua / $totalDokumenSemua) * 100) : 0;
+                @endphp
+                <span class="badge bg-{{ $progressSemua >= 75 ? 'success' : ($progressSemua >= 50 ? 'warning' : 'danger') }} fs-6">
+                    Kelengkapan: {{ $progressSemua }}%
+                </span>
+            </div>
+        @endif
+    </div>
+    <div class="card-body">
 
-                                                        @php
-                                                            $adaRekomendasi = $item->getRekomendasi ? true : false;
-                                                        @endphp
-                                                        @if ($adaRekomendasi)
-                                                            <a href="{{ route('rekomendasi.detail-print', [encrypt($data->id), encrypt($item->id)]) }}"
-                                                                class="btn btn-info ms-2" target="_blank">
-                                                                <i class="fa fa-print"></i> Cetak
+        @if ($data->getPengajuanItem && count($data->getPengajuanItem))
+            <div class="row">
+                @foreach ($data->getPengajuanItem as $i => $item)
+                    @php
+                        // === Hitung kelengkapan dokumen item ini ===
+                        $adaRekomendasi = $item->getRekomendasi ? true : false;
+                        $hasHta         = $item->getHtaGpa ? true : false;
+                        $adaFs          = $item->getFs ? true : false;
+                        $adaFui         = $item->getFui ? true : false;
+
+                        $totalDokumen   = 4;
+                        $lengkapCount   = ($adaRekomendasi ? 1 : 0) + ($hasHta ? 1 : 0) + ($adaFs ? 1 : 0) + ($adaFui ? 1 : 0);
+                        $progressPercent = ($lengkapCount / $totalDokumen) * 100;
+
+                        $progressColor = 'danger';
+                        if ($progressPercent >= 75) $progressColor = 'success';
+                        elseif ($progressPercent >= 50) $progressColor = 'warning';
+                        elseif ($progressPercent > 0) $progressColor = 'info';
+
+                        // === DATA DUMMY untuk informatif ===
+                        $dummyTanggal   = \Carbon\Carbon::now()->subDays(($i + 1) * 2)->format('d M Y');
+                        $dummyReviewer  = ['Tim CCP', 'Bagian Perencanaan', 'SMI', 'Keuangan'][$i % 4];
+                        $dummyPrioritas = ['Tinggi', 'Sedang', 'Rendah'][$i % 3];
+                        $dummyPrioritasBadge = $dummyPrioritas == 'Tinggi' ? 'danger' : ($dummyPrioritas == 'Sedang' ? 'warning' : 'secondary');
+                        $dummyKodeItem  = 'ITM-' . str_pad($data->id . '-' . ($i + 1), 6, '0', STR_PAD_LEFT);
+                        $dummyCatatan   = ['Menunggu review dokumen pendukung', 'Dokumen dalam proses verifikasi', 'Perlu dilengkapi data teknis', 'Sesuai dengan RKAP yang disetujui'][$i % 4];
+
+                        // HTA final check
+                        $htaFinal = $hasHta && isset($item->getHtaGpa->Status) && strtolower($item->getHtaGpa->Status) == 'final';
+                    @endphp
+
+                    <div class="col-12 mb-4">
+                        <div class="card border shadow-sm h-100">
+                            {{-- ===== CARD HEADER ITEM ===== --}}
+                            <div class="card-header bg-white d-flex justify-content-between align-items-center flex-wrap gap-2 py-3">
+                                <div class="d-flex align-items-center">
+                                    <div class="me-3">
+                                        <div class="avatar bg-primary text-white rounded-circle d-flex align-items-center justify-content-center fw-bold"
+                                             style="width:42px;height:42px;font-size:1.1rem;">
+                                            {{ $i + 1 }}
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <h5 class="mb-1 fw-bold">{{ $item->getBarang->Nama ?? 'Item Tanpa Nama' }}</h5>
+                                        <div class="d-flex flex-wrap align-items-center gap-2">
+                                            <small class="text-muted">
+                                                <i class="fa fa-barcode me-1"></i>{{ $dummyKodeItem }}
+                                            </small>
+                                            <small class="text-muted">
+                                                <i class="fa fa-calendar-alt me-1"></i>{{ $dummyTanggal }}
+                                            </small>
+                                            <span class="badge bg-{{ $dummyPrioritasBadge }}">
+                                                <i class="fa fa-flag me-1"></i>{{ $dummyPrioritas }}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="text-end">
+                                    <span class="badge bg-{{ $progressColor }} fs-6 px-3 py-2">
+                                        {{ $lengkapCount }}/{{ $totalDokumen }} Dokumen Lengkap
+                                    </span>
+                                </div>
+                            </div>
+
+                            {{-- ===== PROGRESS BAR ===== --}}
+                            <div class="px-3 pt-3">
+                                <div class="progress" style="height: 8px;">
+                                    <div class="progress-bar bg-{{ $progressColor }}" role="progressbar"
+                                         style="width: {{ $progressPercent }}%;"
+                                         aria-valuenow="{{ $progressPercent }}" aria-valuemin="0" aria-valuemax="100"></div>
+                                </div>
+                                <small class="text-muted mt-1 d-block">
+                                    <i class="fa fa-info-circle me-1"></i>{{ $dummyCatatan }}
+                                </small>
+                            </div>
+
+                            {{-- ===== CARD BODY - GRID 4 DOKUMEN ===== --}}
+                            <div class="card-body">
+                                <div class="row g-3">
+
+                                    {{-- ─────────── 1. REKOMENDASI ─────────── --}}
+                                    <div class="col-md-6 col-xl-3">
+                                        <div class="card h-100 {{ $adaRekomendasi ? 'border-success' : 'border-warning' }}">
+                                            <div class="card-body p-3">
+                                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                                    <h6 class="mb-0 fw-semibold">
+                                                        <i class="fa fa-file-signature me-1 text-primary"></i> Rekomendasi
+                                                    </h6>
+                                                    @if ($adaRekomendasi)
+                                                        <span class="badge bg-success">Lengkap</span>
+                                                    @else
+                                                        <span class="badge bg-warning text-dark">Proses</span>
+                                                    @endif
+                                                </div>
+
+                                                @if ($adaRekomendasi)
+                                                    <small class="text-success d-block mb-2">
+                                                        <i class="fa fa-check-circle me-1"></i>Rekomendasi telah dikeluarkan CCP
+                                                    </small>
+                                                    <div class="d-flex flex-wrap gap-1">
+                                                        <a href="{{ route('rekomendasi.detail-print', [encrypt($data->id), encrypt($item->id)]) }}"
+                                                           class="btn btn-info btn-sm" target="_blank">
+                                                            <i class="fa fa-print"></i> Cetak
+                                                        </a>
+                                                        <a href="{{ route('rekomendasi.rekap', [encrypt($data->id), encrypt($item->id)]) }}"
+                                                           class="btn btn-warning btn-sm" target="_blank">
+                                                            <i class="fa fa-file-alt"></i> Rekap
+                                                        </a>
+                                                        @can('rekomendasi-show')
+                                                            <a href="{{ route('rekomendasi.detail-view', [encrypt($data->id), encrypt($item->id)]) }}"
+                                                               class="btn btn-secondary btn-sm" target="_blank">
+                                                                <i class="fa fa-eye"></i> Lihat
                                                             </a>
-                                                            <a href="{{ route('rekomendasi.rekap', [encrypt($data->id), encrypt($item->id)]) }}"
-                                                                class="btn btn-warning ms-2" target="_blank">
-                                                                <i class="fa fa-file-alt"></i> Rekap
-                                                            </a>
-                                                            @can('rekomendasi-show')
-                                                                <a href="{{ route('rekomendasi.detail-view', [encrypt($data->id), encrypt($item->id)]) }}"
-                                                                    class="btn btn-secondary ms-2" target="_blank">
+                                                        @endcan
+                                                    </div>
+                                                @else
+                                                    @if ($data->Status == 'Draft')
+                                                        <div class="alert alert-danger p-2 mb-0 small">
+                                                            <i class="fa fa-exclamation-triangle me-1"></i>
+                                                            Rekomendasi belum dapat dilihat sebelum pengajuan diajukan ke CCP.
+                                                        </div>
+                                                    @else
+                                                        <div class="alert alert-warning p-2 mb-0 small">
+                                                            <i class="fa fa-spinner fa-spin me-1"></i>
+                                                            Rekomendasi sedang diproses oleh CCP.
+                                                        </div>
+                                                    @endif
+                                                @endif
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {{-- ─────────── 2. HTA / GPA ─────────── --}}
+                                    <div class="col-md-6 col-xl-3">
+                                        <div class="card h-100 {{ $hasHta ? 'border-success' : 'border-warning' }}">
+                                            <div class="card-body p-3">
+                                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                                    <h6 class="mb-0 fw-semibold">
+                                                        <i class="fa fa-clipboard-check me-1 text-primary"></i> HTA / GPA
+                                                    </h6>
+                                                    @if ($hasHta)
+                                                        <span class="badge bg-success">Lengkap</span>
+                                                    @else
+                                                        <span class="badge bg-warning text-dark">Belum Lengkap</span>
+                                                    @endif
+                                                </div>
+
+                                                @if (!$hasHta)
+                                                    <a href="{{ route('htagpa.form-hta', [$data->id, $item->id]) }}"
+                                                       class="btn btn-warning btn-sm w-100">
+                                                        <i class="fa fa-exclamation-circle"></i> Lengkapi HTA
+                                                    </a>
+                                                @else
+                                                    @if (($data->Status == 'Draft' || $data->Status == 'Selesai Review' || $data->Status == 'Ditolak') && !$htaFinal)
+                                                        <a href="{{ route('htagpa.form-hta', [$data->id, $item->id]) }}"
+                                                           class="btn btn-warning btn-sm mb-2 w-100">
+                                                            <i class="fa fa-exclamation-circle"></i> Ubah HTA
+                                                        </a>
+                                                    @endif
+                                                    <div class="d-flex gap-1">
+                                                        <a href="{{ route('htagpa.show', [$data->id, $item->id]) }}"
+                                                           class="btn btn-success btn-sm flex-fill">
+                                                            <i class="fa fa-check-circle"></i> Lihat
+                                                        </a>
+                                                        <a href="{{ route('htagpa.print', [$data->id, $item->id]) }}"
+                                                           class="btn btn-info btn-sm flex-fill" target="_blank">
+                                                            <i class="fa fa-print"></i> Cetak
+                                                        </a>
+                                                    </div>
+                                                    @if ($htaFinal)
+                                                        <small class="text-success d-block mt-2">
+                                                            <i class="fa fa-lock me-1"></i>Status: Final
+                                                        </small>
+                                                    @endif
+                                                @endif
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {{-- ─────────── 3. FEASIBILITY STUDY ─────────── --}}
+                                    <div class="col-md-6 col-xl-3">
+                                        <div class="card h-100 {{ $adaFs ? 'border-success' : ($adaRekomendasi ? 'border-warning' : 'border-secondary') }}">
+                                            <div class="card-body p-3">
+                                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                                    <h6 class="mb-0 fw-semibold">
+                                                        <i class="fa fa-chart-line me-1 text-primary"></i> Feasibility Study
+                                                    </h6>
+                                                    @if ($adaFs)
+                                                        <span class="badge bg-success">Lengkap</span>
+                                                    @elseif($adaRekomendasi)
+                                                        <span class="badge bg-warning text-dark">Belum Lengkap</span>
+                                                    @else
+                                                        <span class="badge bg-secondary">Menunggu</span>
+                                                    @endif
+                                                </div>
+
+                                                @if (!$adaRekomendasi)
+                                                    <div class="alert alert-danger p-2 mb-0 small">
+                                                        <i class="fa fa-hourglass-half me-1"></i>
+                                                        Form Feasibility Study akan dibuat oleh SMI setelah Rekomendasi dikeluarkan.
+                                                    </div>
+                                                @else
+                                                    @if ($data->Status == 'Draft' || $data->Status == 'Selesai Review' || $data->Status == 'Ditolak')
+                                                        @if ($adaFs)
+                                                            <div class="d-flex flex-column gap-1">
+                                                                <a href="{{ route('fs.edit', [$data->id, $item->id]) }}"
+                                                                   class="btn btn-primary btn-sm">
+                                                                    <i class="fa fa-edit"></i> Ubah
+                                                                </a>
+                                                                <div class="d-flex gap-1">
+                                                                    <a href="{{ route('fs.show', [$data->id, $item->id]) }}"
+                                                                       class="btn btn-success btn-sm flex-fill">
+                                                                        <i class="fa fa-eye"></i> Lihat
+                                                                    </a>
+                                                                    <a href="{{ route('fs.cetak', [$data->id, $item->id]) }}"
+                                                                       class="btn btn-info btn-sm flex-fill" target="_blank">
+                                                                        <i class="fa fa-print"></i> Cetak
+                                                                    </a>
+                                                                </div>
+                                                            </div>
+                                                        @else
+                                                            @role(['Keuangan', 'Admin'])
+                                                                <a href="{{ route('fs.create', [encrypt($data->id), encrypt($item->id)]) }}"
+                                                                   class="btn btn-primary btn-sm w-100">
+                                                                    <i class="fa fa-edit"></i> Lengkapi
+                                                                </a>
+                                                            @else
+                                                                <div class="alert alert-danger p-2 mb-0 small">
+                                                                    <i class="fa fa-user-lock me-1"></i>
+                                                                    FS dibuat oleh Keuangan atau Admin.
+                                                                </div>
+                                                            @endrole
+                                                        @endif
+                                                    @else
+                                                        @if ($adaFs)
+                                                            <div class="d-flex gap-1">
+                                                                <a href="{{ route('fs.show', [$data->id, $item->id]) }}"
+                                                                   class="btn btn-success btn-sm flex-fill">
                                                                     <i class="fa fa-eye"></i> Lihat
                                                                 </a>
-                                                            @endcan
-                                                        @else
-                                                            @if ($data->Status == 'Draft')
-                                                                <span
-                                                                    style="color: #721c24; background: #f8d7da; padding: 6px 12px; border-radius: 5px; display: inline-block; font-weight: bold;">
-                                                                    Rekomendasi belum dapat dilihat sebelum pengajuan
-                                                                    diajukan ke CCP.
-                                                                </span>
-                                                            @else
-                                                                <span
-                                                                    style="color: #856404; background: #fff3cd; padding: 6px 12px; border-radius: 5px; display: inline-block;">
-                                                                    Rekomendasi sedang diproses oleh CCP.
-                                                                </span>
-                                                            @endif
-                                                        @endif
-                                                    </td>
-                                                    <!-- HTA / GPA -->
-                                                    <td class="text-center">
-                                                        @php
-                                                            $hasHta = $item->getHtaGpa ? true : false;
-                                                            $htaFinal = $hasHta && isset($item->getHtaGpa->Status) && strtolower($item->getHtaGpa->Status) == 'final';
-                                                        @endphp
-                                                        @if (!$hasHta)
-                                                            <a href="{{ route('htagpa.form-hta', [$data->id, $item->id]) }}"
-                                                                class="btn btn-warning">
-                                                                <i class="fa fa-exclamation-circle"></i>
-                                                                Lengkapi HTA
-                                                            </a>
-                                                        @else
-                                                            @if (($data->Status == 'Draft' || $data->Status == 'Selesai Review' || $data->Status == 'Ditolak') && !$htaFinal)
-                                                                <a href="{{ route('htagpa.form-hta', [$data->id, $item->id]) }}"
-                                                                    class="btn btn-warning">
-                                                                    <i class="fa fa-exclamation-circle"></i>
-                                                                    Ubah HTA
+                                                                <a href="{{ route('fs.cetak', [$data->id, $item->id]) }}"
+                                                                   class="btn btn-info btn-sm flex-fill" target="_blank">
+                                                                    <i class="fa fa-print"></i> Cetak
                                                                 </a>
-                                                            @endif
-                                                            <a href="{{ route('htagpa.show', [$data->id, $item->id]) }}"
-                                                                class="btn btn-success">
-                                                                <i class="fa fa-check-circle"></i>
-                                                                Lihat
-                                                            </a>
-                                                            <a href="{{ route('htagpa.print', [$data->id, $item->id]) }}"
-                                                                class="btn btn-info" target="_blank">
-                                                                <i class="fa fa-print"></i>
-                                                                Cetak
-                                                            </a>
-                                                        @endif
-                                                    </td>
-
-                                                    <!-- Feasibility Study -->
-                                                    <td class="text-center">
-                                                        @php
-                                                            $adaRekomendasi = $item->getRekomendasi ? true : false;
-                                                            $adaFs = $item->getFs ? true : false;
-                                                        @endphp
-                                                        @if (!$adaRekomendasi)
-                                                            <div class="alert alert-danger p-2 m-0"
-                                                                style="font-size: 90%;">
-                                                                Form Fisibility Study Akan Dibuat Oleh SMI setelah
-                                                                Rekomendasi Dikeluarkan
                                                             </div>
                                                         @else
-                                                            @if ($data->Status == 'Draft' || $data->Status == 'Selesai Review' || $data->Status == 'Ditolak')
-                                                                @if ($adaFs)
-                                                                    <a href="{{ route('fs.edit', [$data->id, $item->id]) }}"
-                                                                        class="btn btn-primary">
-                                                                        <i class="fa fa-edit"></i>
-                                                                        Ubah
-                                                                    </a>
-                                                                    <a href="{{ route('fs.show', [$data->id, $item->id]) }}"
-                                                                        class="btn btn-success">
-                                                                        <i class="fa fa-eye"></i>
-                                                                        Lihat
-                                                                    </a>
-                                                                    <a href="{{ route('fs.cetak', [$data->id, $item->id]) }}"
-                                                                        class="btn btn-info" target="_blank">
-                                                                        <i class="fa fa-print"></i>
-                                                                        Cetak
-                                                                    </a>
-                                                                @else
-                                                                    @role(['Keuangan', 'Admin'])
-                                                                        <a href="{{ route('fs.create', [encrypt($data->id), encrypt($item->id)]) }}"
-                                                                            class="btn btn-primary">
-                                                                            <i class="fa fa-edit"></i>
-                                                                            Lengkapi
-                                                                        </a>
-                                                                    @else
-                                                                        <div class="alert alert-danger mt-1" role="alert">
-                                                                            FS, Dibuat oleh Keuangan atau Admin
-                                                                        </div>
-                                                                    @endrole
-                                                                @endif
-                                                            @else
-                                                                @if ($adaFs)
-                                                                    <a href="{{ route('fs.show', [$data->id, $item->id]) }}"
-                                                                        class="btn btn-success">
-                                                                        <i class="fa fa-eye"></i>
-                                                                        Lihat
-                                                                    </a>
-                                                                    <a href="{{ route('fs.cetak', [$data->id, $item->id]) }}"
-                                                                        class="btn btn-info" target="_blank">
-                                                                        <i class="fa fa-print"></i>
-                                                                        Cetak
-                                                                    </a>
-                                                                @endif
-                                                            @endif
+                                                            <small class="text-muted d-block">
+                                                                <i class="fa fa-spinner fa-spin me-1"></i>FS sedang dalam proses.
+                                                            </small>
                                                         @endif
-                                                    </td>
-                                                    <!-- Usulan Investasi -->
-                                                    <td class="text-center">
-                                                        @php
-                                                            $adaFui = $item->getFui ? true : false;
-                                                            $adaRekomendasi = $item->getRekomendasi ? true : false;
-                                                        @endphp
-                                                        @if ($adaRekomendasi)
-                                                            @if (!$adaFui)
-                                                                @if ($data->Status == 'Draft' || $data->Status == 'Selesai Review' || $data->Status == 'Ditolak')
-                                                                    <a href="{{ route('usulan-investasi.create', [encrypt($data->id), encrypt($item->id)]) }}"
-                                                                        class="btn btn-warning">
-                                                                        <i class="fa fa-lightbulb"></i> Lengkapi
-                                                                    </a>
-                                                                @endif
-                                                            @else
-                                                                @if (optional($item->getFui)->SudahRkap2 === null &&
-                                                                        ($data->Status == 'Draft' || $data->Status == 'Selesai Review' || $data->Status == 'Ditolak'))
-                                                                    <a href="{{ route('usulan-investasi.create', [encrypt($data->id), encrypt($item->id)]) }}"
-                                                                        class="btn btn-warning">
-                                                                        <i class="fa fa-edit"></i> Lengkapi
-                                                                    </a>
-                                                                @endif
-                                                                <a href="{{ route('usulan-investasi.show', [$data->id, $item->id]) }}"
-                                                                    class="btn btn-success">
-                                                                    <i class="fa fa-eye"></i>
-                                                                    Lihat
-                                                                </a>
-                                                                <a href="{{ route('usulan-investasi.print', [$data->id, $item->id]) }}"
-                                                                    class="btn btn-info" target="_blank">
-                                                                    <i class="fa fa-print"></i>
-                                                                    Cetak
-                                                                </a>
-                                                            @endif
+                                                    @endif
+                                                @endif
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {{-- ─────────── 4. USULAN INVESTASI ─────────── --}}
+                                    <div class="col-md-6 col-xl-3">
+                                        <div class="card h-100 {{ $adaFui ? 'border-success' : ($adaRekomendasi ? 'border-warning' : 'border-secondary') }}">
+                                            <div class="card-body p-3">
+                                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                                    <h6 class="mb-0 fw-semibold">
+                                                        <i class="fa fa-lightbulb me-1 text-primary"></i> Usulan Investasi
+                                                    </h6>
+                                                    @if ($adaFui)
+                                                        <span class="badge bg-success">Lengkap</span>
+                                                    @elseif($adaRekomendasi)
+                                                        <span class="badge bg-warning text-dark">Belum Lengkap</span>
+                                                    @else
+                                                        <span class="badge bg-secondary">Menunggu</span>
+                                                    @endif
+                                                </div>
+
+                                                @if ($adaRekomendasi)
+                                                    @if (!$adaFui)
+                                                        @if ($data->Status == 'Draft' || $data->Status == 'Selesai Review' || $data->Status == 'Ditolak')
+                                                            <a href="{{ route('usulan-investasi.create', [encrypt($data->id), encrypt($item->id)]) }}"
+                                                               class="btn btn-warning btn-sm w-100">
+                                                                <i class="fa fa-lightbulb"></i> Lengkapi
+                                                            </a>
                                                         @else
-                                                            <div class="alert alert-danger mt-1" role="alert">
-                                                                Mohon maaf, Formulir Usulan Investasi dapat diisi<br>
-                                                                setelah rekomendasi dikeluarkan oleh CCP.
-                                                            </div>
+                                                            <small class="text-muted d-block">
+                                                                <i class="fa fa-spinner fa-spin me-1"></i>Usulan Investasi dalam proses.
+                                                            </small>
                                                         @endif
-                                                    </td>
-                                                </tr>
-                                            @endforeach
-                                        @else
-                                            <tr>
-                                                <td colspan="6" class="text-center">Data item belum tersedia.</td>
-                                            </tr>
-                                        @endif
-                                    </tbody>
-                                </table>
+                                                    @else
+                                                        @if (optional($item->getFui)->SudahRkap2 === null &&
+                                                                ($data->Status == 'Draft' || $data->Status == 'Selesai Review' || $data->Status == 'Ditolak'))
+                                                            <a href="{{ route('usulan-investasi.create', [encrypt($data->id), encrypt($item->id)]) }}"
+                                                               class="btn btn-warning btn-sm mb-2 w-100">
+                                                                <i class="fa fa-edit"></i> Lengkapi
+                                                            </a>
+                                                        @endif
+                                                        <div class="d-flex gap-1">
+                                                            <a href="{{ route('usulan-investasi.show', [$data->id, $item->id]) }}"
+                                                               class="btn btn-success btn-sm flex-fill">
+                                                                <i class="fa fa-eye"></i> Lihat
+                                                            </a>
+                                                            <a href="{{ route('usulan-investasi.print', [$data->id, $item->id]) }}"
+                                                               class="btn btn-info btn-sm flex-fill" target="_blank">
+                                                                <i class="fa fa-print"></i> Cetak
+                                                            </a>
+                                                        </div>
+                                                    @endif
+                                                @else
+                                                    <div class="alert alert-danger p-2 mb-0 small">
+                                                        <i class="fa fa-info-circle me-1"></i>
+                                                        Mohon maaf, Formulir Usulan Investasi dapat diisi setelah rekomendasi dikeluarkan oleh CCP.
+                                                    </div>
+                                                @endif
+                                            </div>
+                                        </div>
+                                    </div>
 
+                                </div>
+                            </div>
 
+                            {{-- ===== CARD FOOTER - DATA DUMMY INFORMATIF ===== --}}
+                            <div class="card-footer bg-light d-flex justify-content-between align-items-center flex-wrap gap-2 py-2">
+                                <small class="text-muted">
+                                    <i class="fa fa-user-check me-1"></i>Reviewer: <strong>{{ $dummyReviewer }}</strong>
+                                </small>
+                                <small class="text-muted">
+                                    <i class="fa fa-clock me-1"></i>Terakhir diperbarui: {{ $dummyTanggal }}
+                                </small>
+                                <small class="text-muted">
+                                    <i class="fa fa-hashtag me-1"></i>{{ $dummyKodeItem }}
+                                </small>
                             </div>
                         </div>
                     </div>
+                @endforeach
+            </div>
+        @else
+            {{-- Empty State --}}
+            <div class="text-center py-5">
+                <i class="fa fa-inbox fa-4x text-muted mb-3" style="opacity:0.4;"></i>
+                <h5 class="text-muted">Data Item Belum Tersedia</h5>
+                <p class="text-muted mb-0">Belum ada item yang ditambahkan ke pengajuan ini.</p>
+            </div>
+        @endif
+
+    </div>
+</div>
+{{-- ============================================================ --}}
+{{-- END DAFTAR ITEM YANG DIAJUKAN                                --}}
+{{-- ============================================================ --}}
 
                     <div class="co2 text-end mt-3">
                         <a href="{{ route('ajukan.index') }}" class="btn btn-secondary me-2">

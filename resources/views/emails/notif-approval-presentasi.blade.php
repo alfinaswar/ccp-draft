@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>Notifikasi Persetujuan Dokumen Presentasi</title>
+    <title>Notifikasi Persetujuan Form Usulan Investasi</title>
 </head>
 
 @php
@@ -41,20 +41,23 @@
                     <tr>
                         <td style="background:#198754;text-align:center;padding:32px 32px 16px 32px;">
                             <h2 style="color:#fff;margin:0;font-weight:bold;font-size:2rem;letter-spacing:1px;">
-                                Notifikasi Persetujuan Presentasi
+                                Notifikasi Persetujuan Form Usulan Investasi
                             </h2>
                         </td>
                     </tr>
                     <tr>
                         <td style="padding:32px 32px 0 32px;color:#222;">
                             <p style="font-size:17px;margin:0 0 10px 0;">
-                                <b>Yth. Bapak / Ibu {{ $valueTesting->Nama ?? 'Penerima Persetujuan' }},</b>
+                                <b>Yth. Bapak/Ibu {{ $valueTesting->Nama ?? 'Penerima Approval' }},</b>
                             </p>
                             <p style="font-size:15px;line-height:1.7;margin:0 0 18px 0;">
                                 Dengan hormat,<br>
-                                Melalui email ini kami sampaikan bahwa terdapat permohonan <b>Persetujuan Pembelian</b>
-                                yang membutuhkan tindak lanjut dari Bapak/Ibu.<br>
-                                <br>
+                                Bersama email ini, kami informasikan bahwa terdapat <b>Pengajuan Form Usulan
+                                    Investasi</b> yang memerlukan persetujuan Anda pada sistem ABPROC.
+                            </p>
+                            <p style="font-size:15px;line-height:1.6;margin:0 0 18px 0;">
+                                Silakan klik tombol berikut untuk melihat detail pengajuan dan memberikan persetujuan:
+                            </p>
                             <table style="font-size:15px; border-collapse:collapse; margin:0 0 18px 0;">
                                 <tr>
                                     <td style="font-weight:bold;width:160px;padding:4px 0;vertical-align:top;">Kode
@@ -98,30 +101,32 @@
                                     </td>
                                 </tr>
                             </table>
-
-
-                            </p>
-
-                            <p style="font-size:15px;line-height:1.6;margin:0 0 18px 0;">
-                                Silakan klik tombol di bawah ini untuk menyetujui pembelian:
-                            </p>
                         </td>
                     </tr>
                     <tr>
                         <td style="padding:16px 32px; text-align:center;">
                             <a href="{{ route('usulan-investasi.approve', $Approval->ApprovalToken) }}"
                                 style="display:inline-block;background:#198754;color:#fff;padding:16px 36px;border-radius:7px;font-size:17px;font-weight:bold;text-decoration:none;letter-spacing:1px;box-shadow:0 4px 16px rgba(25,135,84,0.14);">
-                                ✓ Setujui
+                                SETUJUI FORM USULAN INVESTASI
                             </a>
                         </td>
                     </tr>
-
-
-
+                    <tr>
+                        <td style="padding:10px 32px 0px 32px;color:#666;">
+                            <p style="font-size:13px;background:#f2f4f7;padding:16px;border-radius:7px;">
+                                Apabila tombol di atas tidak dapat diakses, silakan salin dan buka tautan berikut pada
+                                browser Anda:<br>
+                                <a style="color:#198754;word-break:break-all;"
+                                    href="{{ route('usulan-investasi.approve', $Approval->ApprovalToken) }}">
+                                    {{ route('usulan-investasi.approve', $Approval->ApprovalToken) }}
+                                </a>
+                            </p>
+                        </td>
+                    </tr>
                     <tr>
                         <td style="padding:10px 32px 24px 32px;">
                             <p style="font-size:15px;margin:24px 0 4px 0;">
-                                Atas perhatian dan kerja sama Bapak, kami ucapkan terima kasih.
+                                Atas perhatian dan kerja sama Bapak/Ibu, kami ucapkan terima kasih.
                             </p>
                             <p style="font-size:15px;margin:0;">
                                 Hormat kami,<br>
