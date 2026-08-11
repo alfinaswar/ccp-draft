@@ -723,6 +723,7 @@ class UsulanInvestasiController extends Controller
                         }
 
                     } catch (\Exception $e) {
+                        dd($e);
                         Log::error('Email gagal ke Direktur (' . $direkturUser->email . '): ' . $e->getMessage());
                     }
                 }
@@ -909,17 +910,18 @@ class UsulanInvestasiController extends Controller
         return redirect()->back()->with('success', 'Usulan Investasi telah disetujui oleh Kadiv.');
     }
 
-    public function approveDirektur(Request $request)
+    public function approveDirektur($kodePengajuan, $direkturId)
     {
-        $usulan = UsulanInvestasi::find($request->id);
-        if (!$usulan) {
-            return redirect()->back()->with('error', 'Usulan Investasi tidak ditemukan.');
-        }
-        $usulan->Direktur = auth()->user()->id;
-        $usulan->DirekturPada = now();
-        $usulan->save();
+        $data = PengajuanPembelian::where('KodePengajuan', $kodePengajuan)->first();
+        $data->AccDirektur     = "Y";
+        $data->DirekturId      = $direkturId;
+        $data->AccDirekturPada = now();
+        $data->save();
 
-        return redirect()->back()->with('success', 'Usulan Investasi telah disetujui oleh Direktur.');
+        return view('emails.setelah-approval-mengetahui-direktur')->with([
+            'message' => 'Usulan Investasi telah disetujui oleh Direktur.'
+        ]);
+
     }
 
     // public function approve($token)
@@ -966,6 +968,7 @@ class UsulanInvestasiController extends Controller
             ->where('Urutan', '<', $penilai->Urutan)
             ->where('Status', 'Pending')
             ->exists();
+            // dd($ada_approval_sebelumnya_pending);
         $this->pdfGenerator->generateAll($usulan->IdPengajuan);
         if (!$ada_approval_sebelumnya_pending) {
 
@@ -1025,9 +1028,9 @@ class UsulanInvestasiController extends Controller
             ->first();
 
         $skipNotifikasi = false;
-        if ($jenisPengajuan !== null && $jenisPengajuan != 1 && $penilai->Urutan == 1) {
-            $skipNotifikasi = true;
-        }
+        // if ($jenisPengajuan !== null && $jenisPengajuan != 1 && $penilai->Urutan == 1) {
+        //     $skipNotifikasi = true;
+        // }
 
         if ($approvalSelanjutnya && !$skipNotifikasi) {
             try {

@@ -47,7 +47,7 @@ class NotifMengetahuiDirektur extends Mailable
             ->subject('Pemberitahuan & Persetujuan FUI - ' . $namaPerusahaan . ' - ' . $namaBarang)
             ->view('emails.notifikasi-mengetahui-direktur') // Pastikan view ini ada, atau buat view khusus direktur
             ->with([
-                'direktur' => $this->direktur, // Dikirim ke view agar bisa disapa "Yth. Bapak/Ibu {{ $direktur->name }}"
+                'direkturUser' => $this->direktur, // Ganti key jadi "direkturUser"
                 'usulan' => $this->usulan,
                 'approval2' => $this->approval2,
                 'dataRekom' => $this->dataRekom,

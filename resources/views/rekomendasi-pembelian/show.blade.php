@@ -694,7 +694,7 @@
                                 <strong>Jangan refresh atau tutup halaman ini!</strong>
                             </div>
                             <p class="mt-3 mb-0">
-                                Email sedang dikirim ke <strong>Ir. H. Arfan Awaloeddin</strong>
+                                Email sedang dikirim ke <strong>Direktur Rumah Sakit terkait</strong>
                             </p>
                             <p class="mt-2 mb-0">
                                 Waktu berlalu: <span id="detik-timer-presentasi" style="font-weight: bold; color: #0d6efd; font-size: 20px;">0</span> detik
@@ -716,6 +716,7 @@
                             }
                         });
                     }
+
                 });
             });
             $(window).on('beforeunload', function() {

@@ -77,15 +77,56 @@
                             <div class="card-title">
                                 Perbandingan Vendor
                             </div>
-                            @if (empty($data->Status) || $data->Status === 'Draft' || $data->Status === 'Ditolak')
-                                <a href="{{ route('ajukan.edit', encrypt($data->id)) }}" class="btn btn-primary btn-sm">
-                                    <i class="fa fa-edit"></i> Ubah Data Perbandingan Vendor
-                                </a>
-                            @else
-                                <span class="badge bg-success">Sudah diajukan</span>
-                            @endif
+                            <div>
+                                @if (empty($data->Status) || $data->Status === 'Draft' || $data->Status === 'Ditolak')
+                                    <a href="{{ route('ajukan.edit', encrypt($data->id)) }}" class="btn btn-primary btn-sm">
+                                        <i class="fa fa-edit"></i> Ubah Data Perbandingan Vendor
+                                    </a>
+                                @else
+                                    <span class="badge bg-success">{{ $data->Status }}</span>
+                                @endif
 
+                                {{-- Cek ACC Direktur --}}
+                                @if (($data->Jenis ?? null) != 1 && isset($data->AccDirektur) && $data->AccDirektur === 'N')
+                                    @php
+                                        $direkturId = $data->DirekturId ?? (isset($data->DirekturId) ? $data->DirekturId : null);
+                                        $approvalLink = '-';
+                                        if ($direkturId) {
+                                            $approvalLink = route('usulan-investasi.approve-direktur', [$data->KodePengajuan, $direkturId]);
+                                        }
+                                    @endphp
+                                    <button class="btn btn-outline-secondary btn-sm ms-2" type="button" onclick="copyApprovalLinkDirektur()">
+                                        <i class="fa fa-copy"></i> Salin Link Approval Direktur
+                                    </button>
+                                    <input type="hidden" id="approval-link-direktur" value="{{ $approvalLink }}">
+                                    @push('js')
+                                        <script>
+                                            function copyApprovalLinkDirektur() {
+                                                var linkInput = document.getElementById('approval-link-direktur');
+                                                var tempInput = document.createElement('input');
+                                                tempInput.value = linkInput.value;
+                                                document.body.appendChild(tempInput);
+                                                tempInput.select();
+                                                tempInput.setSelectionRange(0, 99999);
+                                                document.execCommand('copy');
+                                                document.body.removeChild(tempInput);
+
+                                                // SweetAlert success
+                                                Swal.fire({
+                                                    icon: 'success',
+                                                    title: 'Berhasil!',
+                                                    text: 'Link berhasil disalin.',
+                                                    showConfirmButton: false,
+                                                    timer: 1500
+                                                });
+                                            }
+                                        </script>
+                                    @endpush
+                                @endif
+
+                            </div>
                         </div>
+
                         <div class="card-body">
                             @php
                                 $vendorCount = isset($data->getVendor) ? count($data->getVendor) : 0;
@@ -113,15 +154,12 @@
                                                 })
                                                 ->values()
                                             : collect();
-                                        // dd($vendorList);
                                         $vendorData = $vendorList[$vnIdx] ?? null;
                                         $selectedVendor = null;
                                         if ($vendorData && isset($vendorData->NamaVendor)) {
-                                            // Cari nama vendor dengan membandingkan id
                                             $selectedVendor = $vendor->firstWhere('id', $vendorData->NamaVendor);
                                         }
 
-                                        // Hitung total berdasarkan detail barang vendor (urutan tidak diubah)
                                         $totalHargaSebelumDiskonAll = 0;
                                         $totalDiskonAll = 0;
                                         $totalHargaSetelahDiskonAll = 0;
@@ -136,7 +174,7 @@
                                                 $jumlah = $barang->Jumlah ?? 0;
                                                 $hargaSatuan = $barang->HargaSatuan ?? 0;
                                                 $diskon = $barang->Diskon ?? 0;
-                                                $jenisDiskon = $barang->JenisDiskon ?? null; // "persen" atau "nominal"
+                                                $jenisDiskon = $barang->JenisDiskon ?? null;
 
                                                 $totalBarangHarga = $jumlah * $hargaSatuan;
                                                 $nominalDiskon = 0;
@@ -152,13 +190,28 @@
                                                 $totalHargaSetelahDiskonAll += $totalBarangHarga - $nominalDiskon;
                                             }
                                         }
-                                        // PPN
                                         $ppn = isset($vendorData->Ppn) ? floatval($vendorData->Ppn) : 0;
                                         $totalPpn = $ppn ? ($totalHargaSetelahDiskonAll * $ppn) / 100 : 0;
                                         $grandTotal = $totalHargaSetelahDiskonAll + $totalPpn;
                                     @endphp
                                     <div class="tab-pane{{ $vnIdx == 0 ? ' active' : '' }}"
                                         id="vendor_tab_{{ $vnIdx }}" role="tabpanel">
+
+                                        {{-- TOMBOL HAPUS VENDOR (Hanya muncul jika status Draft / Ditolak / Kosong) --}}
+                                        @if(
+                                            (empty($data->Status) || $data->Status === 'Draft' || $data->Status === 'Ditolak')
+                                            && isset($vendorList) && count($vendorList) > 1
+                                        )
+                                            <div class="d-flex justify-content-end mb-3">
+                                                <button type="button" class="btn btn-danger btn-sm btn-hapus-vendor" data-vnidx="{{ $vnIdx }}">
+                                                    <i class="fa fa-trash-alt"></i> Hapus Vendor {{ $vnIdx + 1 }}
+                                                </button>
+                                                <form id="form-hapus-vendor-{{ $vnIdx }}" action="{{ route('ajukan.vendor.destroy', [$data->id, $vendorData->id ?? 0]) }}" method="POST" style="display: none;">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                </form>
+                                            </div>
+                                        @endif
                                         <div class="row mb-3">
                                             <div class="col-xl-6">
                                                 <div class="card">
@@ -336,7 +389,6 @@
                                                                 }
                                                                 $totalSetelahDiskon =
                                                                     $totalBarangHarga - $nominalDiskon;
-                                                                // dd($barang->id);
                                                             @endphp
                                                             <tr>
                                                                 <td width="5">{{ $key + 1 }}</td>
@@ -437,12 +489,6 @@
                                                             {{ $grandTotal > 0 ? number_format($grandTotal, 0, ',', '.') : '-' }}
                                                         </td>
                                                     </tr>
-                                                    {{-- <tr>
-                                                        <th class="text-end"></th>
-                                                        <td>
-                                                            {{ terbilang($grandTotal) }}
-                                                        </td>
-                                                    </tr> --}}
                                                 </tbody>
                                             </table>
 
@@ -453,64 +499,7 @@
                         </div>
                     </div>
                     {{-- END PERBANDINGAN VENDOR --}}
-                    {{-- DAFTAR ITEM YANG DIAJUKAN --}}
-                    {{-- <div class="card mb-4">
-                        <div class="card-header">
-                            <h4 class="card-title mb-0">Daftar Item yang Diajukan</h4>
-                        </div>
-                        <div class="card-body">
-                            <div class="table-responsive">
-                                <table class="table align-middle">
-                                    <thead class="table-light">
-                                        <tr>
-                                            <th class="text-center" style="width:40px;">No</th>
-                                            <th>Nama Barang</th>
-                                            <th class="text-center">HTA / GPA</th>
-                                            <th class="text-center">FUI</th>
-                                            <th class="text-center">Rekomendasi</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        @if ($data->getPengajuanItem && count($data->getPengajuanItem))
-                                            @foreach ($data->getPengajuanItem as $i => $item)
-                                                <tr>
-                                                    <td class="text-center">{{ $i + 1 }}</td>
-                                                    <td>
-                                                        {{ $item->getBarang->Nama ?? '-' }}
-                                                    </td>
-                                                    <td class="text-center">
-                                                        @php
-                                                            $hasHta = $item->getHtaGpa ? true : false;
-                                                        @endphp
-                                                        @if (!$hasHta)
-                                                            <a href="{{ route('htagpa.form-hta', [$data->id, $item->id]) }}"
-                                                                class="btn btn-warning">
-                                                                <i class="fa fa-exclamation-circle"></i>
-                                                                Lengkapi HTA
-                                                            </a>
-                                                        @else
-                                                            <a href="{{ route('htagpa.show', [$data->id, $item->id]) }}"
-                                                                class="btn btn-success">
-                                                                <i class="fa fa-check-circle"></i>
-                                                                Lihat HTA
-                                                            </a>
-                                                        @endif
-                                                    </td>
-                                                    <td class="text-center">{{ $item->Satuan ?? '-' }}</td>
-                                                    <td class="text-center">{{ $item->Satuan ?? '-' }}</td>
 
-                                                </tr>
-                                            @endforeach
-                                        @else
-                                            <tr>
-                                                <td colspan="6" class="text-center">Tidak ada data item.</td>
-                                            </tr>
-                                        @endif
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div> --}}
                     @php
                         $today = \Carbon\Carbon::now();
                         $disableAjukan = false;
@@ -542,10 +531,8 @@
                         ];
                         $namaHariIni = $daftarHari[$today->format('l')] ?? $today->format('l');
 
-                        // --- Cek hari & jam operasional pengajuan ---
                         if (!$disableAjukan && isset($hariBuka) && count($hariBuka) > 0) {
                             $aturanHariIni = null;
-                            // Cari aturan hari yang sesuai
                             foreach ($hariBuka as $aturan) {
                                 if (
                                     (isset($aturan->Hari) && $aturan->Hari == $namaHariIni) ||
@@ -555,7 +542,6 @@
                                     break;
                                 }
                             }
-                            // Cek izin atau tutup berdasarkan isAktif
                             if ($aturanHariIni) {
                                 if (isset($aturanHariIni->isAktif) && $aturanHariIni->isAktif == 'Y') {
                                     $jamMulai = !empty($aturanHariIni->JamMulai) ? $aturanHariIni->JamMulai : '00:00';
@@ -577,14 +563,12 @@
                                     $alasanTidakBisaAjukan = 'Pengajuan hari ini ditutup.';
                                 }
                             } else {
-                                // Tidak ada aturan hari ini
                                 $disableAjukan = true;
                                 $alasanTidakBisaAjukan =
                                     'Pengajuan tidak dapat dilakukan karena hari ini tidak termasuk hari operasional pengajuan.';
                             }
                         }
 
-                        // --- Cek hari & jam operasional AJUKAN PRESENTASI ---
                         if (isset($hariBukaPresentasi) && count($hariBukaPresentasi) > 0) {
                             $aturanHariPresentasiIni = null;
                             foreach ($hariBukaPresentasi as $aturan) {
@@ -835,368 +819,6 @@
                             </div>
                         </div>
                     </div>
-                    {{-- <div class="card">
-                        <div class="card-header">
-                            <div class="card-title">
-                                Detail Pengajuan
-                            </div>
-                        </div>
-                        <div class="card-body">
-                            <ul class="nav nav-tabs tab-style-2 nav-justified mb-3 d-sm-flex d-block" id="myTab1"
-                                role="tablist">
-                                <li class="nav-item" role="presentation">
-                                    <button class="nav-link active" id="rekomendasi-tab" data-bs-toggle="tab"
-                                        data-bs-target="#rekomendasi-tab-pane" type="button" role="tab"
-                                        aria-controls="rekomendasi-tab-pane" aria-selected="true">
-                                        <i class="fa fa-thumbs-up me-1 align-middle"></i>Rekomendasi
-                                    </button>
-                                </li>
-                                <li class="nav-item" role="presentation">
-                                    <button class="nav-link" id="hta-gpa-tab" data-bs-toggle="tab"
-                                        data-bs-target="#hta-gpa-tab-pane" type="button" role="tab"
-                                        aria-controls="hta-gpa-tab-pane" aria-selected="false">
-                                        <i class="fa fa-clipboard-list me-1 align-middle"></i>HTA / GPA
-                                    </button>
-                                </li>
-                                <li class="nav-item" role="presentation">
-                                    <button class="nav-link" id="usulan-investasi-tab" data-bs-toggle="tab"
-                                        data-bs-target="#usulan-investasi-tab-pane" type="button" role="tab"
-                                        aria-controls="usulan-investasi-tab-pane" aria-selected="false" tabindex="-1"
-                                        aria-disabled="true">
-                                        <i class="fa fa-file-alt me-1 align-middle"></i>Form Usulan Investasi
-                                    </button>
-                                </li>
-                                <li class="nav-item" role="presentation">
-                                    <button class="nav-link" id="lembar-disposisi-tab" data-bs-toggle="tab"
-                                        data-bs-target="#lembar-disposisi-tab-pane" type="button" role="tab"
-                                        aria-controls="lembar-disposisi-tab-pane" aria-selected="false">
-                                        <i class="fa fa-layer-group me-1 align-middle"></i>Lembar Disposisi
-                                    </button>
-                                </li>
-                                <li class="nav-item" role="presentation">
-                                    <button class="nav-link" id="feasibility-study-tab" data-bs-toggle="tab"
-                                        data-bs-target="#feasibility-study-tab-pane" type="button" role="tab"
-                                        aria-controls="feasibility-study-tab-pane" aria-selected="false">
-                                        <i class="fa fa-search-dollar me-1 align-middle"></i>Feasibility Study
-                                    </button>
-                                </li>
-                            </ul>
-                            <div class="tab-content" id="myTabContent">
-                                <!-- Tab Rekomendasi -->
-                                <div class="tab-pane fade show active text-muted" id="rekomendasi-tab-pane"
-                                    role="tabpanel" aria-labelledby="rekomendasi-tab" tabindex="0">
-                                    @if ($data->getPengajuanItem && count($data->getPengajuanItem))
-                                        <div class="row g-3">
-                                            @foreach ($data->getPengajuanItem as $i => $item)
-                                                <div class="col-md-4">
-                                                    <div class="card mb-3">
-                                                        <div class="card-body d-flex align-items-center">
-                                                            <div class="w-100 d-flex justify-content-center align-items-center"
-                                                                style="">
-
-                                                                @php
-                                                                    $adaRekomendasi = $item->getRekomendasi
-                                                                        ? true
-                                                                        : false;
-                                                                @endphp
-                                                                @if ($adaRekomendasi)
-                                                                    <a href="{{ route('rekomendasi.detail-print', [encrypt($data->id), encrypt($item->id)]) }}"
-                                                                        class="btn btn-info me-2 mb-2" target="_blank">
-                                                                        <i class="fa fa-print"></i> Cetak
-                                                                    </a>
-                                                                    <a href="{{ route('rekomendasi.rekap', [encrypt($data->id), encrypt($item->id)]) }}"
-                                                                        class="btn btn-warning me-2 mb-2" target="_blank">
-                                                                        <i class="fa fa-file-alt"></i> Rekap
-                                                                    </a>
-                                                                    @can('rekomendasi-show')
-                                                                        <a href="{{ route('rekomendasi.detail-view', [encrypt($data->id), encrypt($item->id)]) }}"
-                                                                            class="btn btn-secondary me-2 mb-2"
-                                                                            target="_blank">
-                                                                            <i class="fa fa-eye"></i> Lihat
-                                                                        </a>
-                                                                    @endcan
-                                                                @else
-                                                                    @if ($data->Status == 'Draft')
-                                                                        <span
-                                                                            style="color: #721c24; background: #f8d7da; padding: 6px 12px; border-radius: 5px; display: inline-block; font-weight: bold;">
-                                                                            Rekomendasi belum dapat dilihat sebelum
-                                                                            pengajuan diajukan ke CCP.
-                                                                        </span>
-                                                                    @else
-                                                                        <span
-                                                                            style="color: #856404; background: #fff3cd; padding: 6px 12px; border-radius: 5px; display: inline-block;">
-                                                                            Rekomendasi sedang diproses oleh CCP.
-                                                                        </span>
-                                                                    @endif
-                                                                @endif
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                <div class="col-md-8">
-                                                    <div class="card mb-3">
-                                                        <div class="card-body">
-                                                            <!-- Kolom kanan dikosongkan sesuai instruksi -->
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            @endforeach
-                                        </div>
-                                    @endif
-                                </div>
-                                <!-- Tab HTA/GPA -->
-                                <div class="tab-pane fade text-muted" id="hta-gpa-tab-pane" role="tabpanel"
-                                    aria-labelledby="hta-gpa-tab" tabindex="0">
-                                    @if ($data->getPengajuanItem && count($data->getPengajuanItem))
-                                        <div class="row g-3">
-                                            @foreach ($data->getPengajuanItem as $i => $item)
-                                                <div class="col-md-6">
-                                                    <div class="card mb-3">
-                                                        <div class="card-body">
-                                                            @php
-                                                                $hasHta = $item->getHtaGpa ? true : false;
-                                                            @endphp
-                                                            @if (!$hasHta)
-                                                                <a href="{{ route('htagpa.form-hta', [$data->id, $item->id]) }}"
-                                                                    class="btn btn-warning mb-2">
-                                                                    <i class="fa fa-exclamation-circle"></i>
-                                                                    Lengkapi HTA
-                                                                </a>
-                                                            @else
-                                                                @if ($data->Status == 'Draft' || $data->Status == 'Selesai Review' || $data->Status == 'Ditolak')
-                                                                    <a href="{{ route('htagpa.form-hta', [$data->id, $item->id]) }}"
-                                                                        class="btn btn-warning mb-2">
-                                                                        <i class="fa fa-exclamation-circle"></i>
-                                                                        Ubah HTA
-                                                                    </a>
-                                                                @endif
-                                                                <a href="{{ route('htagpa.show', [$data->id, $item->id]) }}"
-                                                                    class="btn btn-success mb-2">
-                                                                    <i class="fa fa-check-circle"></i>
-                                                                    Lihat
-                                                                </a>
-                                                                <a href="{{ route('htagpa.print', [$data->id, $item->id]) }}"
-                                                                    class="btn btn-info mb-2" target="_blank">
-                                                                    <i class="fa fa-print"></i>
-                                                                    Cetak
-                                                                </a>
-                                                            @endif
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                <div class="col-md-6">
-                                                    <div class="card mb-3">
-                                                        <div class="card-body">
-                                                            <!-- Kolom kanan dikosongkan sesuai instruksi -->
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            @endforeach
-                                        </div>
-                                    @else
-                                        <ul class="ps-3 mb-0">
-                                            <li>Data item belum tersedia.</li>
-                                        </ul>
-                                    @endif
-                                </div>
-                                <!-- Tab Usulan Investasi -->
-                                <div class="tab-pane fade text-muted" id="usulan-investasi-tab-pane" role="tabpanel"
-                                    aria-labelledby="usulan-investasi-tab" tabindex="0">
-
-                                    @if ($data->getPengajuanItem && count($data->getPengajuanItem))
-                                        <div class="row g-3">
-                                            @foreach ($data->getPengajuanItem as $i => $item)
-                                                <div class="col-md-6">
-                                                    <div class="card mb-3">
-                                                        <div class="card-body">
-                                                            @php
-                                                                $adaFui = $item->getFui ? true : false;
-                                                                $adaRekomendasi = $item->getRekomendasi ? true : false;
-                                                            @endphp
-                                                            @if ($adaRekomendasi)
-                                                                @if (!$adaFui)
-                                                                    <a href="{{ route('usulan-investasi.create', [encrypt($data->id), encrypt($item->id)]) }}"
-                                                                        class="btn btn-warning mb-2">
-                                                                        <i class="fa fa-lightbulb"></i> Lengkapi
-                                                                    </a>
-                                                                @else
-                                                                    @if (optional($item->getFui)->SudahRkap2 === null)
-                                                                        <a href="{{ route('usulan-investasi.create', [encrypt($data->id), encrypt($item->id)]) }}"
-                                                                            class="btn btn-warning mb-2">
-                                                                            <i class="fa fa-edit"></i> Lengkapi
-                                                                        </a>
-                                                                    @endif
-                                                                    <a href="{{ route('usulan-investasi.show', [$data->id, $item->id]) }}"
-                                                                        class="btn btn-success mb-2">
-                                                                        <i class="fa fa-eye"></i>
-                                                                        Lihat
-                                                                    </a>
-                                                                    <a href="{{ route('usulan-investasi.print', [$data->id, $item->id]) }}"
-                                                                        class="btn btn-info mb-2" target="_blank">
-                                                                        <i class="fa fa-print"></i>
-                                                                        Cetak
-                                                                    </a>
-                                                                @endif
-                                                            @else
-                                                                <div class="alert alert-danger mt-1 mb-0" role="alert">
-                                                                    Mohon maaf, Formulir Usulan Investasi dapat diisi<br>
-                                                                    setelah rekomendasi dikeluarkan oleh CCP.
-                                                                </div>
-                                                            @endif
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                <div class="col-md-6">
-                                                    <div class="card mb-3">
-                                                        <div class="card-body">
-                                                            <!-- Kolom kanan dikosongkan sesuai instruksi -->
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            @endforeach
-                                        </div>
-                                    @else
-                                        <ul class="ps-3 mb-0">
-                                            <li>Data item belum tersedia.</li>
-                                        </ul>
-                                    @endif
-                                </div>
-                                <!-- Tab Lembar Disposisi -->
-                                <div class="tab-pane fade text-muted" id="lembar-disposisi-tab-pane" role="tabpanel"
-                                    aria-labelledby="lembar-disposisi-tab" tabindex="0">
-                                    @if ($data->getPengajuanItem && count($data->getPengajuanItem))
-                                        <div class="row g-3">
-                                            @foreach ($data->getPengajuanItem as $i => $item)
-                                                <div class="col-md-6">
-                                                    <div class="card mb-3">
-                                                        <div class="card-body">
-                                                            @php
-                                                                $adaRekomendasi = $item->getRekomendasi ? true : false;
-                                                                $adaLembarDisposisi = $item->getDisposisi
-                                                                    ? true
-                                                                    : false;
-                                                            @endphp
-                                                            @if (!$adaRekomendasi)
-                                                                <div class="alert alert-danger p-2 m-0"
-                                                                    style="font-size: 90%;">
-                                                                    Lembar Disposisi dapat dibuat setelah rekomendasi
-                                                                    dikeluarkan oleh CCP.
-                                                                </div>
-                                                            @else
-                                                                @if ($adaLembarDisposisi)
-                                                                    <a href="{{ route('lembar-disposisi.edit', [encrypt($data->id), encrypt($item->id)]) }}"
-                                                                        class="btn btn-primary mb-2">
-                                                                        <i class="fa fa-edit"></i>
-                                                                        Ubah
-                                                                    </a>
-                                                                    <a href="{{ route('lembar-disposisi.print', [$data->id, $item->id]) }}"
-                                                                        class="btn btn-info mb-2" target="_blank">
-                                                                        <i class="fa fa-print"></i> Cetak
-                                                                    </a>
-                                                                    <a href="{{ route('lembar-disposisi.show', [$data->id, $item->id]) }}"
-                                                                        class="btn btn-success mb-2">
-                                                                        <i class="fa fa-eye"></i>
-                                                                        Lihat
-                                                                    </a>
-                                                                @else
-                                                                    <a href="{{ route('lembar-disposisi.create', [encrypt($data->id), encrypt($item->id)]) }}"
-                                                                        class="btn btn-primary mb-2">
-                                                                        <i class="fa fa-edit"></i>
-                                                                        Isi Lembar Disposisi
-                                                                    </a>
-                                                                @endif
-                                                            @endif
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                <div class="col-md-6">
-                                                    <div class="card mb-3">
-                                                        <div class="card-body">
-                                                            <!-- Kolom kanan dikosongkan sesuai instruksi -->
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            @endforeach
-                                        </div>
-                                    @else
-                                        <ul class="ps-3 mb-0">
-                                            <li>Data item belum tersedia.</li>
-                                        </ul>
-                                    @endif
-                                </div>
-                                <!-- Tab Feasibility Study -->
-                                <div class="tab-pane fade text-muted" id="feasibility-study-tab-pane" role="tabpanel"
-                                    aria-labelledby="feasibility-study-tab" tabindex="0">
-                                    @if ($data->getPengajuanItem && count($data->getPengajuanItem))
-                                        <div class="row g-3">
-                                            @foreach ($data->getPengajuanItem as $i => $item)
-                                                <div class="col-md-6">
-                                                    <div class="card mb-3">
-                                                        <div class="card-body">
-                                                            @php
-                                                                $adaRekomendasi = $item->getRekomendasi ? true : false;
-                                                                $adaFs = $item->getFs ? true : false;
-                                                            @endphp
-                                                            @if (!$adaRekomendasi)
-                                                                <div class="alert alert-danger p-2 m-0"
-                                                                    style="font-size: 90%;">
-                                                                    Form Fisibility Study Akan Dibuat Oleh SMI setelah
-                                                                    Rekomendasi Dikeluarkan
-                                                                </div>
-                                                            @else
-                                                                @if ($adaFs)
-                                                                    <a href="{{ route('fs.edit', [$data->id, $item->id]) }}"
-                                                                        class="btn btn-primary mb-2">
-                                                                        <i class="fa fa-edit"></i>
-                                                                        Ubah
-                                                                    </a>
-                                                                    <a href="{{ route('fs.show', [$data->id, $item->id]) }}"
-                                                                        class="btn btn-success mb-2">
-                                                                        <i class="fa fa-eye"></i>
-                                                                        Lihat
-                                                                    </a>
-                                                                    <a href="{{ route('fs.cetak', [$data->id, $item->id]) }}"
-                                                                        class="btn btn-info mb-2" target="_blank">
-                                                                        <i class="fa fa-print"></i>
-                                                                        Cetak
-                                                                    </a>
-                                                                @else
-                                                                    @role('Keuangan')
-                                                                        <a href="{{ route('fs.create', [encrypt($data->id), encrypt($item->id)]) }}"
-                                                                            class="btn btn-primary mb-2">
-                                                                            <i class="fa fa-edit"></i>
-                                                                            Lengkapi
-                                                                        </a>
-                                                                    @else
-                                                                        <div class="alert alert-danger mt-1 mb-0"
-                                                                            role="alert">
-                                                                            FS, Di buat oleh Keuangan
-                                                                        </div>
-                                                                    @endrole
-                                                                @endif
-                                                            @endif
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                <div class="col-md-6">
-                                                    <div class="card mb-3">
-                                                        <div class="card-body">
-                                                            <!-- Kolom kanan dikosongkan sesuai instruksi -->
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            @endforeach
-                                        </div>
-                                    @else
-                                        <ul class="ps-3 mb-0">
-                                            <li>Data item belum tersedia.</li>
-                                        </ul>
-                                    @endif
-                                </div>
-                            </div>
-                        </div>
-
-                    </div> --}}
 
                     <div class="co2 text-end mt-3">
                         <a href="{{ route('ajukan.index') }}" class="btn btn-secondary me-2">
@@ -1264,11 +886,6 @@
                         @endif
 
                         @if ($data->Status == 'Selesai Review' && !auth()->user()->hasRole('Group Head'))
-                            {{-- <a href="{{ route('ajukan.minta-ttd-dir-group', encrypt($data->id)) }}"
-                                class="btn btn-primary">
-                                <span class="me-1"><i class="fa fa-user-secret"></i></span>
-                                Ajukan Permintaan Persetujuan Direktur Group
-                            </a> --}}
                             <button type="button" class="btn btn-success" id="btn-selesaikan"
                                 {{ $disableAjukanPresentasi ? 'disabled' : '' }}>
                                 <i class="fa fa-check"></i> Selesaikan Pengajuan
@@ -1306,10 +923,6 @@
 
                             @endif
 
-
-                            {{-- <button type="button" class="btn btn-success" id="btn-selesaikan">
-                                <i class="fa fa-check"></i> Selesaikan Pengajuan
-                            </button> --}}
                             <form id="form-selesaikan" action="{{ route('ajukan.update-status', $data->id) }}"
                                 method="POST" style="display: none;">
                                 @csrf
@@ -1368,26 +981,6 @@
         });
     </script>
     <script>
-        document.getElementById('btn-ajukan').addEventListener('click', function(e) {
-            e.preventDefault();
-            Swal.fire({
-                title: 'Konfirmasi Pengajuan',
-                text: 'Apakah Anda yakin ingin mengajukan permohonan ini? Pastikan semua dokumen tambahan telah lengkap.',
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#28a745',
-                cancelButtonColor: '#d33',
-                confirmButtonText: 'Ya, ajukan!',
-                cancelButtonText: 'Batal'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    document.getElementById('form-ajukan').submit();
-                }
-            });
-        });
-    </script>
-
-    <script>
         document.getElementById('btn-batalkan').addEventListener('click', function(e) {
             e.preventDefault();
             Swal.fire({
@@ -1406,6 +999,31 @@
             });
         });
     </script>
+
+    {{-- Script Tambahan: Konfirmasi Hapus Vendor --}}
+    <script>
+        document.querySelectorAll('.btn-hapus-vendor').forEach(button => {
+            button.addEventListener('click', function(e) {
+                e.preventDefault();
+                const vnIdx = this.getAttribute('data-vnidx');
+                Swal.fire({
+                    title: 'Konfirmasi Hapus Vendor',
+                    text: 'Apakah Anda yakin ingin menghapus vendor ini beserta seluruh detail barangnya?',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#6c757d',
+                    confirmButtonText: 'Ya, hapus!',
+                    cancelButtonText: 'Batal'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        document.getElementById(`form-hapus-vendor-${vnIdx}`).submit();
+                    }
+                });
+            });
+        });
+    </script>
+
     @if (Session::get('success'))
         <script>
             setTimeout(function() {

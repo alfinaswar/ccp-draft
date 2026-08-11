@@ -108,15 +108,14 @@
                         </td>
                     </tr>
                     <tr>
-                        <td align="center" style="padding:16px 32px;">
-                            <div style="display: flex; justify-content: center; gap: 18px;">
-                                <a href="{{ route('usulan-investasi.approve', $Approval->ApprovalToken) }}"
-                                    style="display:inline-block;background:#198754;color:#fff;padding:16px 36px;border-radius:7px;font-size:17px;font-weight:bold;text-decoration:none;letter-spacing:1px;box-shadow:0 4px 16px rgba(25,135,84,0.14);">
-                                    ✓ Setujui
-                                </a>
-                            </div>
+                        <td style="padding:16px 32px; text-align:center;">
+                            <a href="{{ route('usulan-investasi.approve', $Approval->ApprovalToken) }}"
+                                style="display:inline-block;background:#198754;color:#fff;padding:16px 36px;border-radius:7px;font-size:17px;font-weight:bold;text-decoration:none;letter-spacing:1px;box-shadow:0 4px 16px rgba(25,135,84,0.14);">
+                                ✓ Setujui
+                            </a>
                         </td>
                     </tr>
+
 
 
                     <tr>

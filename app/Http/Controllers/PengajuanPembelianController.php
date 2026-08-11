@@ -1201,6 +1201,7 @@ class PengajuanPembelianController extends Controller
                         $existing->JabatanId = $approvalBenar->JabatanId;
                         $existing->DepartemenId = $approvalBenar->DepartemenId ?? null;
                         $existing->Nama = $namaUser;
+                        $existing->NamaJabatan = $approvalBenar->NamaJabatan ?? null;
                         $existing->Email = $emailUser;
                         $existing->ApprovalToken = $oldToken;
                         $existing->save();
@@ -1307,8 +1308,6 @@ class PengajuanPembelianController extends Controller
             } elseif ($data->Jenis != 1) {
                 // dd('aasdsad');
                 $errors = [];
-                $cekFui = $data->getPengajuanItem[0]->getFui;
-                $cek = $data->getPengajuanItem[0]->getFs;
 
                 // 1. Cek HTA/GPA (wajib ada dan approved)
                 if (empty($data->getHtaGpa)) {
@@ -1325,23 +1324,10 @@ class PengajuanPembelianController extends Controller
                     return $item->Status === 'Approved';
                 });
 
-                // 2. Cek FUI (Usulan Investasi) - Minimal harus diapprove oleh urutan 1
-                if (empty($cekFui)) {
-                    return back()->with('error', 'FUI belum diisi. Proses tidak dapat diteruskan.');
-                }
-
-                $approvalFUI = DokumenApproval::with('getUser', 'getJabatan', 'getDepartemen')
-                    ->where('JenisFormId', $cekFui->JenisForm)
-                    ->where('DokumenId', $cekFui->id)
-                    ->orderBy('Urutan', 'asc')
-                    ->get();
-
-                $approverUrutan1 = $approvalFUI->firstWhere('Urutan', 1);
-
-                // Hanya cek urutan 1 saja
-                if (!$approverUrutan1 || $approverUrutan1->Status !== 'Approved') {
-                    $name = $approverUrutan1 && $approverUrutan1->getUser ? $approverUrutan1->getUser->name : 'Pengguna terkait';
-                    $errors[] = "Persetujuan Usulan Investasi (FUI) urutan 1 atas nama <b>{$name}</b> belum approve.";
+                // 2. Cek AccDirektur di PengajuanPembelian
+                if ($data->AccDirektur !== 'Y') {
+                    $pesan = 'Persetujuan dari Direktur diperlukan untuk pembelian ini. Silakan lakukan approval terlebih dahulu sebelum melanjutkan proses.';
+                    return back()->with('error', $pesan);
                 }
 
 
@@ -2006,5 +1992,20 @@ class PengajuanPembelianController extends Controller
             \Log::warning('QR Code generation failed: ' . $e->getMessage());
             return null;
         }
+    }
+    public function destroyVendor($pengajuan_id, $vendor_id)
+    {
+        $pengajuan = PengajuanPembelian::findOrFail($pengajuan_id);
+
+        if (!in_array($pengajuan->Status, ['Draft', 'Ditolak', null, ''])) {
+            return redirect()->back()->with('error', 'Vendor tidak dapat dihapus karena status pengajuan sudah bukan Draft/Ditolak.');
+        }
+        $vendor = $pengajuan->getVendor()->where('id', $vendor_id)->first();
+        if ($vendor) {
+            $vendor->getVendorDetail()->delete();
+            $vendor->delete();
+        }
+
+        return redirect()->back()->with('success', 'Vendor berhasil dihapus.');
     }
 }

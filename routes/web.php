@@ -72,7 +72,8 @@ Route::get('/approval/hta-gpa/{token}/reject', [HtaDanGpaController::class, 'rej
 // End HTA dan GPA
 Route::get('/preview-approval/{id}', [UsulanInvestasiController::class, 'SebelumApprove'])->name('usulan-investasi.SebelumApprove');
 Route::get('/approval/usulan-investasi/{token}/approve', [UsulanInvestasiController::class, 'approve'])->name('usulan-investasi.approve');
-Route::get('/approval/usulan-investasi/{token}/approve-direktur', [UsulanInvestasiController::class, 'approveDirektur'])->name('usulan-investasi.approve-direktur');
+Route::get('/approval/usulan-investasi/{kodePengajuan}/{direkturId}/approve-direktur', [UsulanInvestasiController::class, 'approveDirektur'])
+    ->name('usulan-investasi.approve-direktur');
 Route::get('/approval/usulan-investasi/{token}/reject', [UsulanInvestasiController::class, 'reject'])->name('usulan-investasi.reject');
 // Route::get('/approval/fisibility-studi/{token}/approve', [FeasibilityStudyController::class, 'approve'])->name('fs.approve');
 
@@ -173,7 +174,8 @@ Route::group(['middleware' => ['auth']], function () {
         Route::post('/update-status-pengajuan/{id}', [PengajuanPembelianController::class, 'UpdatePengajuan'])->name('ajukan.update-status');
         Route::get('/show/{id}', [PengajuanPembelianController::class, 'show'])->name('ajukan.show');
         Route::get('/notifikasi-ttd-dir-group/{id}', [PengajuanPembelianController::class, 'mintaTtdDirGroup'])->name('ajukan.minta-ttd-dir-group');
-
+        // Contoh Route (Sesuaikan dengan struktur web.php Anda)
+        Route::delete('/ajukan/{pengajuan_id}/vendor/{vendor_id}', [PengajuanPembelianController::class, 'destroyVendor'])->name('ajukan.vendor.destroy');
         Route::post('/kirim-approval-direktur-group/{id}', [PengajuanPembelianController::class, 'KirimApprovalDirekturGroup'])->name('ajukan.kirim-approval-direktur-group');
         Route::delete('/delete/{id}', [PengajuanPembelianController::class, 'destroy'])->name('ajukan.destroy');
         Route::post('/cek-history', [PengajuanPembelianController::class, 'cekHistory'])->name('ajukan.cek-history');

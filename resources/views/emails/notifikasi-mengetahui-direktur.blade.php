@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>Notifikasi Pengajuan Form Usulan Investasi</title>
+    <title>Pemberitahuan Pengajuan Pembelian untuk Dipresentasikan</title>
 </head>
 
 <body style="margin:0;padding:0;background:#f4f6fa;font-family:Arial,sans-serif;">
@@ -15,22 +15,21 @@
                     <tr>
                         <td style="background:#198754;text-align:center;padding:32px 32px 16px 32px;">
                             <h2 style="color:#fff;margin:0;font-weight:bold;font-size:2rem;letter-spacing:1px;">
-                                Notifikasi Pengajuan Form Usulan Investasi
+                                Pemberitahuan Pengajuan Pembelian
                             </h2>
                         </td>
                     </tr>
                     <tr>
                         <td style="padding:32px 32px 0 32px;color:#222;">
                             <p style="font-size:17px;margin:0 0 10px 0;">
-                                <b>Yth. Bapak/Ibu {{ $penilai->Nama ?? 'Penerima Approval' }},</b>
+                                <b>Yth. Bapak/Ibu {{ $direkturUser->name ?? 'Penerima Informasi' }},</b>
                             </p>
                             <p style="font-size:15px;line-height:1.7;margin:0 0 18px 0;">
                                 Dengan hormat,<br>
-                                Bersama email ini, kami informasikan bahwa terdapat <b>Pengajuan Form Usulan
-                                    Investasi</b> yang memerlukan persetujuan Anda pada sistem ABPROC.
+                                Melalui email ini, kami informasikan bahwa terdapat <b>Pengajuan Pembelian</b> yang perlu diketahui oleh Bapak/Ibu dan akan dipresentasikan pada kesempatan yang akan datang.
                             </p>
                             <p style="font-size:15px;line-height:1.6;margin:0 0 18px 0;">
-                                Silakan klik tombol berikut untuk melihat detail pengajuan dan memberikan persetujuan:
+                                Silakan klik tombol berikut untuk melihat detail pengajuan yang akan dipresentasikan:
                             </p>
                         </td>
                     </tr>
@@ -62,18 +61,13 @@
                                     <td style="padding:4px 0 4px 16px;vertical-align:top;">:
                                         {{ $data2->getPermintaan->getDetail[0]->RencanaPenempatan ?? '-' }}</td>
                                 </tr>
-
-
                             </table>
-
-
-
 
                         </td>
                     </tr>
                     <tr>
                         <td align="center" style="padding:16px 32px;">
-                            <a href="{{ route('usulan-investasi.approve-direktur', $penilai->ApprovalToken) }}"
+                            <a href="{{ route('usulan-investasi.approve-direktur', [$data2->KodePengajuan, $direkturUser->id]) }}"
                                 style="
                                     display:inline-block;
                                     background:#198754;
@@ -87,8 +81,9 @@
                                     letter-spacing:1px;
                                     transition:background 0.3s;
                                 ">
-                                SETUJUI USULAN INVESTASI
+                                LIHAT DETAIL PENGAJUAN
                             </a>
+
                         </td>
                     </tr>
                     <tr>
@@ -97,9 +92,10 @@
                                 Apabila tombol di atas tidak dapat diakses, silakan salin dan buka tautan berikut pada
                                 browser Anda:<br>
                                 <a style="color:#198754;word-break:break-all;"
-                                    href="{{ route('usulan-investasi.approve-direktur', $penilai->ApprovalToken) }}">
-                                    {{ route('usulan-investasi.approve-direktur', $penilai->ApprovalToken) }}
+                                    href="{{ route('usulan-investasi.approve-direktur', [$data2->KodePengajuan, $direkturUser->id]) }}">
+                                    {{ route('usulan-investasi.approve-direktur', [$data2->KodePengajuan, $direkturUser->id]) }}
                                 </a>
+
                             </p>
                         </td>
                     </tr>
