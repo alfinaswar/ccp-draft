@@ -189,11 +189,11 @@ class PengajuanPembelianController extends Controller
 
                 ->addColumn('CekStatus', function ($row) {
                     $html = '-';
-                    // if ($row->Jenis == 1) {
+
                     $hta = [1, 2, 16];
                     $fui = [7, 11, 12, 13, 14, 15];
-                    $dispo = [9, 10];
-                    // $cariHTa = HtaDanGpa::where('JenisForm', $hta)->where('IdPengajuan', $row->id)->first();
+
+                    // ─────────── CEK HTA ───────────
                     $cekHta = null;
                     foreach ($hta as $JenisHta) {
                         $cariHTaItem = HtaDanGpa::where('JenisForm', $JenisHta)->where('IdPengajuan', $row->id)->first();
@@ -210,45 +210,29 @@ class PengajuanPembelianController extends Controller
                         }
                     }
 
+                    // ─────────── CEK FUI (HANYA jika Status = 'Selesai') ───────────
                     $cekFui = null;
-                    foreach ($fui as $JenisFui) {
-
-                        $cariFUI = UsulanInvestasi::where('JenisForm', $JenisFui)->where('IdPengajuan', $row->id)->first();
-                        $cek = null;
-                        if ($cariFUI) {
-                            $cek = DokumenApproval::where('JenisFormId', $JenisFui)
-                                ->where('DokumenId', $cariFUI->id)
-                                ->where('UserId', auth()->user()->id)
-                                ->where('Status', 'Pending')
-                                ->first();
-                        }
-                        if ($cek) {
-                            $cekFui = $cek;
-                            break;
-                        }
-                    }
-                    // Cari dokumen Disposisi yang sesuai pengajuan
-                    $cekDispo = null;
-                    foreach ($dispo as $JenisDispo) {
-                        $cariDispoItem = LembarDisposisi::where('JenisForm', $JenisDispo)->where('IdPengajuan', $row->id)->first();
-                        if ($cariDispoItem) {
-                            $cek = DokumenApproval::where('JenisFormId', $JenisDispo)
-                                ->where('DokumenId', $cariDispoItem->id)
-                                ->where('UserId', auth()->user()->id)
-                                ->where('Status', 'Pending')
-                                ->first();
-                            if ($cek) {
-                                $cekDispo = $cek;
-                                break;
+                    if ($row->Status == 'Selesai') {
+                        foreach ($fui as $JenisFui) {
+                            $cariFUI = UsulanInvestasi::where('JenisForm', $JenisFui)->where('IdPengajuan', $row->id)->first();
+                            if ($cariFUI) {
+                                $cek = DokumenApproval::where('JenisFormId', $JenisFui)
+                                    ->where('DokumenId', $cariFUI->id)
+                                    ->where('UserId', auth()->user()->id)
+                                    ->where('Status', 'Pending')
+                                    ->first();
+                                if ($cek) {
+                                    $cekFui = $cek;
+                                    break;
+                                }
                             }
                         }
                     }
 
-
+                    // ─────────── BUILD PESAN ───────────
                     $pesan = [];
-                    if ($cekDispo) {
-                        $pesan[] = '<span style="color:#dc3545;"><b>Form: Disposisi</b> - <i>Perlu Disetujui</i></span>';
-                    }
+
+                    // FUI dulu (sesuai urutan asli setelah disposisi dihapus)
                     if ($cekFui) {
                         $pesan[] = '<span style="color:#dc3545;"><b>Form: FUI</b> - <i>Perlu Disetujui</i></span>';
                     }
@@ -259,7 +243,7 @@ class PengajuanPembelianController extends Controller
                     if (!empty($pesan)) {
                         $html = implode('<br>', $pesan);
                     }
-                    // }
+
                     return $html;
                 })
                 ->addColumn('Status', function ($row) {
