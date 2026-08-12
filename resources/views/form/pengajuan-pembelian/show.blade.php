@@ -486,7 +486,8 @@
                                                         <th class="text-end">Grand Total:</th>
                                                         <td>
                                                             Rp
-                                                            {{ $grandTotal > 0 ? number_format($grandTotal, 0, ',', '.') : '-' }}
+                                                            {{ $grandTotal > 0 ? number_format(ceil($grandTotal), 0, ',', '.') : '-' }}
+
                                                         </td>
                                                     </tr>
                                                 </tbody>
