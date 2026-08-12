@@ -813,7 +813,7 @@
                                                            class="btn btn-warning btn-sm mb-2 w-100">
                                                             <i class="fa fa-exclamation-circle"></i> Ubah HTA
                                                         </a>
-                                                    @elseif ($data->Status == 'Ditolak' && $htaFinal)
+                                                    @elseif ($data->Status == 'Ditolak')
                                                         {{-- Tetap tampilkan meski final dan ditolak --}}
                                                         <a href="{{ route('htagpa.form-hta', [$data->id, $item->id]) }}"
                                                            class="btn btn-warning btn-sm mb-2 w-100">
