@@ -411,7 +411,6 @@
                             <a href="javascript:history.back()" class="btn btn-secondary me-2">
                                 <i class="fa fa-arrow-left"></i> Kembali
                             </a>
-
                             @if (!empty($usulan) && ($usulan->getPengajuan->Status ?? null) == 'Selesai')
                                 @foreach ($approval as $item)
                                     @if (
