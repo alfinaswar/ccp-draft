@@ -163,6 +163,7 @@
             padding-right: 4px;
             display: inline-block;
         }
+
         .previous-justifikasi-box {
             background-color: #f4f7fb;
             border-left: 4px solid #989898;
@@ -170,6 +171,7 @@
             padding: 1rem 1.25rem;
             margin-bottom: 1.7rem;
         }
+
         .previous-justifikasi-title {
             font-weight: 600;
             font-size: 0.94rem;
@@ -180,9 +182,76 @@
             align-items: center;
             gap: 7px;
         }
+
         .previous-justifikasi-content {
             font-size: 0.99rem;
             color: #273143;
+        }
+
+        /* Custom highlight for approval/reject options */
+        .approval-choice-box {
+            background: linear-gradient(90deg, #e0eaff 0%, #f1f5fa 100%);
+            border: 2px solid #206bc4;
+            border-radius: 10px;
+            box-shadow: 0 6px 24px 0 rgba(32, 107, 196, 0.09);
+            padding: 1.7rem 1.3rem;
+            margin-bottom: 1.75rem;
+            text-align: center;
+        }
+        .approval-choice-title {
+            font-weight: 700;
+            color: #1a437e;
+            margin-bottom: 0.9rem;
+            font-size: 1.16rem;
+            letter-spacing: 0.5px;
+        }
+        .approval-radio-group {
+            display: flex;
+            justify-content: center;
+            gap: 2.2rem;
+        }
+        .approval-radio-label {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            cursor: pointer;
+            font-size: 1.03rem;
+            font-weight: 600;
+            color: #22368e;
+            transition: color 0.15s;
+            padding: 0.3rem 0.75rem;
+            border-radius: 8px;
+            border: 2px solid transparent;
+            background: none;
+        }
+        .approval-radio-label input[type="radio"] {
+            accent-color: #1a5ba8;
+            width: 24px; height: 24px;
+            margin-bottom: 6px;
+        }
+        .approval-radio-label.selected,
+        .approval-radio-label input[type="radio"]:checked + span {
+            color: #fff;
+            background-color: #206bc4;
+            border-color: #164a91;
+        }
+        .approval-radio-label.selected {
+            color: #fff;
+            background-color: #206bc4;
+            border-color: #164a91;
+        }
+        .approval-radio-label .radio-description {
+            font-size: 0.84rem;
+            color: #4e6fae;
+            font-weight: 400;
+        }
+        .approval-radio-label.selected .radio-description {
+            color: #b3d5ff;
+        }
+        .approval-choice-required {
+            color: #dc3545;
+            font-size: 0.93rem;
+            margin-top: 0.2rem;
         }
     </style>
 </head>
@@ -224,7 +293,8 @@
                                     <span class="colon">:</span>
                                 </div>
                             </dt>
-                            <dd class="col-sm-8">{{ $penilai->getDokumenHTAGPA->getPengajuan->KodePengajuan ?? '-' }}</dd>
+                            <dd class="col-sm-8">{{ $penilai->getDokumenHTAGPA->getPengajuan->KodePengajuan ?? '-' }}
+                            </dd>
 
                             <dt class="col-sm-4">
                                 <div class="dt-align-colon">
@@ -247,7 +317,7 @@
                     </div>
 
                     {{-- Tampilkan Justifikasi Sebelumnya --}}
-                    @if(isset($ListApproval) && is_iterable($ListApproval) && count($ListApproval) > 0)
+                    @if (isset($ListApproval) && is_iterable($ListApproval) && count($ListApproval) > 0)
                         <div class="previous-justifikasi-box mb-4">
                             <div class="previous-justifikasi-title">
                                 <i class="ti ti-archive me-1"></i>
@@ -255,17 +325,18 @@
                             </div>
                             <div class="previous-justifikasi-content">
                                 <ul class="list-group">
-                                    @foreach($ListApproval as $approval)
+                                    @foreach ($ListApproval as $approval)
                                         <li class="list-group-item">
                                             <strong>
                                                 {{ $approval->Nama ?? ($approval->getUser->name ?? '-') }}
                                                 :
                                             </strong>
                                             <span>{{ $approval->Justifikasi ?? '(Tidak ada justifikasi)' }}</span>
-                                            @if(isset($approval->TanggalApproval))
+                                            @if (isset($approval->TanggalApproval))
                                                 <br>
                                                 <small class="text-muted">
-                                                    Pada {{ \Carbon\Carbon::parse($approval->TanggalApproval)->format('d M Y H:i') }}
+                                                    Pada
+                                                    {{ \Carbon\Carbon::parse($approval->TanggalApproval)->format('d M Y H:i') }}
                                                 </small>
                                             @endif
                                         </li>
@@ -317,19 +388,38 @@
                             </div>
                         </div>
 
+                        <div class="approval-choice-box mb-4" id="approvalChoiceBox">
+                            <div class="approval-choice-title">
+                                <i class="ti ti-question-circle me-2"></i>
+                                Pilih Opsi Persetujuan (<span class="required">*</span>)
+                            </div>
+                            <div class="approval-radio-group" id="approvalRadioGroup">
+                                <label class="approval-radio-label" id="labelSetuju">
+                                    <input type="radio" name="Status" value="Approved" {{ old('Status')=='Approved' ? 'checked' : '' }} required>
+                                    <span>Setuju</span>
+                                    <span class="radio-description">Setuju dan dilanjutkan proses HTA/GPA</span>
+                                </label>
+                                <label class="approval-radio-label" id="labelTolak">
+                                    <input type="radio" name="Status" value="Rejected" {{ old('Status')=='Rejected' ? 'checked' : '' }} required>
+                                    <span>Tolak</span>
+                                    <span class="radio-description">Tidak setuju/lakukan revisi pada pengajuan ini</span>
+                                </label>
+                            </div>
+
+
+                            <div class="approval-choice-required" id="approvalChoiceRequired" style="display:none;">
+                                Silakan pilih salah satu opsi di atas.
+                            </div>
+                        </div>
+
+
                         <hr class="my-4">
 
                         {{-- Tombol Aksi --}}
-                        <div class="d-flex flex-column flex-sm-row justify-content-between align-items-center gap-2">
-                            <div class="d-flex gap-2">
-                                <button type="button" class="btn btn-outline-danger btn-approve px-4"
-                                    onclick="handleReject()">
-                                    <i class="ti ti-circle-x me-1"></i> Tolak
-                                </button>
-                                <button type="submit" class="btn btn-primary btn-approve px-4" id="btnSubmit">
-                                    <i class="ti ti-check me-1"></i> Lanjutkan Approval
-                                </button>
-                            </div>
+                        <div class="d-flex flex-column flex-sm-row justify-content-center align-items-center gap-2">
+                            <button type="submit" class="btn btn-primary btn-approve px-4" id="btnSubmit">
+                                <i class="ti ti-check me-1"></i> Lanjutkan Approval
+                            </button>
                         </div>
                     </form>
                 </div>
@@ -349,7 +439,7 @@
         // Character counter (pure JS, tanpa library)
         const textarea = document.getElementById('justifikasi');
         const charCount = document.getElementById('charCount');
-        const form = documentJustifikasi = document.getElementById('formJustifikasi');
+        const formJustifikasi = document.getElementById('formJustifikasi');
         const btnSubmit = document.getElementById('btnSubmit');
 
         // Update counter saat mengetik
@@ -371,14 +461,43 @@
             textarea.dispatchEvent(new Event('input'));
         }
 
-        // Submit biasa - langsung kirim, tanpa konfirmasi
-        formJustifikasi.addEventListener('submit', function() {
+        // Custom approval radio highlight
+        function updateApprovalHighlight() {
+            const radios = document.querySelectorAll('input[name="Status"]');
+            radios.forEach(function(radio) {
+                const label = radio.closest('.approval-radio-label');
+                if(radio.checked) {
+                    label.classList.add('selected');
+                } else {
+                    label.classList.remove('selected');
+                }
+            });
+        }
+        document.querySelectorAll('input[name="Status"]').forEach(function(radio) {
+            radio.addEventListener('change', updateApprovalHighlight);
+        });
+        // Set highlight initial
+        updateApprovalHighlight();
+
+        // Required check for approval radio set
+        formJustifikasi.addEventListener('submit', function(e) {
+            // Hide any prev error
+            document.getElementById('approvalChoiceRequired').style.display = "none";
+            btnSubmit.disabled = false;
+
+            // Check Status radio required
+            const checkedRadio = document.querySelector('input[name="Status"]:checked');
+            if (!checkedRadio) {
+                document.getElementById('approvalChoiceRequired').style.display = "block";
+                e.preventDefault();
+                return false;
+            }
+
             // Disable tombol & tampilkan loading (mencegah double submit)
             btnSubmit.disabled = true;
             btnSubmit.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Memproses...';
         });
     </script>
-
 </body>
 
 </html>

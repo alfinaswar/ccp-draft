@@ -916,45 +916,50 @@ class HtaDanGpaController extends Controller
         $penilai = DokumenApproval::with(['getDokumenHTAGPA.getPengajuan'])
             ->where('ApprovalToken', $token)
             ->first();
-        if (!$penilai) {
+        if (!$penilai || $penilai->Status === 'Ditolak') {
             return view('errors.proses-verifikasi');
         }
+
         $ListApproval = DokumenApproval::with(['getDokumenHTAGPA.getPengajuan'])
             ->where('DokumenId', $penilai->DokumenId)
             ->where('JenisFormId', $penilai->JenisFormId)
             ->get();
         // Cek apakah sudah diapprove/direject sebelumnya
-        if ($penilai->Status !== 'Pending') {
+        // Jika status sudah tidak Pending dan bukan Ditolak (Rejected), tampilkan pesan sudah diproses
+        if ($penilai->Status !== 'Pending' && strtolower($penilai->Status) !== 'rejected') {
             return view('emails.setelah-approval', compact('penilai'))->with([
                 'message' => 'Persetujuan sudah diproses sebelumnya dengan status: ' . $penilai->Status
             ]);
         }
+
 
         return view('emails.sebelum-approve', compact('penilai', 'ListApproval'));
     }
 
     public function submitJustifikasi(Request $request, $token)
     {
+        // dd($request->all());
         $penilai = DokumenApproval::with('getDokumenHTAGPA')->where('ApprovalToken', $token)->first();
         if (!$penilai) {
             return view('errors.proses-verifikasi');
         }
-        if (!$penilai || $penilai->Status !== 'Pending') {
-            return redirect()->back()->with('error', 'Approval sudah diproses sebelumnya.');
-        }
+        // if (!$penilai || $penilai->Status !== 'Pending') {
+        //     return redirect()->back()->with('error', 'Approval sudah diproses sebelumnya.');
+        // }
         $duplicatePenilai = DokumenApproval::where('DokumenId', $penilai->DokumenId)
             ->where('JenisFormId', $penilai->JenisFormId)
             ->where('UserId', $penilai->UserId)
-            ->where('Status', 'Pending')
+            ->whereIn('Status', ['Pending', 'Rejected'])
             ->get();
 
         foreach ($duplicatePenilai as $toApprove) {
             $toApprove->update([
                 'Justifikasi' => $request->justifikasi,
-                'Status' => 'Approved',
+                'Status' => $request->Status,
                 'TanggalApprove' => Carbon::now(),
             ]);
         }
+
         $penilai = $penilai->fresh();
         $hta = null;
         $pengajuan = null;
@@ -997,7 +1002,28 @@ class HtaDanGpaController extends Controller
                 }
             }
         }
-        // Log aktivitas
+
+        // Logging aktivitas berdasarkan status persetujuan
+        if ($request->Status === 'Rejected') {
+            AktivitasPengajuan::create([
+                'KodePengajuan' => $kodePengajuan ?? null,
+                'Jenis' => 'HTA-GPA',
+                'Keterangan' => ($penilai->Nama ?? '-') . ' telah MENOLAK HTA/GPA. Justifikasi: ' . ($request->Justifikasi ?? '-'),
+                'UserCreate' => $penilai->Nama ?? '-',
+            ]);
+            $this->pdfGenerator->generateAll($pengajuan->id);
+            return view('emails.setelah-approval', compact('penilai'))->with([
+                'message' => 'Penilaian telah ditolak.'
+            ]);
+        }else{
+        if ($pengajuan && $pengajuan->Status == 'Ditolak') {
+            $pengajuan->Status = 'Draft';
+            $pengajuan->save();
+        }
+
+        }
+
+        // Jika Status bukan Rejected (assume Approved/other)
         AktivitasPengajuan::create([
             'KodePengajuan' => $kodePengajuan ?? null,
             'Jenis' => 'HTA-GPA',
@@ -1012,9 +1038,9 @@ class HtaDanGpaController extends Controller
             ->orderBy('Urutan', 'asc')
             ->first();
 
+        $this->pdfGenerator->generateAll($pengajuan->id);
+
         if ($nextApproval) {
-            // $this->savePdfToStorage($pengajuan->id, $pengajuan->PengajuanItemId);
-            $this->pdfGenerator->generateAll($pengajuan->id);
             if (!empty($nextApproval->Email)) {
                 $parameter = MasterParameter::get();
                 $approval2 = DokumenApproval::with('getUser', 'getJabatan', 'getDepartemen')
@@ -1057,160 +1083,10 @@ class HtaDanGpaController extends Controller
                 // $hta->save();
             }
         }
-
         // $this->savePdfToStorage($pengajuan->id, $pengajuan->PengajuanItemId);
-        $this->pdfGenerator->generateAll($pengajuan->id);
+
         return view('emails.setelah-approval', compact('penilai'))->with([
             'message' => 'Terima kasih, persetujuan Anda berhasil dicatat.'
         ]);
-    }
-
-    private function savePdfToStorage($idPengajuan, $idPengajuanItem)
-    {
-        $data = PengajuanPembelian::with([
-            'getVendor.getVendorDetail',
-            'getHtaGpa',
-            'getVendor.getHtaGpa' => function ($query) use ($idPengajuanItem) {
-                $query->where('PengajuanItemId', $idPengajuanItem);
-            },
-            'getJenisPermintaan.getForm',
-            'getHtaGpa.getPenilai1',
-            'getHtaGpa.getPenilai2',
-            'getHtaGpa.getPenilai3',
-            'getHtaGpa.getPenilai4',
-            'getHtaGpa.getPenilai5',
-            'getHtaGpa.getPenilai',
-            'getPengajuanItem' => function ($query) use ($idPengajuanItem) {
-                $query->where('id', $idPengajuanItem)->with('getBarang.getMerk');
-            }
-        ])->find($idPengajuan);
-
-        if (!$data || !$data->getHtaGpa) {
-            return null;
-        }
-
-        $approval2 = DokumenApproval::with('getUser', 'getJabatan', 'getDepartemen')
-            ->where('JenisFormId', $data->getHtaGpa->JenisForm)
-            ->where('DokumenId', $data->getHtaGpa->id)
-            ->orderBy('Urutan', 'asc')
-            ->get();
-
-        foreach ($approval2 as $item) {
-            if ($item->Status == 'Approved') {
-                $qrCode = QrCode::create(route('approval.validasi', $item->ApprovalToken ?? '0'))
-                    ->setSize(300)
-                    ->setMargin(10);
-
-                $writer = new PngWriter();
-                $result = $writer->write($qrCode);
-
-                $item->qrCode = base64_encode($result->getString());
-            }
-        }
-
-        $parameter = MasterParameter::get();
-
-        // Generate PDF HTA-GPA
-        $pdf = \PDF::loadView('hta-gpa.cetak-hta-gpa', compact('data', 'parameter', 'approval2'))
-            ->setPaper('a4', 'landscape');
-
-        $pdf->setOptions([
-            'isHtml5ParserEnabled' => true,
-            'isRemoteEnabled' => true,
-        ]);
-
-        $htaGpaOutput = $pdf->output();
-
-        // ==========================================
-        // PERSIAPAN PATH
-        // ==========================================
-        $dirPath = 'public/rekap-file/pengajuan-' . $idPengajuan;
-        $fullDirPath = storage_path('app/' . $dirPath);
-
-        // Pastikan direktori ada
-        if (!file_exists($fullDirPath)) {
-            mkdir($fullDirPath, 0777, true);
-        }
-
-        // Simpan PDF HTA-GPA sementara
-        $htaGpaTempPath = $fullDirPath . '/hta-gpa-temp-' . $idPengajuan . '.pdf';
-        file_put_contents($htaGpaTempPath, $htaGpaOutput);
-
-        $idPermintaan = $data->IdPermintaan ?? null;
-        $permintaanFullPath = null;
-
-        if ($idPermintaan) {
-            $permintaanFileName = 'permintaan_' . $idPermintaan . '.pdf';
-            $permintaanFullPath = storage_path('app/public/rekap-file/permintaan/' . $permintaanFileName);
-
-            if (!file_exists($permintaanFullPath)) {
-                $permintaanFullPath = null;
-            }
-        }
-
-        // ==========================================
-        // GABUNGKAN PDF (JIKA PERMINTAAN ADA)
-        // ==========================================
-        if ($permintaanFullPath) {
-            try {
-                $combinedPdf = new \setasign\Fpdi\Tcpdf\Fpdi();
-
-                // A. Tambahkan halaman dari PDF Permintaan (halaman awal)
-                $pageCount = $combinedPdf->setSourceFile($permintaanFullPath);
-                for ($i = 1; $i <= $pageCount; $i++) {
-                    $tplIdx = $combinedPdf->importPage($i);
-                    $size = $combinedPdf->getTemplateSize($tplIdx);
-                    $combinedPdf->AddPage($size['orientation'], [$size['width'], $size['height']]);
-                    $combinedPdf->useTemplate($tplIdx);
-                }
-
-                // B. Tambahkan halaman dari PDF HTA-GPA (halaman berikutnya)
-                $pageCount = $combinedPdf->setSourceFile($htaGpaTempPath);
-                for ($i = 1; $i <= $pageCount; $i++) {
-                    $tplIdx = $combinedPdf->importPage($i);
-                    $size = $combinedPdf->getTemplateSize($tplIdx);
-                    $combinedPdf->AddPage($size['orientation'], [$size['width'], $size['height']]);
-                    $combinedPdf->useTemplate($tplIdx);
-                }
-
-                // Output ke buffer (hindari error path TCPDF di Windows)
-                $combinedContent = $combinedPdf->Output('', 'S');
-
-                // Simpan hasil gabungan
-                $pdfFileName = 'hta-gpa-' . $idPengajuan . '.pdf';
-                $storagePath = $dirPath . '/' . $pdfFileName;
-                Storage::put($storagePath, $combinedContent);
-
-                // Hapus file temporary
-                if (file_exists($htaGpaTempPath)) {
-                    unlink($htaGpaTempPath);
-                }
-
-                return 'storage/rekap-file/pengajuan-' . $idPengajuan . '/' . $pdfFileName;
-            } catch (\Exception $e) {
-                Log::error('Error combining PDF: ' . $e->getMessage());
-
-                // Fallback: jika gagal combine, simpan PDF HTA-GPA saja
-                $pdfFileName = 'hta-gpa-' . $idPengajuan . '.pdf';
-                $storagePath = $dirPath . '/' . $pdfFileName;
-                Storage::put($storagePath, $htaGpaOutput);
-
-                if (file_exists($htaGpaTempPath)) {
-                    unlink($htaGpaTempPath);
-                }
-
-                return 'storage/rekap-file/pengajuan-' . $idPengajuan . '/' . $pdfFileName;
-            }
-        } else {
-            $pdfFileName = 'hta-gpa-' . $idPengajuan . '.pdf';
-            $storagePath = $dirPath . '/' . $pdfFileName;
-            Storage::put($storagePath, $htaGpaOutput);
-
-            if (file_exists($htaGpaTempPath)) {
-                unlink($htaGpaTempPath);
-            }
-
-            return 'storage/rekap-file/pengajuan-' . $idPengajuan . '/' . $pdfFileName;
-        }
     }
 }
