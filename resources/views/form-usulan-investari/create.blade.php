@@ -131,9 +131,7 @@
                                     <div class="mb-1">
                                         <label class="form-label fw-bold">Nama Kepala Divisi</label>
                                         <select class="form-select select2" name="NamaKadiv2" required>
-                                            <option value="" disabled
-                                                {{ !isset($usulan) && !old('NamaKadiv2') ? 'selected' : '' }}>-- Pilih
-                                                Kepala Divisi --</option>
+                                             <option value="">-- Pilih Nama Kepala Divisi --</option>
                                             @foreach ($user as $u)
                                                 <option value="{{ $u->id }}"
                                                     @if (isset($usulan) && $usulan->NamaKadiv2 == $u->id) @elseif(old('NamaKadiv2') == $u->id) selected @endif>

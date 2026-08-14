@@ -618,9 +618,58 @@
 {{-- ============================================================ --}}
 <div class="card mb-4">
     <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
-        <h4 class="card-title mb-0">
-            <i class="fa fa-list-check me-2"></i>Daftar Item yang Diajukan
-        </h4>
+        <div>
+            <h4 class="card-title mb-0">
+                <i class="fa fa-list-check me-2"></i>Daftar Item yang Diajukan
+            </h4>
+            {{-- Tambahan penanda ACC Direktur --}}
+            <div class="small mt-1">
+                <span>
+                    <strong>Acc Direktur:</strong>
+                    @if(isset($data->AccDirektur) && $data->AccDirektur)
+                        <span class="badge bg-success"><i class="fa fa-check"></i> Sudah ACC</span>
+                    @else
+                        <span class="badge bg-secondary">Belum ACC</span>
+                    @endif
+                </span>
+                <span class="ms-3">
+                    <strong>Acc Direktur Pada:</strong>
+                    <span class="badge bg-primary">
+                        @if(isset($data->AccDirekturPada) && $data->AccDirekturPada)
+                            {{ \Carbon\Carbon::parse($data->AccDirekturPada)->translatedFormat('d F Y H:i') }} WIB
+                        @else
+                            -
+                        @endif
+                    </span>
+                </span>
+            </div>
+            {{-- Fitur Copy Link Approval Direktur --}}
+            @if(
+                isset($data->getPengajuanItem) &&
+                collect($data->getPengajuanItem)->filter(fn($item) => $item->getFui)->count() > 0 &&
+                !empty($data->direktur_id)
+            )
+            <div class="mt-2">
+                <button class="btn btn-sm btn-outline-primary" id="copyLinkDirektur">
+                    <i class="fa fa-link"></i> Copy Link Approval Direktur
+                </button>
+                @php
+                    // Use route in web.php:
+                    // Route::get('/approval/usulan-investasi/{kodePengajuan}/{direkturId}/approve-direktur', ...)
+                    $approvalDirekturUrl = route('usulan-investasi.approve-direktur', [
+                        'kodePengajuan' => $data->kode_pengajuan ?? $data->id,
+                        'direkturId' => $data->direktur_id ?? 0
+                    ]);
+                    $kataKataTemplate = "Yth Direktur,\nMohon melakukan approval pengajuan berikut:\n\n" .
+                        $approvalDirekturUrl . "\n\nTerima kasih.";
+                @endphp
+
+                <textarea id="templateKataKataDirektur" class="form-control d-none">{{ $kataKataTemplate }}</textarea>
+            </div>
+            @endif
+
+
+        </div>
         @if ($data->getPengajuanItem && count($data->getPengajuanItem))
             @php
                 $isFsRequired = ($data->Jenis ?? null) == 1;
@@ -1024,6 +1073,31 @@
 
     </div>
 </div>
+@push('js')
+<script>
+    document.getElementById('copyLinkDirektur').addEventListener('click', function() {
+        const kata = document.getElementById('templateKataKataDirektur').value;
+        // Try the Clipboard API, fallback to execCommand
+        if (navigator.clipboard) {
+            navigator.clipboard.writeText(kata).then(function() {
+                alert('Link approval dan template kata-kata berhasil dicopy ke clipboard!');
+            }, function() {
+                fallbackCopy();
+            });
+        } else {
+            fallbackCopy();
+        }
+        function fallbackCopy() {
+            const textArea = document.getElementById('templateKataKataDirektur');
+            textArea.classList.remove('d-none');
+            textArea.select();
+            document.execCommand('copy');
+            textArea.classList.add('d-none');
+            alert('Link approval dan template kata-kata berhasil dicopy ke clipboard!');
+        }
+    });
+</script>
+@endpush
 {{-- ============================================================ --}}
 {{-- END DAFTAR ITEM YANG DIAJUKAN                                --}}
 {{-- ============================================================ --}}

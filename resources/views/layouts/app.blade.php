@@ -91,6 +91,214 @@
 
             <!-- Header Menu -->
             <ul class="nav user-menu">
+<!-- CDN FontAwesome (WAJIB ADA DI LAYOUT UTAMA AGAR ICON MUNCUL) -->
+<!-- Jika sudah ada di layout.php, abaikan baris ini -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+<!-- STYLE KHUSUS (Biar tombol cantik & z-index aman) -->
+<style>
+    .btn-info-alur {
+        transition: all 0.3s ease;
+    }
+    .btn-info-alur:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 10px rgba(13, 202, 240, 0.4);
+        background-color: #0dcaf0;
+        border-color: #0dcaf0;
+        color: #fff;
+    }
+    /* Fix agar modal muncul di atas sidebar/header */
+    .modal-backdrop { z-index: 1040; }
+    #alurPengajuanModal { z-index: 1050; }
+</style>
+
+<!-- ========================================== -->
+<!-- BUTTON PEMICU MODAL                        -->
+<!-- ========================================== -->
+<li class="nav-item">
+    <button type="button"
+            class="btn btn-outline-info btn-sm px-3 rounded-pill btn-info-alur"
+            data-bs-toggle="modal"
+            data-bs-target="#alurPengajuanModal"
+            data-bs-backdrop="false">
+        <i class="fa-solid fa-circle-info me-1"></i> Info Alur
+    </button>
+</li>
+
+<!-- ========================================== -->
+<!-- MODAL CONTENT                              -->
+<!-- ========================================== -->
+<div class="modal fade" id="alurPengajuanModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="false">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+
+            <!-- HEADER MODAL -->
+            <div class="modal-header bg-primary text-white border-0 px-4 py-3">
+                <h5 class="modal-title fw-bold mb-0">
+                    <i class="fa-solid fa-diagram-project me-2"></i>Alur Pengajuan ABProc v2
+                </h5>
+                <!-- Tombol Close (X) di Pojok Kanan Atas -->
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+
+            <!-- BODY MODAL -->
+            <div class="modal-body px-4 py-4">
+
+                <!-- Alert Info -->
+                <div class="alert alert-info d-flex align-items-center border-0 bg-info-subtle text-info-emphasis mb-4">
+                    <i class="fa-solid fa-lightbulb fa-2x me-3"></i>
+                    <div>
+                        <strong>Panduan Terbaru</strong>
+                        <p class="mb-0 small">Mohon baca perubahan alur di bawah ini agar pengajuan tidak tertunda.</p>
+                    </div>
+                </div>
+
+                <!-- LIST PERUBAHAN -->
+                <h6 class="fw-bold text-primary mb-3"><i class="fa-solid fa-list-check me-2"></i>Perubahan Signifikan:</h6>
+
+                <div class="list-group list-group-flush mb-4">
+                    <!-- Item 1 -->
+                    <div class="list-group-item px-0 py-3 border-bottom">
+                        <div class="d-flex align-items-start">
+                            <div class="me-3">
+                                <span class="badge bg-warning text-dark rounded-circle p-2">
+                                    <i class="fa-solid fa-signature"></i>
+                                </span>
+                            </div>
+                            <div>
+                                <h6 class="fw-bold mb-1">Penandatanganan FUI</h6>
+                                <p class="text-muted mb-1 small">FUI ditandatangani <strong>SETELAH Presentasi</strong> dilakukan.</p>
+                                <span class="badge bg-danger bg-opacity-10 text-danger small">
+                                    <i class="fa-solid fa-triangle-exclamation me-1"></i>Berubah dari alur lama
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Item 2 -->
+                    <div class="list-group-item px-0 py-3 border-bottom">
+                        <div class="d-flex align-items-start">
+                            <div class="me-3">
+                                <span class="badge bg-danger rounded-circle p-2">
+                                    <i class="fa-solid fa-trash-can"></i>
+                                </span>
+                            </div>
+                            <div>
+                                <h6 class="fw-bold mb-1">Lembar Disposisi</h6>
+                                <p class="text-muted mb-0 small">Tidak ada lagi lembar disposisi. Proses lebih ringkas.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Item 3 -->
+                    <div class="list-group-item px-0 py-3">
+                        <div class="d-flex align-items-start">
+                            <div class="me-3">
+                                <span class="badge bg-info text-dark rounded-circle p-2">
+                                    <i class="fa-solid fa-users"></i>
+                                </span>
+                            </div>
+                            <div>
+                                <h6 class="fw-bold mb-1">Penandatangan HTA/GPA</h6>
+                                <p class="text-muted mb-0 small">Jumlah pejabat penandatangan disesuaikan jenis pengajuan.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ALUR SINGKAT (TIMELINE) -->
+                <div class="bg-light rounded-3 p-3">
+                    <h6 class="text-muted fw-bold small text-uppercase mb-3 text-center">
+                        <i class="fa-solid fa-route me-1"></i> Alur Singkat
+                    </h6>
+
+                    <!-- Container Timeline -->
+                    <div class="d-flex align-items-center justify-content-between text-center w-100 gap-1">
+
+                        <!-- Step 1 -->
+                        <div class="flex-fill">
+                            <div class="bg-secondary text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-2" style="width:36px;height:36px;">
+                                <i class="fa-solid fa-file-invoice"></i>
+                            </div>
+                            <div class="small fw-bold text-secondary">Permintaan</div>
+                        </div>
+
+                        <!-- Arrow -->
+                        <div class="text-primary"><i class="fa-solid fa-chevron-right"></i></div>
+
+                        <!-- Step 2 -->
+                        <div class="flex-fill">
+                            <div class="bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-2" style="width:36px;height:36px;">
+                                <i class="fa-solid fa-paper-plane"></i>
+                            </div>
+                            <div class="small fw-bold text-secondary">Pengajuan</div>
+                        </div>
+
+                        <!-- Arrow -->
+                        <div class="text-primary"><i class="fa-solid fa-chevron-right"></i></div>
+
+                        <!-- Step 3 -->
+                        <div class="flex-fill">
+                            <div class="bg-warning text-dark rounded-circle d-inline-flex align-items-center justify-content-center mb-2" style="width:36px;height:36px;">
+                                <i class="fa-solid fa-clipboard-check"></i>
+                            </div>
+                            <div class="small fw-bold text-secondary">Review CCP</div>
+                        </div>
+
+                        <!-- Arrow -->
+                        <div class="text-primary"><i class="fa-solid fa-chevron-right"></i></div>
+
+                        <!-- Step 4 -->
+                        <div class="flex-fill">
+                            <div class="bg-success text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-2" style="width:36px;height:36px;">
+                                <i class="fa-solid fa-chalkboard-user"></i>
+                            </div>
+                            <div class="small fw-bold text-secondary">Presentasi Komite</div>
+                        </div>
+
+                        <!-- Arrow -->
+                        <div class="text-primary"><i class="fa-solid fa-chevron-right"></i></div>
+
+                        <!-- Step 5 -->
+                        <div class="flex-fill">
+                            <div class="bg-info text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-2" style="width:36px;height:36px;">
+                                <i class="fa-solid fa-file-signature"></i>
+                            </div>
+                            <div class="small fw-bold text-secondary">Pejabat Menyetuji FUI</div>
+                        </div>
+
+                        <!-- Arrow -->
+                        <div class="text-primary"><i class="fa-solid fa-chevron-right"></i></div>
+
+                        <!-- Step 6 -->
+                        <div class="flex-fill">
+                            <div class="bg-dark text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-2" style="width:36px;height:36px;">
+                                <i class="fa-solid fa-circle-check"></i>
+                            </div>
+                            <div class="small fw-bold text-dark">Selesai</div>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- FOOTER MODAL -->
+            <div class="modal-footer border-0 bg-light px-4 py-3 justify-content-end d-flex">
+                <button type="button" class="btn btn-light px-4 fw-semibold me-2" data-bs-dismiss="modal">
+                    <i class="fa-solid fa-xmark me-1"></i> Tutup
+                </button>
+                <button type="button" class="btn btn-primary px-4 fw-semibold" data-bs-dismiss="modal">
+                    <i class="fa-solid fa-check-circle me-1"></i> Saya Mengerti
+                </button>
+            </div>
+
+
+        </div>
+    </div>
+</div>
+
+
 
 <li class="nav-item nav-searchinputs">
     {{-- <button
@@ -101,7 +309,6 @@
         <i class="bi bi-headset"></i> Buat Ticket Trouble
     </button> --}}
 </li>
-
 
                 <li class="nav-item dropdown">
                     <a href="javascript:void(0);" class="nav-link userset dropdown-toggle" title="Profil"
@@ -130,6 +337,7 @@
 
                     </ul>
                 </li>
+
 
                 <li class="nav-item">
                     <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
@@ -1002,6 +1210,23 @@
     <script src="{{ asset('') }}assets/js/script.js"></script>
     <script src="{{ asset('') }}assets/js/custom-select2.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <!-- SCRIPT PENDUKUNG (Agar modal selalu bisa di-close) -->
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var modalElement = document.getElementById('alurPengajuanModal');
+        if (modalElement) {
+            // Inisialisasi manual
+            var myModal = new bootstrap.Modal(modalElement);
+
+            // Event listener jika tombol tutup diklik
+            modalElement.addEventListener('hidden.bs.modal', function () {
+                // Pastikan backdrop hilang (jika ada bug visual)
+                var backdrops = document.querySelectorAll('.modal-backdrop');
+                backdrops.forEach(backdrop => backdrop.remove());
+            });
+        }
+    });
+</script>
     <script>
         const sessionLifetime = {{ config('session.lifetime') }} * 60 * 1000;
         const warningTime = 60 * 1000;
