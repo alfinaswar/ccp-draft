@@ -67,31 +67,32 @@ class NotifikasiPengajuanMail extends Mailable
             $htaGpaFileName = 'hta-gpa-' . $idPengajuan . '.pdf';
             $htaGpaDirPath = 'public/rekap-file/pengajuan-' . $idPengajuan;
             $htaGpaStoragePath = $htaGpaDirPath . '/' . $htaGpaFileName;
-            $htaGpaFullDirPath = storage_path('app/' . $htaGpaDirPath);
+            $htaGpaFullPath = storage_path('app/' . $htaGpaStoragePath);
 
-            if (!file_exists($htaGpaFullDirPath)) {
-                mkdir($htaGpaFullDirPath, 0777, true);
+            if (file_exists($htaGpaFullPath)) {
+                $email->attach($htaGpaFullPath, [
+                    'as' => $htaGpaFileName,
+                    'mime' => 'application/pdf',
+                ]);
             }
-            $pdf = Pdf::loadView('hta-gpa.cetak-hta-gpa-email', [
-                'data' => $this->pengajuan,
-                'hta' => $this->hta,
-                'parameter' => $this->parameter,
-                'penilai' => $this->penilai,
-                'approval2' => $this->approval2,
-            ])->setPaper('a4', 'landscape');
+        }
 
-            $pdf->setOptions([
-                'isHtml5ParserEnabled' => true,
-                'isRemoteEnabled' => true,
-            ]);
+        // TAMBAHAN: KALAU JENIS NYA 2 ATAU 16, LAMPIRKAN JUGA FILE PDF INI WALAU SUDAH ADA DI ATAS
+        if (
+            ($this->hta->JenisForm == '2' || $this->hta->JenisForm == '16')
+        ) {
+            $idPengajuan = $this->pengajuan->id;
+            $htaGpaFileName = 'hta-gpa-' . $idPengajuan . '.pdf';
+            $htaGpaDirPath = 'public/rekap-file/pengajuan-' . $idPengajuan;
+            $htaGpaStoragePath = $htaGpaDirPath . '/' . $htaGpaFileName;
+            $htaGpaFullPath = storage_path('app/' . $htaGpaStoragePath);
 
-            $htaGpaOutput = $pdf->output();
-
-            Storage::put($htaGpaStoragePath, $htaGpaOutput);
-
-            $email->attachData($htaGpaOutput, $htaGpaFileName, [
-                'mime' => 'application/pdf',
-            ]);
+            if (file_exists($htaGpaFullPath)) {
+                $email->attach($htaGpaFullPath, [
+                    'as' => $htaGpaFileName,
+                    'mime' => 'application/pdf',
+                ]);
+            }
         }
 
         return $email;
