@@ -515,7 +515,7 @@ class UsulanInvestasiController extends Controller
                 'Kategori' => 'nullable|string',
                 'Tanggal2' => 'nullable|date',
                 'Divisi2' => 'nullable|integer',
-                'NamaKadiv2' => 'nullable|integer',
+                'NamaKadiv2' => 'required|integer',
                 'Kategori2' => 'nullable|string',
                 'Alasan' => 'nullable|string',
                 'items' => 'required|array',
