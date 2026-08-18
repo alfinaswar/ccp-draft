@@ -153,7 +153,7 @@ class PengajuanPembelianController extends Controller
                     $kode = isset($row->KodePengajuan) ? $row->KodePengajuan : '-';
                     return '<a href="' . route('ajukan.show', $id) . '" style="color: #007bff; font-weight: bold;" target="_blank">' . e($kode) . '</a>';
                 })
-           
+
                 ->addColumn('NamaBarang', function ($row) {
                     $namaBarang = '-';
                     $merek = '-';
@@ -166,6 +166,21 @@ class PengajuanPembelianController extends Controller
                     }
                     return $namaBarang . ' / ' . $merek . ' / ' . $tipe;
                 })
+                ->editColumn('Jenis', function ($row) {
+                    // Jika 1 itu Medis, 2 Umum (Logum), 3 Umum (Proyek) -- kasih icon dan label
+                    switch ($row->Jenis) {
+                        case 1:
+                            return '<span class="badge badge-success"><i class="fa fa-plus-square mr-1"></i>Medis</span>';
+                        case 2:
+                            return '<span class="badge badge-info"><i class="fa fa-cogs mr-1"></i>Umum (Logum)</span>';
+                        case 3:
+                            return '<span class="badge badge-primary"><i class="fa fa-project-diagram mr-1"></i>Umum (Proyek)</span>';
+                        default:
+                            return '<span class="badge badge-secondary"><i class="fa fa-question-circle mr-1"></i>-</span>';
+                    }
+                })
+
+
 
                 ->addColumn('action', function ($row) {
                     $id = encrypt($row->id);
@@ -305,7 +320,7 @@ class PengajuanPembelianController extends Controller
                         ? \Carbon\Carbon::parse($row->TanggalPresentasi)->translatedFormat('d M Y H:i')
                         : '-';
                 })
-                ->rawColumns(['action', 'LokasiPenempatan', 'KodePengajuan', 'Status', 'NamaBarang', 'TanggalPresentasi', 'CekStatus'])
+                ->rawColumns(['action', 'LokasiPenempatan', 'KodePengajuan', 'Status', 'NamaBarang', 'TanggalPresentasi', 'CekStatus','Jenis'])
                 ->make(true);
         }
         $kodePerusahaan = auth()->user()->kodeperusahaan;
