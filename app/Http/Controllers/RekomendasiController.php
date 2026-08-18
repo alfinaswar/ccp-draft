@@ -478,12 +478,14 @@ class RekomendasiController extends Controller
      */
     public function store(Request $request)
     {
+        // dd($request->all());
         $fileName = null;
         if ($request->hasFile('upload_file')) {
             $file = $request->file('upload_file');
             $fileName = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
             $file->storeAs('rekomendasi_file', $fileName, 'public');
         }
+
         $existingRekomendasi = Rekomendasi::where([
             'IdPengajuan' => $request->rekomendasi[0]['IdPengajuan'],
             'PengajuanItemId' => $request->rekomendasi[0]['PengajuanItemId'],
@@ -514,6 +516,18 @@ class RekomendasiController extends Controller
                 ->forceDelete();
 
             foreach ($request->rekomendasi as $key => $value) {
+                if ($request->hasFile("rekomendasi.$key.SphBaru")) {
+                    $file = $request->file("rekomendasi.$key.SphBaru");
+                    if ($file) {
+                        $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
+                        $extension = $file->getClientOriginalExtension();
+                        $uniqNumber = time() . '_' . uniqid();
+                        $namaFileBaru = $originalName . '_' . $uniqNumber . '.' . $extension;
+                        $file->storeAs('file_sph_baru', $namaFileBaru, 'public');
+                        $value['SphBaru'] = $namaFileBaru;
+                    }
+                }
+
                 $isi = RekomendasiDetail::create([
                     'IdPengajuan' => $value['IdPengajuan'],
                     'PengajuanItemId' => $value['PengajuanItemId'],
@@ -1548,7 +1562,6 @@ class RekomendasiController extends Controller
             'KodePengajuan' => $kodePengajuan ?? null,
             'Jenis' => 'Rekomendasi',
             'Keterangan' => 'Tanggal presentasi untuk nomor pengajuan ' . ($kodePengajuan ?? '-') . ' telah diperbarui dan telah dikirim ke urutan 1 (Direktur)',
-
             'UserCreate' => auth()->user()->name,
         ]);
         return redirect()->back()->with('success', 'Tanggal presentasi berhasil diperbarui dan email notifikasi telah dikirim.');
@@ -1894,149 +1907,31 @@ class RekomendasiController extends Controller
         }
     }
 
-    private function savePdfToStorageFUI($IdPengajuan, $barang)
+    public function updateSph(Request $request, $id)
     {
-        // dd($IdPengajuan);
-        $usulan = UsulanInvestasi::with(
-            'getFuiDetail.getVendor',
-            'getBarang',
-            'getVendor',
-            'getAccDirektur',
-            'getAccKadiv',
-            'getDepartemen',
-            'getDepartemen2',
-            'getNamaForm'
-        )
-            ->where('IdPengajuan', $IdPengajuan)
-            ->first();
+        dd($request->all());
 
-        if (!$usulan) {
-            return null;
-        }
-        // dd($usulan);
-        $VendorAcc = Rekomendasi::with([
-            'getRekomedasiDetail' => function ($query2) {
-                $query2->where('Rekomendasi', 1);
-            },
-            'getRekomedasiDetail.getNamaVendor'
-        ])
-            ->where('PengajuanItemId', $barang)
-            ->first();
-
-        $dataRekom = Rekomendasi::with('getRekomedasiDetail.getBarang', 'getRekomedasiDetail.getNamaVendor')
-            ->where('IdPengajuan', $IdPengajuan)
-            ->first();
-
-        $approval = DokumenApproval::with('getUser', 'getJabatan', 'getDepartemen')
-            ->where('JenisFormId', $usulan->JenisForm)
-            ->where('DokumenId', $usulan->id)
-            ->orderBy('Urutan', 'asc')
-            ->get();
-
-        // Generate QR Code untuk approval yang approved
-        foreach ($approval as $item) {
-            if ($item->Status == 'Approved') {
-                $qrCode = QrCode::create(route('approval.validasi', $item->ApprovalToken))
-                    ->setSize(300)
-                    ->setMargin(10);
-
-                $writer = new PngWriter();
-                $result = $writer->write($qrCode);
-
-                $item->qrCode = base64_encode($result->getString());
-            }
+        // Temukan entri rekomendasi
+        $rekomendasi = \App\Models\Rekomendasi::find($id);
+        if (!$rekomendasi) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Data rekomendasi tidak ditemukan.'
+            ], 404);
         }
 
-        $CariPengajuanItem = PengajuanItem::with('getRekomendasi')->find($barang);
-        $Acc = $VendorAcc->getRekomedasiDetail[0]->IdVendor ?? null;
-        $NamaBarangAcc = $VendorAcc->getRekomedasiDetail[0]->NamaPermintaan ?? null;
+        // Update data SPH
+        $rekomendasi->no_sph = $validatedData['no_sph'];
+        $rekomendasi->tanggal_sph = $validatedData['tanggal_sph'];
+        $rekomendasi->nilai_sph = $validatedData['nilai_sph'];
+        $rekomendasi->keterangan = $validatedData['keterangan'] ?? null;
 
-        $data2 = PengajuanPembelian::with([
-            'getVendor' => function ($query2) use ($Acc) {
-                $query2->where('NamaVendor', $Acc);
-            },
-            'getVendor.getVendorDetail' => function ($query) use ($NamaBarangAcc) {
-                $query->where('NamaBarang', $NamaBarangAcc);
-            },
-            'getRekomendasi' => function ($query) {
-                $query->with([
-                    'getRekomedasiDetail' => function ($query2) {
-                        $query2->where('Rekomendasi', 1);
-                    }
-                ]);
-            }
-        ])->find($IdPengajuan);
+        $rekomendasi->save();
 
-        // Generate PDF FUI
-        $pdf = \PDF::loadView('form-usulan-investari.show-pdf', compact('usulan', 'VendorAcc', 'approval', 'data2', 'dataRekom'))
-            ->setOptions([
-                'isHtml5ParserEnabled' => true,
-                'isRemoteEnabled' => true,
-                'defaultFont' => 'sans-serif',
-            ])
-            ->setPaper('a4', 'portrait');
-
-        // ==========================================
-        // 2. PERSIAPAN FOLDER & SIMPAN PDF FUI SEMENTARA
-        // ==========================================
-        $dirPath = 'public/rekap-file/pengajuan-' . $IdPengajuan;
-        $fullDirPath = storage_path('app/' . $dirPath);
-        if (!file_exists($fullDirPath)) {
-            mkdir($fullDirPath, 0777, true);
-        }
-
-        // Simpan PDF FUI sementara
-        $fuiTempPath = $fullDirPath . '/fui-temp-' . $IdPengajuan . '-' . $barang . '.pdf';
-        file_put_contents($fuiTempPath, $pdf->output());
-
-        // ==========================================
-        // 3. GABUNGKAN PDF: FS + FUI (FUI DI AKHIR)
-        // ==========================================
-        $combinedPdf = new \setasign\Fpdi\Tcpdf\Fpdi();
-
-        // Path PDF FS yang sudah ada di storage
-        $fsPath = $fullDirPath . '/fs-' . $IdPengajuan . '.pdf';
-
-        // Daftar file PDF yang akan digabungkan
-        $pdfFilesToMerge = [];
-
-        // 1. PDF FS (Halaman Awal) - jika ada
-        if (file_exists($fsPath)) {
-            $pdfFilesToMerge[] = $fsPath;
-        }
-
-        // 2. PDF FUI (Halaman Paling Akhir) - yang baru di-generate
-        $pdfFilesToMerge[] = $fuiTempPath;
-
-        // Proses penggabungan
-        foreach ($pdfFilesToMerge as $pdfFile) {
-            try {
-                $pageCount = $combinedPdf->setSourceFile($pdfFile);
-                for ($i = 1; $i <= $pageCount; $i++) {
-                    $tplIdx = $combinedPdf->importPage($i);
-                    $size = $combinedPdf->getTemplateSize($tplIdx);
-
-                    $combinedPdf->AddPage(
-                        $size['orientation'],
-                        [$size['width'], $size['height']]
-                    );
-                    $combinedPdf->useTemplate($tplIdx);
-                }
-            } catch (\Exception $e) {
-                \Log::error('Error merging PDF FUI: ' . $e->getMessage() . ' - File: ' . $pdfFile);
-            }
-        }
-
-        // ==========================================
-        // 4. SIMPAN HASIL COMBINE & CLEANUP
-        // ==========================================
-        $finalFileName = 'fui-' . $IdPengajuan . '.pdf';
-        $finalPath = $fullDirPath . '/' . $finalFileName;
-        $finalPath = str_replace('\\', '/', $finalPath);
-        $combinedPdf->Output($finalPath, 'F');
-        if (file_exists($fuiTempPath)) {
-            unlink($fuiTempPath);
-        }
-        return 'storage/rekap-file/pengajuan-' . $IdPengajuan . '/' . $finalFileName;
+        return response()->json([
+            'success' => true,
+            'message' => 'Data SPH berhasil diperbarui.',
+            'data' => $rekomendasi
+        ]);
     }
 }
