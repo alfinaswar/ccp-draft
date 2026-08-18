@@ -1,6 +1,34 @@
 @extends('layouts.app')
 
 @section('content')
+@push('css')
+<style>
+    #pengajuanTable td a[title*="Klik untuk melihat"] {
+    position: relative;
+    padding: 4px 8px;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+    border: 1px dashed transparent;
+}
+
+#pengajuanTable td a[title*="Klik untuk melihat"]:hover {
+    background-color: #fff5f5;
+    border-color: #dc3545;
+    color: #a71d2a !important;
+    text-decoration: none;
+}
+
+#pengajuanTable td a[title*="Klik untuk melihat"]:hover::after {
+    content: "🔗";
+    position: absolute;
+    right: -15px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 10px;
+    opacity: 0.7;
+}
+</style>
+@endpush
     <div class="page-header">
         <div class="row">
             <div class="col">

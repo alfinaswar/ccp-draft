@@ -180,7 +180,120 @@ class PengajuanPembelianController extends Controller
                     }
                 })
 
+                ->addColumn('CekStatus', function ($row) {
+                    $html = '-';
 
+                    $htaTypes = [1, 2, 16];
+                    $fuiTypes = [7, 11, 12, 13, 14, 15];
+
+                    $userId = auth()->id();
+                    $pengajuanId = $row->id;
+
+                    // ─────────── FUNGSI BANTUAN: Cek apakah user sudah bisa approve ───────────
+                    $canApproveNow = function ($jenisFormId, $dokumenId) use ($userId) {
+                        // Cari record approval untuk user ini
+                        $myApproval = DokumenApproval::where('JenisFormId', $jenisFormId)
+                            ->where('DokumenId', $dokumenId)
+                            ->where('UserId', $userId)
+                            ->where('Status', 'Pending')
+                            ->first();
+
+                        if (!$myApproval)
+                            return null;
+
+                        // Cek semua approval sebelumnya (Urutan < milik saya) harus sudah Approved
+                        $prevApprovals = DokumenApproval::where('JenisFormId', $jenisFormId)
+                            ->where('DokumenId', $dokumenId)
+                            ->where('Urutan', '<', $myApproval->Urutan)
+                            ->get();
+
+                        $allPrevApproved = $prevApprovals->every(function ($item) {
+                            return $item->Status === 'Approved';
+                        });
+
+                        return $allPrevApproved ? $myApproval : null;
+                    };
+
+                    // ─────────── FUNGSI BANTUAN: Generate Link Show Dokumen ───────────
+                    $getShowLink = function ($jenisFormId, $dokumenId) use ($pengajuanId) {
+                        // Ambil data dokumen untuk mendapatkan PengajuanItemId
+                        if (in_array($jenisFormId, [1, 2, 16])) {
+                            // HTA/GPA
+                            $doc = \App\Models\HtaDanGpa::find($dokumenId);
+                            if ($doc && $doc->PengajuanItemId) {
+                                return route('htagpa.show', [$pengajuanId, $doc->PengajuanItemId]);
+                            }
+                        } elseif (in_array($jenisFormId, [7, 11, 12, 13, 14, 15])) {
+                            // FUI / Usulan Investasi
+                            $doc = \App\Models\UsulanInvestasi::find($dokumenId);
+                            if ($doc && $doc->PengajuanItemId) {
+                                return route('usulan-investasi.show', [$pengajuanId, $doc->PengajuanItemId]);
+                            }
+                        }
+                        return '#';
+                    };
+
+                    $pesan = [];
+
+                    // ─────────── CEK HTA ───────────
+                    foreach ($htaTypes as $jenisHta) {
+                        $cariHTaItem = \App\Models\HtaDanGpa::where('JenisForm', $jenisHta)
+                            ->where('IdPengajuan', $pengajuanId)
+                            ->first();
+
+                        if ($cariHTaItem) {
+                            $approval = $canApproveNow($jenisHta, $cariHTaItem->id);
+
+                            if ($approval) {
+                                $link = $getShowLink($jenisHta, $cariHTaItem->id);
+                                $pesan[] = sprintf(
+                                    '<a href="%s" class="text-decoration-none" style="color:#dc3545;font-weight:600;"
+                        title="Klik untuk melihat dan menyetujui dokumen HTA/GPA"
+                        target="_blank">
+                        <i class="fa fa-external-link-alt me-1"></i>
+                        Form: HTA - Perlu Disetujui
+                    </a>',
+                                    e($link)
+                                );
+                                break; // Stop setelah menemukan yang pertama
+                            }
+                        }
+                    }
+
+                    // ─────────── CEK FUI (HANYA jika Status Pengajuan = 'Selesai') ───────────
+                    if ($row->Status == 'Selesai') {
+                        foreach ($fuiTypes as $jenisFui) {
+                            $cariFUI = \App\Models\UsulanInvestasi::where('JenisForm', $jenisFui)
+                                ->where('IdPengajuan', $pengajuanId)
+                                ->first();
+
+                            if ($cariFUI) {
+                                $approval = $canApproveNow($jenisFui, $cariFUI->id);
+
+                                if ($approval) {
+                                    $link = $getShowLink($jenisFui, $cariFUI->id);
+                                    $pesan[] = sprintf(
+                                        '<a href="%s" class="text-decoration-none" style="color:#dc3545;font-weight:600;"
+                            title="Klik untuk melihat dan menyetujui dokumen Usulan Investasi"
+                            target="_blank">
+                            <i class="fa fa-external-link-alt me-1"></i>
+                            Form: FUI - Perlu Disetujui
+                        </a>',
+                                        e($link)
+                                    );
+                                    break;
+                                }
+                            }
+                        }
+                    }
+
+                    // ─────────── BUILD OUTPUT ───────────
+                    if (!empty($pesan)) {
+                        $html = implode('<br>', $pesan);
+                    }
+
+                    return $html;
+                })
 
                 ->addColumn('action', function ($row) {
                     $id = encrypt($row->id);
@@ -203,65 +316,7 @@ class PengajuanPembelianController extends Controller
                     return $buttonDelete . ' ' . $buttonTracking;
                 })
 
-                ->addColumn('CekStatus', function ($row) {
-                    $html = '-';
 
-                    $hta = [1, 2, 16];
-                    $fui = [7, 11, 12, 13, 14, 15];
-
-                    // ─────────── CEK HTA ───────────
-                    $cekHta = null;
-                    foreach ($hta as $JenisHta) {
-                        $cariHTaItem = HtaDanGpa::where('JenisForm', $JenisHta)->where('IdPengajuan', $row->id)->first();
-                        if ($cariHTaItem) {
-                            $cek = DokumenApproval::where('JenisFormId', $JenisHta)
-                                ->where('DokumenId', $cariHTaItem->id)
-                                ->where('UserId', auth()->user()->id)
-                                ->where('Status', 'Pending')
-                                ->first();
-                            if ($cek) {
-                                $cekHta = $cek;
-                                break;
-                            }
-                        }
-                    }
-
-                    // ─────────── CEK FUI (HANYA jika Status = 'Selesai') ───────────
-                    $cekFui = null;
-                    if ($row->Status == 'Selesai') {
-                        foreach ($fui as $JenisFui) {
-                            $cariFUI = UsulanInvestasi::where('JenisForm', $JenisFui)->where('IdPengajuan', $row->id)->first();
-                            if ($cariFUI) {
-                                $cek = DokumenApproval::where('JenisFormId', $JenisFui)
-                                    ->where('DokumenId', $cariFUI->id)
-                                    ->where('UserId', auth()->user()->id)
-                                    ->where('Status', 'Pending')
-                                    ->first();
-                                if ($cek) {
-                                    $cekFui = $cek;
-                                    break;
-                                }
-                            }
-                        }
-                    }
-
-                    // ─────────── BUILD PESAN ───────────
-                    $pesan = [];
-
-                    // FUI dulu (sesuai urutan asli setelah disposisi dihapus)
-                    if ($cekFui) {
-                        $pesan[] = '<span style="color:#dc3545;"><b>Form: FUI</b> - <i>Perlu Disetujui</i></span>';
-                    }
-                    if ($cekHta) {
-                        $pesan[] = '<span style="color:#dc3545;"><b>Form: HTA</b> - <i>Perlu Disetujui</i></span>';
-                    }
-
-                    if (!empty($pesan)) {
-                        $html = implode('<br>', $pesan);
-                    }
-
-                    return $html;
-                })
                 ->addColumn('Status', function ($row) {
                     switch ($row->Status) {
                         case 'Draft':
