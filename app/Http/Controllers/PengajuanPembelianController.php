@@ -151,8 +151,9 @@ class PengajuanPembelianController extends Controller
                 ->addColumn('KodePengajuan', function ($row) {
                     $id = encrypt($row->id);
                     $kode = isset($row->KodePengajuan) ? $row->KodePengajuan : '-';
-                    return '<a href="' . route('ajukan.show', $id) . '" style="color: #007bff; font-weight: bold;">' . e($kode) . '</a>';
+                    return '<a href="' . route('ajukan.show', $id) . '" style="color: #007bff; font-weight: bold;" target="_blank">' . e($kode) . '</a>';
                 })
+           
                 ->addColumn('NamaBarang', function ($row) {
                     $namaBarang = '-';
                     $merek = '-';
