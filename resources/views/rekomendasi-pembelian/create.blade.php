@@ -112,7 +112,16 @@
                                 <div class="tab-pane fade {{ $vIdx === 0 ? 'show active' : '' }}"
                                     id="vendor-pane-{{ $vIdx }}" role="tabpanel"
                                     aria-labelledby="vendor-tab-{{ $vIdx }}">
+ {{-- Hidden input untuk ID RekomendasiDetail (jika sudah ada) --}}
+        @php
+            $existingDetail = $data->getRekomendasi[0]?->getRekomedasiDetail[$vIdx] ?? null;
+        @endphp
 
+        <input type="hidden"
+               name="rekomendasi[{{ $vIdx }}][rekomendasi_detail_id]"
+               value="{{ $existingDetail ? $existingDetail->id : '' }}">
+
+        {{-- Hidden inputs lainnya tetap ada --}}
                                     {{-- {{ dd($Vendor->getHtaGpa->Deskripsi) }} --}}
                                     <input type="hidden" name="rekomendasi[{{ $vIdx }}][IdPengajuan]"
                                         value="{{ $data->id }}">

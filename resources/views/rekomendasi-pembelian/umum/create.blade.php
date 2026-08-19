@@ -138,7 +138,16 @@
                                 <div class="tab-pane fade {{ $vIdx === 0 ? 'show active' : '' }}"
                                     id="vendor-pane-{{ $vIdx }}" role="tabpanel"
                                     aria-labelledby="vendor-tab-{{ $vIdx }}">
+ {{-- Hidden input untuk ID RekomendasiDetail (jika sudah ada) --}}
+        @php
+            $existingDetail = $data->getRekomendasi[0]?->getRekomedasiDetail[$vIdx] ?? null;
+        @endphp
 
+        <input type="hidden"
+               name="rekomendasi[{{ $vIdx }}][rekomendasi_detail_id]"
+               value="{{ $existingDetail ? $existingDetail->id : '' }}">
+
+        {{-- Hidden inputs lainnya tetap ada --}}
                                     {{-- {{ dd($Vendor->getHtaGpa->Deskripsi) }} --}}
                                     <input type="hidden" name="rekomendasi[{{ $vIdx }}][IdPengajuan]"
                                         value="{{ $data->id }}">
@@ -156,24 +165,43 @@
                                         value="{{ $data->getPengajuanItem[0]->getRekomendasi->DisetujuiOleh ?? '' }}">
                                     <input type="hidden" name="rekomendasi[{{ $vIdx }}][DisetujuiPada]"
                                         value="{{ $data->getPengajuanItem[0]->getRekomendasi->DisetujuiPada ?? '' }}">
-                                    @if (!empty($Vendor) && !empty($Vendor->SuratPenawaranVendor))
-                                        <div class="mb-4">
-                                            <div class="card border-0 shadow-sm bg-light">
-                                                <div class="card-body d-flex align-items-center">
-                                                    <span class="me-3" style="font-size: 2rem; color: #dc3545;">
-                                                        <i class="fa fa-file-pdf"></i>
-                                                    </span>
-                                                    <div>
-                                                        <div class="fw-bold mb-1">Surat Penawaran Vendor</div>
+                                   <div class="mb-4">
+                                        <div class="card border-0 shadow-sm bg-light">
+                                            <div class="card-body d-flex align-items-center">
+                                                <span class="me-3" style="font-size: 2rem; color: #dc3545;">
+                                                    <i class="fa fa-file-pdf"></i>
+                                                </span>
+                                                <div>
+                                                    <div class="fw-bold mb-1">Surat Penawaran Vendor</div>
+                                                    @if (!empty($data->getRekomendasi[0]->getRekomedasiDetail[$vIdx]->SphBaru))
+                                                        <a href="{{ asset('storage/file_sph_baru/' . $data->getRekomendasi[0]->getRekomedasiDetail[$vIdx]->SphBaru) }}"
+                                                            target="_blank" class="btn btn-sm btn-primary px-3 mb-1">
+                                                            <i class="fa fa-eye"></i> Lihat Surat Penawaran (Baru)
+                                                        </a>
+                                                    @else
                                                         <a href="{{ asset('storage/penawaran_vendor/' . $Vendor->SuratPenawaranVendor) }}"
-                                                            target="_blank" class="btn btn-sm btn-primary px-3">
+                                                            target="_blank" class="btn btn-sm btn-primary px-3 mb-1">
                                                             <i class="fa fa-eye"></i> Lihat Surat Penawaran
                                                         </a>
+                                                    @endif
+
+
+
+                                                    <label for="uploadSuratPenawaran-{{ $vIdx }}"
+                                                        class="form-label mb-1">Upload Surat Penawaran (PDF, max
+                                                        5MB)</label>
+                                                    <div class="input-group mb-1">
+                                                        <input class="form-control" type="file" accept="application/pdf"
+                                                            name="rekomendasi[{{ $vIdx }}][SphBaru]"
+                                                            id="uploadSuratPenawaran-{{ $vIdx }}">
+                                                        <button type="submit"
+                                                            class="btn btn-success btn-sm">Upload</button>
                                                     </div>
+
                                                 </div>
                                             </div>
                                         </div>
-                                    @endif
+                                    </div>
                                     <table class="table align-middle nilai-table" style="width:100%;"
                                         data-vidx="{{ $vIdx }}">
                                         <thead class="table-light">
