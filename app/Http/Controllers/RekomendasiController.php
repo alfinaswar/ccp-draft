@@ -482,14 +482,12 @@ class RekomendasiController extends Controller
      */
     public function store(Request $request)
     {
-        // dd($request->all());
         $fileName = null;
         if ($request->hasFile('upload_file')) {
             $file = $request->file('upload_file');
             $fileName = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
             $file->storeAs('rekomendasi_file', $fileName, 'public');
         }
-
         $existingRekomendasi = Rekomendasi::where([
             'IdPengajuan' => $request->rekomendasi[0]['IdPengajuan'],
             'PengajuanItemId' => $request->rekomendasi[0]['PengajuanItemId'],
@@ -514,58 +512,17 @@ class RekomendasiController extends Controller
         );
 
         if (isset($request->rekomendasi) && is_array($request->rekomendasi)) {
-            $processedDetailIds = []; // Melacak ID primary key yang sudah diproses
+            RekomendasiDetail::where('IdPengajuan', $header->IdPengajuan)
+                ->where('PengajuanItemId', $header->PengajuanItemId)
+                ->where('IdRekomendasi', $header->id)
+                ->forceDelete();
 
             foreach ($request->rekomendasi as $key => $value) {
-                $vendorId = $value['IdVendor'] ?? null;
-                if (!$vendorId)
-                    continue;
-
-                // ✅ PRIORITAS 1: Gunakan ID dari form (jika ada)
-                $rekomendasiDetailId = $value['rekomendasi_detail_id'] ?? null;
-                $existingDetail = null;
-
-                if ($rekomendasiDetailId) {
-                    $existingDetail = RekomendasiDetail::find($rekomendasiDetailId);
-                } else {
-                    // Fallback: cari berdasarkan vendor (untuk data baru / backward compatibility)
-                    $existingDetail = RekomendasiDetail::where('IdRekomendasi', $header->id)
-                        ->where('IdVendor', $vendorId)
-                        ->first();
-                }
-
-                if ($existingDetail) {
-                    $processedDetailIds[] = $existingDetail->id;
-                }
-
-                // ─────────── HANDLE UPLOAD FILE SPH BARU ───────────
-                $sphBaruFilename = null;
-
-                if ($request->hasFile("rekomendasi.$key.SphBaru")) {
-                    $file = $request->file("rekomendasi.$key.SphBaru");
-                    if ($file && $file->isValid()) {
-                        $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
-                        $extension = $file->getClientOriginalExtension();
-                        $uniqNumber = time() . '_' . uniqid();
-                        $sphBaruFilename = $originalName . '_' . $uniqNumber . '.' . $extension;
-                        $file->storeAs('file_sph_baru', $sphBaruFilename, 'public');
-                    }
-                }
-
-                // Hapus file lama jika ada upload baru
-                if ($sphBaruFilename && $existingDetail && !empty($existingDetail->SphBaru)) {
-                    $oldFilePath = storage_path('app/public/file_sph_baru/' . $existingDetail->SphBaru);
-                    if (file_exists($oldFilePath)) {
-                        unlink($oldFilePath);
-                    }
-                }
-
-                // ─────────── PREPARE DATA ───────────
-                $dataToSave = [
+                $isi = RekomendasiDetail::create([
                     'IdPengajuan' => $value['IdPengajuan'],
                     'PengajuanItemId' => $value['PengajuanItemId'],
                     'IdRekomendasi' => $header->id,
-                    'IdVendor' => $vendorId,
+                    'IdVendor' => $value['IdVendor'] ?? null,
                     'NamaPermintaan' => $value['NamaPermintaan'] ?? null,
                     'HargaAwal' => isset($value['HargaAwal']) ? preg_replace('/\D/', '', $value['HargaAwal']) : null,
                     'HargaNego' => isset($value['HargaNego']) ? preg_replace('/\D/', '', $value['HargaNego']) : null,
@@ -587,43 +544,21 @@ class RekomendasiController extends Controller
                     'UserNego' => auth()->user()->id,
                     'Keterangan' => $value['Keterangan'] ?? null,
                     'KodePerusahaan' => $request->rekomendasi[0]['KodePerusahaan'],
-                    // Gunakan file baru jika ada, jika tidak pakai file lama (jika ada)
-                    'SphBaru' => $sphBaruFilename ?? ($existingDetail ? $existingDetail->SphBaru : null),
-                ];
-
-                if ($existingDetail) {
-                    // ✅ UPDATE record yang sudah ada
-                    $existingDetail->update($dataToSave);
-                } else {
-                    // ✅ CREATE record baru (memungkinkan vendor sama tersimpan terpisah)
-                    RekomendasiDetail::create($dataToSave);
-                }
+                ]);
             }
-
-            // ─────────── HAPUS DATA YANG TIDAK ADA DI REQUEST ──────────
-            // Menggunakan primary key 'id' agar aman & tidak bentrok dengan vendor ganda
-            RekomendasiDetail::where('IdRekomendasi', $header->id)
-                ->whereNotIn('id', $processedDetailIds)
-                ->delete();
         }
-
-        // ─────────── UPDATE STATUS PENGAJUAN ───────────
         $pengajuan = PengajuanPembelian::find($request->rekomendasi[0]['IdPengajuan']);
         if ($pengajuan) {
             $pengajuan->Status = 'Dalam Review';
             $pengajuan->save();
         }
-
         $kodePengajuan = $pengajuan ? $pengajuan->KodePengajuan : null;
-
-        // ────────── LOG AKTIVITAS ───────────
         AktivitasPengajuan::create([
             'KodePengajuan' => $kodePengajuan ?? null,
             'Jenis' => 'Rekomendasi',
             'Keterangan' => 'Pembuatan rekomendasi untuk nomor pengajuan ' . $kodePengajuan . ' telah dilakukan (masih sebagai draft)',
             'UserCreate' => auth()->user()->name,
         ]);
-
         if (function_exists('activity')) {
             $userInput = $request->all();
             $kodePengajuan = $pengajuan ? $pengajuan->KodePengajuan : '-';
@@ -764,12 +699,15 @@ class RekomendasiController extends Controller
     {
         // dd($request->all());
         $fileName = null;
-
         if ($request->hasFile('upload_file')) {
             $file = $request->file('upload_file');
             $fileName = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
             $file->storeAs('rekomendasi_file', $fileName, 'public');
         }
+        $existingRekomendasi = Rekomendasi::where([
+            'IdPengajuan' => $request->rekomendasi[0]['IdPengajuan'],
+            'PengajuanItemId' => $request->rekomendasi[0]['PengajuanItemId'],
+        ])->first();
 
         $header = Rekomendasi::updateOrCreate(
             [
@@ -785,65 +723,26 @@ class RekomendasiController extends Controller
                     ? Carbon::parse($request->rekomendasi[0]['DisetujuiPada'])->format('Y-m-d H:i:s')
                     : null,
                 'UserNego' => auth()->user()->id,
-                'File' => $fileName !== null ? $fileName : null,
+                'File' => $fileName !== null
+                    ? $fileName
+                    : ($existingRekomendasi ? $existingRekomendasi->File : null),
             ]
         );
 
         if (isset($request->rekomendasi) && is_array($request->rekomendasi)) {
-
-            $processedDetailIds = []; // Track which detail IDs have been processed
+            // Delete all existing details for this header before inserting new ones
+            RekomendasiDetail::where([
+                'IdPengajuan' => $request->rekomendasi[0]['IdPengajuan'],
+                'PengajuanItemId' => $request->rekomendasi[0]['PengajuanItemId'],
+                'IdRekomendasi' => $header->id,
+            ])->forceDelete();
 
             foreach ($request->rekomendasi as $key => $value) {
-                $vendorId = $value['IdVendor'] ?? null;
-                if (!$vendorId)
-                    continue;
-
-                // ✅ PRIORITAS 1: Gunakan ID dari form (jika ada)
-                $rekomendasiDetailId = $value['rekomendasi_detail_id'] ?? null;
-
-                // ✅ PRIORITAS 2: Jika tidak ada ID, cari berdasarkan IdVendor (untuk backward compatibility)
-                $existingDetail = null;
-                if ($rekomendasiDetailId) {
-                    $existingDetail = RekomendasiDetail::find($rekomendasiDetailId);
-                } else {
-                    // Fallback: cari berdasarkan vendor (hanya jika tidak ada ID dari form)
-                    $existingDetail = RekomendasiDetail::where('IdRekomendasi', $header->id)
-                        ->where('IdVendor', $vendorId)
-                        ->first();
-                }
-
-                if ($existingDetail) {
-                    $processedDetailIds[] = $existingDetail->id;
-                }
-
-                // ─────────── HANDLE UPLOAD FILE SPH BARU ───────────
-                $sphBaruFilename = null;
-
-                if ($request->hasFile("rekomendasi.$key.SphBaru")) {
-                    $file = $request->file("rekomendasi.$key.SphBaru");
-                    if ($file && $file->isValid()) {
-                        $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
-                        $extension = $file->getClientOriginalExtension();
-                        $uniqNumber = time() . '_' . uniqid();
-                        $sphBaruFilename = $originalName . '_' . $uniqNumber . '.' . $extension;
-                        $file->storeAs('file_sph_baru', $sphBaruFilename, 'public');
-                    }
-                }
-
-                // Hapus file lama jika ada upload baru
-                if ($sphBaruFilename && $existingDetail && !empty($existingDetail->SphBaru)) {
-                    $oldFilePath = storage_path('app/public/file_sph_baru/' . $existingDetail->SphBaru);
-                    if (file_exists($oldFilePath)) {
-                        unlink($oldFilePath);
-                    }
-                }
-
-                // ─────────── PREPARE DATA ──────────
-                $dataToSave = [
+                RekomendasiDetail::create([
                     'IdPengajuan' => $value['IdPengajuan'],
                     'PengajuanItemId' => $value['PengajuanItemId'],
                     'IdRekomendasi' => $header->id,
-                    'IdVendor' => $vendorId,
+                    'IdVendor' => $value['IdVendor'] ?? null,
                     'NamaPermintaan' => $value['NamaPermintaan'] ?? null,
                     'HargaAwal' => isset($value['HargaAwal']) ? preg_replace('/\D/', '', $value['HargaAwal']) : null,
                     'HargaNego' => isset($value['HargaNego']) ? preg_replace('/\D/', '', $value['HargaNego']) : null,
@@ -865,51 +764,31 @@ class RekomendasiController extends Controller
                     'UserNego' => auth()->user()->id,
                     'Keterangan' => $value['Keterangan'] ?? null,
                     'KodePerusahaan' => $request->rekomendasi[0]['KodePerusahaan'],
-                    'SphBaru' => $sphBaruFilename ?? ($existingDetail ? $existingDetail->SphBaru : null),
-                ];
-
-                if ($existingDetail) {
-                    // ✅ UPDATE record yang sudah ada
-                    $existingDetail->update($dataToSave);
-                } else {
-                    // ✅ CREATE record baru (ini yang memungkinkan 2 vendor sama tersimpan)
-                    RekomendasiDetail::create($dataToSave);
-                }
+                ]);
             }
-
-            // ─────────── HAPUS DATA YANG TIDAK DIPROSES ───────────
-            RekomendasiDetail::where('IdRekomendasi', $header->id)
-                ->whereNotIn('id', $processedDetailIds)
-                ->delete();
         }
-
-        // ─────────── UPDATE STATUS & LOGGING ───────────
         $pengajuan = PengajuanPembelian::find($request->rekomendasi[0]['IdPengajuan']);
         if ($pengajuan) {
             $pengajuan->Status = 'Dalam Review';
             $pengajuan->save();
         }
-
         $kodePengajuan = $pengajuan ? ($pengajuan->KodePengajuan ?? $pengajuan->Kode ?? null) : null;
-
         AktivitasPengajuan::create([
             'KodePengajuan' => $kodePengajuan,
             'Jenis' => 'Rekomendasi',
-            'Keterangan' => 'Pembuatan rekomendasi untuk nomor pengajuan ' . ($kodePengajuan ?? '-') . ' telah dilakukan',
+            'Keterangan' => 'Pembuatan rekomendasi untuk nomor pengajuan ' . ($kodePengajuan ?? '-') . ' telah dilakukan (masih sebagai draft)',
             'UserCreate' => auth()->user()->name,
         ]);
-
         if (function_exists('activity')) {
-            $kodePengajuanLog = $pengajuan ? $pengajuan->Kode : '-';
+            $kodePengajuan = $pengajuan ? $pengajuan->Kode : '-';
             activity()
                 ->causedBy(auth()->user()->id)
                 ->withProperties([
                     'ip' => request()->ip(),
-                    'kode_pengajuan' => $kodePengajuanLog
+                    'kode_pengajuan' => $kodePengajuan
                 ])
-                ->log('Simpan rekomendasi: ' . ($request->rekomendasi[0]['IdPengajuan'] ?? '') . ' (Kode: ' . $kodePengajuanLog . ')');
+                ->log('Simpan rekomendasi: ' . ($request->rekomendasi[0]['IdPengajuan'] ?? '') . ' (Kode: ' . $kodePengajuan . ')');
         }
-
         return redirect()->back()->with('success', 'Data berhasil disimpan.');
     }
 
