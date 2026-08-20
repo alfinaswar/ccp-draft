@@ -163,7 +163,7 @@
             <td>Bmhp</td>
             @foreach ($rekomendasi->getRekomedasiDetail as $item)
                 <td>
-                    {{ $item->Bmhp ?? '-' }}
+                     {!! $item->Bmhp ?? '-' !!}
                 </td>
             @endforeach
         </tr>
