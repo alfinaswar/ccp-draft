@@ -1,6 +1,106 @@
 @extends('layouts.app')
 
 @section('content')
+@push('css')
+    <style>
+    #modalJustifikasi .modal-header {
+        background: linear-gradient(135deg, #ffffff 0%, #ffffff 100%);
+        color: #fff;
+        border-radius: .5rem .5rem 0 0;
+        padding: 1rem 1.5rem;
+    }
+    #modalJustifikasi .modal-header .btn-close {
+        filter: invert(1) grayscale(100%) brightness(200%);
+        opacity: .8;
+    }
+    #modalJustifikasi .modal-header .btn-close:hover {
+        opacity: 1;
+    }
+    #modalJustifikasi .modal-body {
+        padding: 1.75rem 1.75rem 1rem;
+    }
+    #modalJustifikasi .status-card {
+        flex: 1;
+        border: 2px solid #e3e6f0;
+        border-radius: .6rem;
+        padding: 1rem 1.25rem;
+        cursor: pointer;
+        transition: all .2s ease;
+        background: #fff;
+        display: flex;
+        align-items: center;
+        gap: .75rem;
+    }
+    #modalJustifikasi .status-card:hover {
+        border-color: #a6b8f0;
+        background: #f8f9ff;
+    }
+    #modalJustifikasi .status-card.active-approved {
+        border-color: #1cc88a;
+        background: #eafaf3;
+        box-shadow: 0 0 0 3px rgba(28, 200, 138, .15);
+    }
+    #modalJustifikasi .status-card.active-rejected {
+        border-color: #e74a3b;
+        background: #fdecea;
+        box-shadow: 0 0 0 3px rgba(231, 74, 59, .15);
+    }
+    #modalJustifikasi .status-card .status-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.1rem;
+        flex-shrink: 0;
+    }
+    #modalJustifikasi .status-card.approved .status-icon {
+        background: #d4f5e6;
+        color: #1cc88a;
+    }
+    #modalJustifikasi .status-card.rejected .status-icon {
+        background: #fadbd8;
+        color: #e74a3b;
+    }
+    #modalJustifikasi .status-card .status-title {
+        font-weight: 600;
+        margin: 0;
+        font-size: .95rem;
+    }
+    #modalJustifikasi .status-card .status-desc {
+        font-size: .78rem;
+        color: #6c757d;
+        margin: 0;
+    }
+    #modalJustifikasi .form-label.fw-bold {
+        color: #3a3b45;
+        margin-bottom: .6rem;
+    }
+    #modalJustifikasi textarea.form-control {
+        border-radius: .5rem;
+        border: 1.5px solid #d1d3e2;
+        padding: .75rem 1rem;
+        transition: border-color .2s, box-shadow .2s;
+    }
+    #modalJustifikasi textarea.form-control:focus {
+        border-color: #4e73df;
+        box-shadow: 0 0 0 3px rgba(78, 115, 223, .15);
+    }
+    #modalJustifikasi .info-box {
+        background: #f8f9fc;
+        border-left: 3px solid #4e73df;
+        padding: .6rem .9rem;
+        border-radius: .35rem;
+        font-size: .82rem;
+        color: #5a5c69;
+        margin-top: .5rem;
+    }
+    #modalJustifikasi .modal-footer {
+        padding: 1rem 1.75rem 1.5rem;
+    }
+</style>
+@endpush
     <div class="page-header">
         <div class="row">
             <div class="col">
@@ -292,45 +392,87 @@
             </div>
         </div>
     @endif
-    <div class="modal fade" id="modalJustifikasi" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content border-0 shadow-sm">
-                <div class="modal-header">
-                    <h5 class="modal-title">
-                        <i class="fa fa-check-circle me-2"></i>Konfirmasi Persetujuan
-                    </h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
-                        aria-label="Close"></button>
-                </div>
-                <form id="formApprove" method="POST">
-                    @csrf
-                    <div class="modal-body">
-                        <div class="mb-3">
-                            <label for="justifikasi" class="form-label fw-bold">
-                                Justifikasi Pembelian Alat <span class="text-danger">*</span>
+
+<div class="modal fade" id="modalJustifikasi" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header">
+                <h5 class="modal-title d-flex align-items-center">
+                    <i class="fa fa-check-circle me-2"></i>
+                    Konfirmasi Persetujuan
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+
+            <form id="formApprove" method="POST">
+                @csrf
+                <div class="modal-body">
+
+                    {{-- Pilihan Status --}}
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">
+                            Pilihan Status <span class="text-danger">*</span>
+                        </label>
+                        <div class="d-flex gap-3">
+                            <label class="status-card approved" for="statusApproved">
+                                <input class="d-none" type="radio" name="Status" id="statusApproved" value="Approved" required>
+                                <div class="status-icon">
+                                    <i class="fa fa-check"></i>
+                                </div>
+                                <div>
+                                    <p class="status-title">Approved</p>
+                                    <p class="status-desc">Setujui permintaan pembelian ini</p>
+                                </div>
                             </label>
-                            <textarea class="form-control @error('justifikasi') is-invalid @enderror" id="justifikasi" name="justifikasi"
-                                rows="4" placeholder="Contoh: Spesifikasi alat sesuai kebutuhan, harga kompetitif, vendor terpercaya, dll."
-                                required></textarea>
-                            @error('justifikasi')
-                                <div class="invalid-feedback d-block">{{ $message }}</div>
-                            @enderror
-                            <small class="text-muted">Justifikasi akan tercatat dalam history persetujuan.</small>
+
+                            <label class="status-card rejected" for="statusRejected">
+                                <input class="d-none" type="radio" name="Status" id="statusRejected" value="Rejected" required>
+                                <div class="status-icon">
+                                    <i class="fa fa-times"></i>
+                                </div>
+                                <div>
+                                    <p class="status-title">Rejected</p>
+                                    <p class="status-desc">Tolak permintaan pembelian ini</p>
+                                </div>
+                            </label>
+                        </div>
+                        @error('Status')
+                            <div class="invalid-feedback d-block mt-2">{{ $message }}</div>
+                        @enderror
+                    </div>
+
+                    {{-- Justifikasi --}}
+                    <div class="mb-3">
+                        <label for="justifikasi" class="form-label fw-bold">
+                            Justifikasi Pembelian Alat <span class="text-danger">*</span>
+                        </label>
+                        <textarea class="form-control @error('justifikasi') is-invalid @enderror"
+                                  id="justifikasi" name="justifikasi" rows="5"
+                                  placeholder="Contoh: Spesifikasi alat sesuai kebutuhan, harga kompetitif, vendor terpercaya, dll."
+                                  required></textarea>
+                        @error('justifikasi')
+                            <div class="invalid-feedback d-block">{{ $message }}</div>
+                        @enderror
+                        <div class="info-box">
+                            <i class="fa fa-info-circle me-1 text-primary"></i>
+                            Justifikasi akan tercatat dalam history persetujuan sebagai audit trail.
                         </div>
                     </div>
-                    <div class="modal-footer border-0">
-                        <button type="button" class="btn btn-secondary btn-sm px-4" data-bs-dismiss="modal">
-                            <i class="fa fa-times me-1"></i>Batal
-                        </button>
-                        <button type="submit" class="btn btn-success btn-sm px-4">
-                            <i class="fa fa-paper-plane me-1"></i>Kirim Persetujuan
-                        </button>
 
-                    </div>
-                </form>
-            </div>
+                </div>
+
+                <div class="modal-footer border-0">
+                    <button type="button" class="btn btn-light btn-sm px-4 border" data-bs-dismiss="modal">
+                        <i class="fa fa-times me-1"></i> Batal
+                    </button>
+                    <button type="submit" class="btn btn-success btn-sm px-4">
+                        <i class="fa fa-paper-plane me-1"></i> Kirim Persetujuan
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
+</div>
 @endsection
 
 @push('js')
@@ -443,4 +585,26 @@
             });
         });
     </script>
+    <script>
+    // Highlight card saat radio dipilih
+    document.addEventListener('DOMContentLoaded', function () {
+        const cards = document.querySelectorAll('#modalJustifikasi .status-card');
+        const radios = document.querySelectorAll('#modalJustifikasi input[name="Status"]');
+
+        radios.forEach(radio => {
+            radio.addEventListener('change', function () {
+                cards.forEach(c => c.classList.remove('active-approved', 'active-rejected'));
+                const parent = this.closest('.status-card');
+                if (this.value === 'Approved') parent.classList.add('active-approved');
+                if (this.value === 'Rejected') parent.classList.add('active-rejected');
+            });
+        });
+
+        // Reset saat modal ditutup
+        document.getElementById('modalJustifikasi').addEventListener('hidden.bs.modal', function () {
+            cards.forEach(c => c.classList.remove('active-approved', 'active-rejected'));
+            document.getElementById('formApprove').reset();
+        });
+    });
+</script>
 @endpush
