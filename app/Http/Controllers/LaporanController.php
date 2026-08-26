@@ -3,11 +3,16 @@
 namespace App\Http\Controllers;
 
 use App\Exports\LaporanTotalPembelianExport;
+use App\Models\AturanPengajuan;
+use App\Models\AturanPengajuanPresentasi;
+use App\Models\MasterBarang;
 use App\Models\MasterJenisPengajuan;
 use App\Models\MasterPerusahaan;
+use App\Models\MasterVendor;
 use App\Models\PengajuanPembelian;
 use App\Models\Rekomendasi;
 use App\Models\RekomendasiDetail;
+use App\Models\TutupPengajuan;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -106,6 +111,21 @@ class LaporanController extends Controller
                     $detail = $row->getPermintaan->getDetail->first() ?? null;
                     return $detail->RencanaPenempatan ?? '-';
                 })
+                ->editColumn('KodePengajuan', function ($row) {
+                    $kode = e($row->KodePengajuan ?? '-');
+                    $idPengajuan = encrypt($row->id);
+                    $idPengajuanItem = $row->getPengajuanItem[0]->id ?? null;
+                    if ($row->KodePengajuan && $idPengajuanItem) {
+                        $url = route('laporan.history-detail',$idPengajuan);
+                        // Biru dan bold, tanpa underline
+                        return '<a href="' . $url . '" class="btn-link" style="color:#007bff; font-weight:bold; text-decoration:none;" target="_blank">' . $kode . '</a>';
+                    }
+                    // Jika tidak ada link, tetap bold dan biru, tanpa underline
+                    return '<span style="color:#007bff; font-weight:bold;">' . $kode . '</span>';
+                })
+
+
+
                 ->addColumn('TanggalPresentasi', function ($row) {
                     if ($row->TanggalPresentasi) {
                         return Carbon::parse($row->TanggalPresentasi)->translatedFormat('d M Y');
@@ -116,7 +136,7 @@ class LaporanController extends Controller
                                 </button>';
                     }
                 })
-                ->rawColumns(['action', 'Status', 'DiajukanPada', 'NamaBarang', 'TanggalPresentasi', 'LokasiPenempatan'])
+                ->rawColumns(['KodePengajuan','action', 'Status', 'DiajukanPada', 'NamaBarang', 'TanggalPresentasi', 'LokasiPenempatan'])
                 ->make(true);
         }
         $jenis = MasterJenisPengajuan::get();
@@ -124,7 +144,17 @@ class LaporanController extends Controller
         return view('laporan.history.index', compact('jenis', 'perusahaan'));
 
     }
-
+    public function HistoryDetail($id){
+        $id = decrypt($id);
+        // dd($id);
+        $data = PengajuanPembelian::with('getVendor.getVendorDetail', 'getJenisPermintaan', 'getPengajuanItem.getBarang', 'getPengajuanItem.getHtaGpa', 'getPengajuanItem.getRekomendasi', 'getPengajuanItem.getFui', 'getPengajuanItem.getDisposisi', 'getDepartemen', 'getPengajuanItem.getFs')->find($id);
+        $tutup = TutupPengajuan::first();
+        $hariBuka = AturanPengajuan::get();
+        $hariBukaPresentasi = AturanPengajuanPresentasi::get();
+        $vendor = MasterVendor::orderBy('Nama', 'asc')->get();
+        $masterbarang = MasterBarang::get();
+        return view('form.pengajuan-pembelian.show', compact('data', 'vendor', 'masterbarang', 'tutup', 'hariBuka', 'hariBukaPresentasi'));
+    }
     /**
      * Show the form for creating a new resource.
      */

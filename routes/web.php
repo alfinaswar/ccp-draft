@@ -362,6 +362,7 @@ Route::group(['middleware' => ['auth']], function () {
     });
     Route::prefix('laporan')->group(function () {
         Route::get('/history', [LaporanController::class, 'History'])->name('laporan.history');
+        Route::get('/detail-pengajuan/{id}', [LaporanController::class, 'HistoryDetail'])->name('laporan.history-detail');
 
         // Laporan Rekomendasi Dr Ingen
         Route::get('/rekomendasi-ccp', [RekomendasiController::class, 'laporan'])->name('rekomendasi.laporan');

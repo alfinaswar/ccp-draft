@@ -1,31 +1,6 @@
 @extends('layouts.app')
 
 @section('content')
-@push('css')
-<style>
-    /* Warna garis bawah untuk tab yang TIDAK aktif */
-    .tab-vendor-0 .nav-link { border-bottom: 3px solid #0d6efd !important; } /* Biru */
-    .tab-vendor-1 .nav-link { border-bottom: 3px solid #198754 !important; } /* Hijau */
-    .tab-vendor-2 .nav-link { border-bottom: 3px solid #ffc107 !important; } /* Kuning */
-    .tab-vendor-3 .nav-link { border-bottom: 3px solid #dc3545 !important; } /* Merah */
-    .tab-vendor-4 .nav-link { border-bottom: 3px solid #6f42c1 !important; } /* Ungu */
-    .tab-vendor-5 .nav-link { border-bottom: 3px solid #0dcaf0 !important; } /* Cyan */
-
-    /* Style untuk tab yang AKTIF (Sedang dibuka) */
-    .nav-tabs .nav-link.active {
-        background-color: #343a40 !important; /* Warna background gelap agar kontras */
-        color: #fff !important;               /* Teks putih */
-        border-color: transparent !important; /* Hilangkan border bawah */
-        font-weight: 600;
-    }
-
-    /* Hover effect sederhana */
-    .nav-tabs .nav-link:hover {
-        border-bottom-width: 4px !important;
-        opacity: 0.9;
-    }
-</style>
-@endpush
     <div class="page-header">
         <div class="row">
             <div class="col">
@@ -156,19 +131,18 @@
                             @php
                                 $vendorCount = isset($data->getVendor) ? count($data->getVendor) : 0;
                             @endphp
-<ul class="nav nav-tabs d-sm-flex d-block" role="tablist">
-    @for ($vn = 0; $vn < $vendorCount; $vn++)
-        <li class="nav-item tab-vendor-{{ $vn }}"> {{-- ✅ Class pembeda warna --}}
-            <a class="nav-link{{ $vn === 0 ? ' active' : '' }}"
-               data-bs-toggle="tab"
-               data-bs-target="#vendor_tab_{{ $vn }}"
-               href="#vendor_tab_{{ $vn }}"
-               role="tab">
-                <strong>Vendor {{ $vn + 1 }}</strong>
-            </a>
-        </li>
-    @endfor
-</ul>
+
+                            <ul class="nav nav-tabs d-sm-flex d-block" role="tablist">
+                                @for ($vn = 0; $vn < $vendorCount; $vn++)
+                                    <li class="nav-item">
+                                        <a class="nav-link{{ $vn === 0 ? ' active' : '' }}" data-bs-toggle="tab"
+                                            data-bs-target="#vendor_tab_{{ $vn }}"
+                                            href="#vendor_tab_{{ $vn }}">
+                                            Vendor {{ $vn + 1 }}
+                                        </a>
+                                    </li>
+                                @endfor
+                            </ul>
 
                             <div class="tab-content">
                                 @for ($vnIdx = 0; $vnIdx < $vendorCount; $vnIdx++)
@@ -1134,10 +1108,10 @@
                             <i class="fa fa-arrow-left"></i> Kembali
                         </a>
 
-                        @if ($data->Status == 'Diajukan' || $data->Status == 'Selesai' || $data->Status == 'Disetujui CEO')
-                            {{-- <button type="button" class="btn btn-danger" id="btn-batalkan">
+                        @if ($data->Status == 'Diajukan' || $data->Status == 'Selesai')
+                            <button type="button" class="btn btn-danger" id="btn-batalkan">
                                 <i class="fa fa-times"></i> Batalkan Pengajuan
-                            </button> --}}
+                            </button>
                             <form id="form-batalkan" action="{{ route('ajukan.update-status', $data->id) }}"
                                 method="POST" style="display: none;">
                                 @csrf
