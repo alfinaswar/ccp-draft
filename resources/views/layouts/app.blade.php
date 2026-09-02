@@ -251,7 +251,29 @@
 
                         <!-- Step 4 -->
                         <div class="flex-fill">
+                            <div class="bg-info text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-2" style="width:36px;height:36px;">
+                                <i class="fa-solid fa-file-signature"></i>
+                            </div>
+                            <div class="small fw-bold text-secondary">Simpan FUI & FS (Jika Ada)</div>
+                        </div>
+
+                        <!-- Arrow -->
+                        <div class="text-primary"><i class="fa-solid fa-chevron-right"></i></div>
+
+                        <!-- Step 5 -->
+                        <div class="flex-fill">
                             <div class="bg-success text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-2" style="width:36px;height:36px;">
+                                <i class="fa-solid fa-circle-check"></i>
+                            </div>
+                            <div class="small fw-bold text-secondary">Selesaikan Pengajuan</div>
+                        </div>
+
+                        <!-- Arrow -->
+                        <div class="text-primary"><i class="fa-solid fa-chevron-right"></i></div>
+
+                        <!-- Step 6 -->
+                        <div class="flex-fill">
+                            <div class="bg-warning text-dark rounded-circle d-inline-flex align-items-center justify-content-center mb-2" style="width:36px;height:36px;">
                                 <i class="fa-solid fa-chalkboard-user"></i>
                             </div>
                             <div class="small fw-bold text-secondary">Presentasi Komite</div>
@@ -260,26 +282,16 @@
                         <!-- Arrow -->
                         <div class="text-primary"><i class="fa-solid fa-chevron-right"></i></div>
 
-                        <!-- Step 5 -->
-                        <div class="flex-fill">
-                            <div class="bg-info text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-2" style="width:36px;height:36px;">
-                                <i class="fa-solid fa-file-signature"></i>
-                            </div>
-                            <div class="small fw-bold text-secondary">Pejabat Menyetuji FUI</div>
-                        </div>
-
-                        <!-- Arrow -->
-                        <div class="text-primary"><i class="fa-solid fa-chevron-right"></i></div>
-
-                        <!-- Step 6 -->
+                        <!-- Step 7 -->
                         <div class="flex-fill">
                             <div class="bg-dark text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-2" style="width:36px;height:36px;">
-                                <i class="fa-solid fa-circle-check"></i>
+                                <i class="fa-solid fa-users"></i>
                             </div>
                             <div class="small fw-bold text-dark">Selesai</div>
                         </div>
 
                     </div>
+
                 </div>
 
             </div>
