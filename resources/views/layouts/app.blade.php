@@ -118,13 +118,15 @@
 <!-- ========================================== -->
 <li class="nav-item">
     <button type="button"
-            class="btn btn-outline-info btn-sm px-3 rounded-pill btn-info-alur"
+            class="btn btn-outline-info btn-sm px-3 rounded-pill btn-info-alur animate__animated animate__pulse animate__infinite"
             data-bs-toggle="modal"
             data-bs-target="#alurPengajuanModal"
-            data-bs-backdrop="false">
+            data-bs-backdrop="false"
+            style="--animate-duration: 1.2s;">
         <i class="fa-solid fa-circle-info me-1"></i> Info Alur
     </button>
 </li>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
 
 <!-- ========================================== -->
 <!-- MODAL CONTENT                              -->
