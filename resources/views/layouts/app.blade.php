@@ -143,199 +143,169 @@
             </div>
 
             <!-- BODY MODAL -->
-<div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h5 class="modal-title">Panduan Pengajuan</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-        </div>
+<div class="modal-body px-4 py-4">
 
-        <div class="modal-body px-4 py-4">
-
-            <!-- Alert Info -->
-            <div class="alert alert-info d-flex align-items-center border-0 bg-light mb-4">
-                <i class="fa-solid fa-lightbulb fa-2x me-3 text-secondary"></i>
-                <div>
-                    <strong>Panduan Terbaru</strong>
-                    <p class="mb-0 small text-muted">Mohon baca perubahan alur di bawah ini agar pengajuan tidak tertunda.</p>
-                </div>
-            </div>
-
-            <!-- LIST PERUBAHAN -->
-            <h6 class="fw-bold mb-3"><i class="fa-solid fa-list-check me-2"></i>Perubahan Signifikan:</h6>
-
-            <div class="list-group list-group-flush mb-4">
-                <!-- Item 1 -->
-                <div class="list-group-item px-0 py-3 border-bottom">
-                    <div class="d-flex align-items-start">
-                        <div class="me-3">
-                            <span class="badge bg-secondary-subtle text-secondary rounded-circle p-2">
-                                <i class="fa-solid fa-signature"></i>
-                            </span>
-                        </div>
-                        <div>
-                            <h6 class="fw-bold mb-1">Penandatanganan FUI</h6>
-                            <p class="text-muted mb-1 small">FUI ditandatangani <strong>SETELAH Presentasi</strong> dilakukan.</p>
-                            <span class="badge bg-danger-subtle text-danger small">
-                                <i class="fa-solid fa-triangle-exclamation me-1"></i>Berubah dari alur lama
-                            </span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Item 2 -->
-                <div class="list-group-item px-0 py-3 border-bottom">
-                    <div class="d-flex align-items-start">
-                        <div class="me-3">
-                            <span class="badge bg-secondary-subtle text-secondary rounded-circle p-2">
-                                <i class="fa-solid fa-trash-can"></i>
-                            </span>
-                        </div>
-                        <div>
-                            <h6 class="fw-bold mb-1">Lembar Disposisi</h6>
-                            <p class="text-muted mb-0 small">Tidak ada lagi lembar disposisi. Proses lebih ringkas.</p>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Item 3 -->
-                <div class="list-group-item px-0 py-3">
-                    <div class="d-flex align-items-start">
-                        <div class="me-3">
-                            <span class="badge bg-secondary-subtle text-secondary rounded-circle p-2">
-                                <i class="fa-solid fa-users"></i>
-                            </span>
-                        </div>
-                        <div>
-                            <h6 class="fw-bold mb-1">Penandatangan HTA/GPA</h6>
-                            <p class="text-muted mb-0 small">Jumlah pejabat penandatangan disesuaikan jenis pengajuan.</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- ALUR SINGKAT (TIMELINE) -->
-            <div class="bg-light rounded-3 p-4">
-                <h6 class="fw-bold text-center mb-4">
-                    <i class="fa-solid fa-route me-1"></i> Alur Singkat
-                </h6>
-
-                <!-- Group: Pengaju -->
-                <div class="mb-3">
-                    <div class="d-flex align-items-center mb-2">
-                        <span class="badge bg-primary me-2">Pengaju</span>
-                        <small class="text-muted">Langkah yang dilakukan oleh pengaju</small>
-                    </div>
-                    <div class="d-flex align-items-center justify-content-between text-center w-100 gap-2">
-
-                        <!-- Step 1: Permintaan -->
-                        <div class="flex-fill">
-                            <div class="bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-2" style="width:40px;height:40px;">
-                                <i class="fa-solid fa-file-invoice"></i>
-                            </div>
-                            <div class="small fw-semibold">Permintaan</div>
-                        </div>
-
-                        <div><i class="fa-solid fa-chevron-right text-muted"></i></div>
-
-                        <!-- Step 2: Pengajuan -->
-                        <div class="flex-fill">
-                            <div class="bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-2" style="width:40px;height:40px;">
-                                <i class="fa-solid fa-paper-plane"></i>
-                            </div>
-                            <div class="small fw-semibold">Pengajuan</div>
-                        </div>
-
-                        <div><i class="fa-solid fa-chevron-right text-muted"></i></div>
-
-                        <!-- Step 3: Simpan FUI & FS -->
-                        <div class="flex-fill">
-                            <div class="bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-2" style="width:40px;height:40px;">
-                                <i class="fa-solid fa-file-signature"></i>
-                            </div>
-                            <div class="small fw-semibold">Simpan FUI & FS</div>
-                            <div class="small text-muted">(Jika Ada)</div>
-                        </div>
-
-                    </div>
-                </div>
-
-                <!-- Divider -->
-                <div class="d-flex align-items-center my-3">
-                    <hr class="flex-grow-1">
-                    <i class="fa-solid fa-arrow-down mx-3 text-muted"></i>
-                    <hr class="flex-grow-1">
-                </div>
-
-                <!-- Group: Tim CCP -->
-                <div>
-                    <div class="d-flex align-items-center mb-2">
-                        <span class="badge bg-secondary me-2">Tim CCP</span>
-                        <small class="text-muted">Langkah yang dilakukan oleh tim CCP</small>
-                    </div>
-                    <div class="d-flex align-items-center justify-content-between text-center w-100 gap-2">
-
-                        <!-- Step 4: Review CCP -->
-                        <div class="flex-fill">
-                            <div class="bg-secondary text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-2" style="width:40px;height:40px;">
-                                <i class="fa-solid fa-clipboard-check"></i>
-                            </div>
-                            <div class="small fw-semibold">Review CCP</div>
-                        </div>
-
-                        <div><i class="fa-solid fa-chevron-right text-muted"></i></div>
-
-                        <!-- Step 5: Presentasi Komite -->
-                        <div class="flex-fill">
-                            <div class="bg-secondary text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-2" style="width:40px;height:40px;">
-                                <i class="fa-solid fa-chalkboard-user"></i>
-                            </div>
-                            <div class="small fw-semibold">Presentasi Komite</div>
-                        </div>
-
-                        <div><i class="fa-solid fa-chevron-right text-muted"></i></div>
-
-                        <!-- Step 6: Selesaikan Pengajuan -->
-                        <div class="flex-fill">
-                            <div class="bg-secondary text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-2" style="width:40px;height:40px;">
-                                <i class="fa-solid fa-circle-check"></i>
-                            </div>
-                            <div class="small fw-semibold">Selesaikan Pengajuan</div>
-                        </div>
-
-                        <div><i class="fa-solid fa-chevron-right text-muted"></i></div>
-
-                        <!-- Step 7: Selesai -->
-                        <div class="flex-fill">
-                            <div class="bg-dark text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-2" style="width:40px;height:40px;">
-                                <i class="fa-solid fa-flag-checkered"></i>
-                            </div>
-                            <div class="small fw-semibold">Selesai</div>
-                        </div>
-
-                    </div>
-                </div>
-
-                <!-- Legend -->
-                <div class="d-flex justify-content-center gap-4 mt-4 pt-3 border-top">
-                    <div class="d-flex align-items-center">
-                        <span class="badge bg-primary me-2">&nbsp;</span>
-                        <small>Aksi Pengaju</small>
-                    </div>
-                    <div class="d-flex align-items-center">
-                        <span class="badge bg-secondary me-2">&nbsp;</span>
-                        <small>Aksi Tim CCP</small>
-                    </div>
-                </div>
-
-            </div>
-
-        </div>
-
-        <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
+    <!-- Alert Info -->
+    <div class="alert alert-info d-flex align-items-center border-0 bg-light mb-4">
+        <i class="fa-solid fa-lightbulb fa-2x me-3 text-secondary"></i>
+        <div>
+            <strong>Panduan Terbaru</strong>
+            <p class="mb-0 small text-muted">Mohon baca perubahan alur di bawah ini agar pengajuan tidak tertunda.</p>
         </div>
     </div>
+
+    <!-- LIST PERUBAHAN -->
+    <h6 class="fw-bold mb-3"><i class="fa-solid fa-list-check me-2"></i>Perubahan Signifikan:</h6>
+
+    <div class="list-group list-group-flush mb-4">
+        <!-- Item 1 -->
+        <div class="list-group-item px-0 py-3 border-bottom">
+            <div class="d-flex align-items-start">
+                <div class="me-3">
+                    <span class="badge bg-secondary-subtle text-secondary rounded-circle p-2">
+                        <i class="fa-solid fa-signature"></i>
+                    </span>
+                </div>
+                <div>
+                    <h6 class="fw-bold mb-1">Penandatanganan FUI</h6>
+                    <p class="text-muted mb-1 small">FUI ditandatangani <strong>SETELAH Presentasi</strong> dilakukan.</p>
+                    <span class="badge bg-danger-subtle text-danger small">
+                        <i class="fa-solid fa-triangle-exclamation me-1"></i>Berubah dari alur lama
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Item 2 -->
+        <div class="list-group-item px-0 py-3 border-bottom">
+            <div class="d-flex align-items-start">
+                <div class="me-3">
+                    <span class="badge bg-secondary-subtle text-secondary rounded-circle p-2">
+                        <i class="fa-solid fa-trash-can"></i>
+                    </span>
+                </div>
+                <div>
+                    <h6 class="fw-bold mb-1">Lembar Disposisi</h6>
+                    <p class="text-muted mb-0 small">Tidak ada lagi lembar disposisi. Proses lebih ringkas.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Item 3 -->
+        <div class="list-group-item px-0 py-3">
+            <div class="d-flex align-items-start">
+                <div class="me-3">
+                    <span class="badge bg-secondary-subtle text-secondary rounded-circle p-2">
+                        <i class="fa-solid fa-users"></i>
+                    </span>
+                </div>
+                <div>
+                    <h6 class="fw-bold mb-1">Penandatangan HTA/GPA</h6>
+                    <p class="text-muted mb-0 small">Jumlah pejabat penandatangan disesuaikan jenis pengajuan.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ALUR SINGKAT (TIMELINE) -->
+    <div class="bg-light rounded-3 p-4">
+        <h6 class="fw-bold text-center mb-4">
+            <i class="fa-solid fa-route me-1"></i> Alur Singkat
+        </h6>
+
+        <!-- Legend -->
+        <div class="d-flex justify-content-center gap-4 mb-4">
+            <div class="d-flex align-items-center">
+                <span class="badge bg-primary me-2" style="width:14px;height:14px;padding:0;">&nbsp;</span>
+                <small class="fw-semibold">Pengaju</small>
+            </div>
+            <div class="d-flex align-items-center">
+                <span class="badge bg-secondary me-2" style="width:14px;height:14px;padding:0;">&nbsp;</span>
+                <small class="fw-semibold">Tim CCP</small>
+            </div>
+        </div>
+
+        <!-- Timeline Linear -->
+        <div class="d-flex align-items-start justify-content-between text-center w-100 gap-1">
+
+            <!-- Step 1: Permintaan (Pengaju) -->
+            <div class="flex-fill">
+                <div class="bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-2" style="width:42px;height:42px;">
+                    <i class="fa-solid fa-file-invoice"></i>
+                </div>
+                <div class="small fw-semibold">Permintaan</div>
+                <span class="badge bg-primary bg-opacity-10 text-primary mt-1" style="font-size:10px;">Pengaju</span>
+            </div>
+
+            <div class="pt-2"><i class="fa-solid fa-chevron-right text-muted"></i></div>
+
+            <!-- Step 2: Pengajuan (Pengaju) -->
+            <div class="flex-fill">
+                <div class="bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-2" style="width:42px;height:42px;">
+                    <i class="fa-solid fa-paper-plane"></i>
+                </div>
+                <div class="small fw-semibold">Pengajuan</div>
+                <span class="badge bg-primary bg-opacity-10 text-primary mt-1" style="font-size:10px;">Pengaju</span>
+            </div>
+
+            <div class="pt-2"><i class="fa-solid fa-chevron-right text-muted"></i></div>
+
+            <!-- Step 3: Review CCP (Tim CCP) -->
+            <div class="flex-fill">
+                <div class="bg-secondary text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-2" style="width:42px;height:42px;">
+                    <i class="fa-solid fa-clipboard-check"></i>
+                </div>
+                <div class="small fw-semibold">Review CCP</div>
+                <span class="badge bg-secondary bg-opacity-10 text-secondary mt-1" style="font-size:10px;">Tim CCP</span>
+            </div>
+
+            <div class="pt-2"><i class="fa-solid fa-chevron-right text-muted"></i></div>
+
+            <!-- Step 4: Simpan FUI & FS (Pengaju) -->
+            <div class="flex-fill">
+                <div class="bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-2" style="width:42px;height:42px;">
+                    <i class="fa-solid fa-file-signature"></i>
+                </div>
+                <div class="small fw-semibold">Simpan FUI & FS</div>
+                <span class="badge bg-primary bg-opacity-10 text-primary mt-1" style="font-size:10px;">Pengaju</span>
+            </div>
+
+            <div class="pt-2"><i class="fa-solid fa-chevron-right text-muted"></i></div>
+
+            <!-- Step 5: Presentasi Komite (Tim CCP) -->
+            <div class="flex-fill">
+                <div class="bg-secondary text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-2" style="width:42px;height:42px;">
+                    <i class="fa-solid fa-chalkboard-user"></i>
+                </div>
+                <div class="small fw-semibold">Presentasi Komite</div>
+                <span class="badge bg-secondary bg-opacity-10 text-secondary mt-1" style="font-size:10px;">Tim CCP</span>
+            </div>
+
+            <div class="pt-2"><i class="fa-solid fa-chevron-right text-muted"></i></div>
+
+            <!-- Step 6: Selesaikan Pengajuan (Tim CCP) -->
+            <div class="flex-fill">
+                <div class="bg-secondary text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-2" style="width:42px;height:42px;">
+                    <i class="fa-solid fa-circle-check"></i>
+                </div>
+                <div class="small fw-semibold">Selesaikan Pengajuan</div>
+                <span class="badge bg-secondary bg-opacity-10 text-secondary mt-1" style="font-size:10px;">Tim CCP</span>
+            </div>
+
+            <div class="pt-2"><i class="fa-solid fa-chevron-right text-muted"></i></div>
+
+            <!-- Step 7: Selesai -->
+            <div class="flex-fill">
+                <div class="bg-dark text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-2" style="width:42px;height:42px;">
+                    <i class="fa-solid fa-flag-checkered"></i>
+                </div>
+                <div class="small fw-semibold">Selesai</div>
+            </div>
+
+        </div>
+
+    </div>
+
 </div>
 
             <!-- FOOTER MODAL -->
