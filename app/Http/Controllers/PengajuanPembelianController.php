@@ -1152,125 +1152,125 @@ class PengajuanPembelianController extends Controller
             }
 
             // === Logika sinkronisasi DokumenApproval (tetap dipertahankan) ===
-            if ($cariFUI && $jenisForm !== null && $cariFUI->JenisForm != $jenisForm) {
-                // $ApprovalBenar = MasterForm::with([
-                //     'getApproval' => function ($query) use ($jenisForm) {
-                //         $query->where('KodePerusahaan', auth()->user()->kodeperusahaan);
-                //     }
-                // ])->find($jenisForm);
+            // if ($cariFUI && $jenisForm !== null && $cariFUI->JenisForm != $jenisForm) {
+            //     // $ApprovalBenar = MasterForm::with([
+            //     //     'getApproval' => function ($query) use ($jenisForm) {
+            //     //         $query->where('KodePerusahaan', auth()->user()->kodeperusahaan);
+            //     //     }
+            //     // ])->find($jenisForm);
 
-                // $approvalsBenar = $ApprovalBenar && $ApprovalBenar->getApproval
-                //     ? $ApprovalBenar->getApproval->sortBy('Urutan')->values()
-                //     : collect([]);
+            //     // $approvalsBenar = $ApprovalBenar && $ApprovalBenar->getApproval
+            //     //     ? $ApprovalBenar->getApproval->sortBy('Urutan')->values()
+            //     //     : collect([]);
 
-                // $currentApprovals = DokumenApproval::where('DokumenId', $cariFUI->id)
-                //     ->where('JenisFormId', $cariFUI->JenisForm)
-                //     ->orderBy('Urutan', 'asc')->get();
+            //     // $currentApprovals = DokumenApproval::where('DokumenId', $cariFUI->id)
+            //     //     ->where('JenisFormId', $cariFUI->JenisForm)
+            //     //     ->orderBy('Urutan', 'asc')->get();
 
-                // $newApprovalsIds = [];
-                // $urutan = 1;
+            //     // $newApprovalsIds = [];
+            //     // $urutan = 1;
 
-                // foreach ($approvalsBenar as $approvalBenar) {
-                //     $existing = $currentApprovals->first(function ($item) use ($approvalBenar) {
-                //         return $item->UserId == $approvalBenar->UserId;
-                //     });
-                //     $user = User::find($approvalBenar->UserId);
-                //     $namaUser = $user ? $user->name : $approvalBenar->Nama;
-                //     $emailUser = $user ? $user->email : $approvalBenar->Email;
+            //     // foreach ($approvalsBenar as $approvalBenar) {
+            //     //     $existing = $currentApprovals->first(function ($item) use ($approvalBenar) {
+            //     //         return $item->UserId == $approvalBenar->UserId;
+            //     //     });
+            //     //     $user = User::find($approvalBenar->UserId);
+            //     //     $namaUser = $user ? $user->name : $approvalBenar->Nama;
+            //     //     $emailUser = $user ? $user->email : $approvalBenar->Email;
 
-                //     if ($existing) {
-                //         $oldToken = $existing->ApprovalToken;
-                //         $existing->Urutan = $urutan;
-                //         $existing->JenisUser = 'Master';
-                //         $existing->JabatanId = $approvalBenar->JabatanId;
-                //         $existing->DepartemenId = $approvalBenar->DepartemenId ?? null;
-                //         $existing->Nama = $namaUser;
-                //         $existing->Email = $emailUser;
-                //         $existing->ApprovalToken = $oldToken;
+            //     //     if ($existing) {
+            //     //         $oldToken = $existing->ApprovalToken;
+            //     //         $existing->Urutan = $urutan;
+            //     //         $existing->JenisUser = 'Master';
+            //     //         $existing->JabatanId = $approvalBenar->JabatanId;
+            //     //         $existing->DepartemenId = $approvalBenar->DepartemenId ?? null;
+            //     //         $existing->Nama = $namaUser;
+            //     //         $existing->Email = $emailUser;
+            //     //         $existing->ApprovalToken = $oldToken;
 
-                //         if ($existing->UserId == 81) {
-                //             $existing->Status = 'Pending';
-                //             $existing->TanggalApprove = null;
-                //         } else {
-                //             $existing->Status = 'Approved';
-                //             $existing->TanggalApprove = Carbon::now();
-                //         }
-                //         $existing->save();
-                //         $newApprovalsIds[] = $existing->id;
-                //     } else {
-                //         $new = DokumenApproval::create([
-                //             'JenisUser' => 'Master',
-                //             'JenisFormId' => $cariFUI->JenisForm,
-                //             'DokumenId' => $cariFUI->id,
-                //             'PerusahaanId' => auth()->user()->kodeperusahaan ?? null,
-                //             'JabatanId' => $approvalBenar->JabatanId,
-                //             'DepartemenId' => $approvalBenar->DepartemenId,
-                //             'UserId' => $approvalBenar->UserId,
-                //             'Nama' => $namaUser,
-                //             'Email' => $emailUser,
-                //             'Urutan' => $urutan,
-                //             'Status' => $approvalBenar->UserId == 81 ? 'Pending' : 'Approved',
-                //             'TanggalApprove' => $approvalBenar->UserId == 81 ? null : Carbon::now(),
-                //             'Catatan' => null,
-                //             'Ttd' => null,
-                //             'ApprovalToken' => str_replace('-', '', Str::uuid()),
-                //         ]);
-                //         $newApprovalsIds[] = $new->id;
-                //     }
-                //     $urutan++;
-                // }
+            //     //         if ($existing->UserId == 81) {
+            //     //             $existing->Status = 'Pending';
+            //     //             $existing->TanggalApprove = null;
+            //     //         } else {
+            //     //             $existing->Status = 'Approved';
+            //     //             $existing->TanggalApprove = Carbon::now();
+            //     //         }
+            //     //         $existing->save();
+            //     //         $newApprovalsIds[] = $existing->id;
+            //     //     } else {
+            //     //         $new = DokumenApproval::create([
+            //     //             'JenisUser' => 'Master',
+            //     //             'JenisFormId' => $cariFUI->JenisForm,
+            //     //             'DokumenId' => $cariFUI->id,
+            //     //             'PerusahaanId' => auth()->user()->kodeperusahaan ?? null,
+            //     //             'JabatanId' => $approvalBenar->JabatanId,
+            //     //             'DepartemenId' => $approvalBenar->DepartemenId,
+            //     //             'UserId' => $approvalBenar->UserId,
+            //     //             'Nama' => $namaUser,
+            //     //             'Email' => $emailUser,
+            //     //             'Urutan' => $urutan,
+            //     //             'Status' => $approvalBenar->UserId == 81 ? 'Pending' : 'Approved',
+            //     //             'TanggalApprove' => $approvalBenar->UserId == 81 ? null : Carbon::now(),
+            //     //             'Catatan' => null,
+            //     //             'Ttd' => null,
+            //     //             'ApprovalToken' => str_replace('-', '', Str::uuid()),
+            //     //         ]);
+            //     //         $newApprovalsIds[] = $new->id;
+            //     //     }
+            //     //     $urutan++;
+            //     // }
 
-                // $userIdBenar = $approvalsBenar->pluck('UserId')->toArray();
-                // foreach ($currentApprovals as $approval) {
-                //     if (!in_array($approval->UserId, $userIdBenar)) {
-                //         $approval->delete();
-                //     }
-                // }
-            } elseif ($cariFUI) {
-                $ApprovalBenar = MasterForm::with([
-                    'getApproval' => function ($query) use ($jenisForm, $cariFUI) {
-                        $query->where('KodePerusahaan', auth()->user()->kodeperusahaan);
-                    }
-                ])->find($jenisForm ?? $cariFUI->JenisForm);
+            //     // $userIdBenar = $approvalsBenar->pluck('UserId')->toArray();
+            //     // foreach ($currentApprovals as $approval) {
+            //     //     if (!in_array($approval->UserId, $userIdBenar)) {
+            //     //         $approval->delete();
+            //     //     }
+            //     // }
+            // } elseif ($cariFUI) {
+            //     $ApprovalBenar = MasterForm::with([
+            //         'getApproval' => function ($query) use ($jenisForm, $cariFUI) {
+            //             $query->where('KodePerusahaan', auth()->user()->kodeperusahaan);
+            //         }
+            //     ])->find($jenisForm ?? $cariFUI->JenisForm);
 
-                $approvalsBenar = $ApprovalBenar && $ApprovalBenar->getApproval
-                    ? $ApprovalBenar->getApproval->sortBy('Urutan')->values()
-                    : collect([]);
+            //     $approvalsBenar = $ApprovalBenar && $ApprovalBenar->getApproval
+            //         ? $ApprovalBenar->getApproval->sortBy('Urutan')->values()
+            //         : collect([]);
 
-                $currentApprovals = DokumenApproval::where('DokumenId', $cariFUI->id)
-                    ->where('JenisFormId', $jenisForm ?? $cariFUI->JenisForm)
-                    ->orderBy('Urutan', 'asc')->get();
+            //     $currentApprovals = DokumenApproval::where('DokumenId', $cariFUI->id)
+            //         ->where('JenisFormId', $jenisForm ?? $cariFUI->JenisForm)
+            //         ->orderBy('Urutan', 'asc')->get();
 
-                $urutan = 1;
-                foreach ($approvalsBenar as $approvalBenar) {
-                    $existing = $currentApprovals->first(function ($item) use ($approvalBenar) {
-                        return $item->UserId == $approvalBenar->UserId;
-                    });
-                    $user = User::find($approvalBenar->UserId);
-                    $namaUser = $user ? $user->name : $approvalBenar->Nama;
-                    $emailUser = $user ? $user->email : $approvalBenar->Email;
+            //     $urutan = 1;
+            //     foreach ($approvalsBenar as $approvalBenar) {
+            //         $existing = $currentApprovals->first(function ($item) use ($approvalBenar) {
+            //             return $item->UserId == $approvalBenar->UserId;
+            //         });
+            //         $user = User::find($approvalBenar->UserId);
+            //         $namaUser = $user ? $user->name : $approvalBenar->Nama;
+            //         $emailUser = $user ? $user->email : $approvalBenar->Email;
 
-                    if ($existing) {
-                        $oldToken = $existing->ApprovalToken;
-                        $existing->Urutan = $urutan;
-                        $existing->JabatanId = $approvalBenar->JabatanId;
-                        $existing->DepartemenId = $approvalBenar->DepartemenId ?? null;
-                        $existing->Nama = $namaUser;
-                        $existing->NamaJabatan = $approvalBenar->NamaJabatan ?? null;
-                        $existing->Email = $emailUser;
-                        $existing->ApprovalToken = $oldToken;
-                        $existing->save();
-                    }
-                    $urutan++;
-                }
+            //         if ($existing) {
+            //             $oldToken = $existing->ApprovalToken;
+            //             $existing->Urutan = $urutan;
+            //             $existing->JabatanId = $approvalBenar->JabatanId;
+            //             $existing->DepartemenId = $approvalBenar->DepartemenId ?? null;
+            //             $existing->Nama = $namaUser;
+            //             $existing->NamaJabatan = $approvalBenar->NamaJabatan ?? null;
+            //             $existing->Email = $emailUser;
+            //             $existing->ApprovalToken = $oldToken;
+            //             $existing->save();
+            //         }
+            //         $urutan++;
+            //     }
 
-                $benarUserIds = $approvalsBenar->pluck('UserId')->toArray();
-                foreach ($currentApprovals as $approval) {
-                    if (!in_array($approval->UserId, $benarUserIds)) {
-                        $approval->delete();
-                    }
-                }
-            }
+            //     $benarUserIds = $approvalsBenar->pluck('UserId')->toArray();
+            //     foreach ($currentApprovals as $approval) {
+            //         if (!in_array($approval->UserId, $benarUserIds)) {
+            //             $approval->delete();
+            //         }
+            //     }
+            // }
 
             // === VALIDASI UNTUK STATUS 'SIAP PRESENTASI' ===
             $cekrekom1 = $data->getRekomendasi[0]->getRekomedasiDetail->where('Rekomendasi', 1)->first();
