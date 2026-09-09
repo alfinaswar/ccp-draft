@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AiController;
+use App\Http\Controllers\ApprovalController;
 use App\Http\Controllers\CekPengajuanController;
 use App\Http\Controllers\FeasibilityStudyController;
 use App\Http\Controllers\HomeController;
@@ -373,4 +374,7 @@ Route::group(['middleware' => ['auth']], function () {
         Route::get('/laporan/total-pembelian/export', [LaporanController::class, 'exportExcel'])->name('laporan.total-pembelian.export');
         Route::get('/laporan/total-pembelian/detail/{kode}', [LaporanController::class, 'detailTotalPembelian'])->name('laporan.total-pembelian.detail');
     });
+    // Route untuk menu "Approval Saya"
+    Route::get('/approval-saya', [ApprovalController::class, 'index'])->name('approval-saya.index');
+    Route::get('/approval-saya/{token}/process', [ApprovalController::class, 'process'])->name('approval-saya.process');
 });

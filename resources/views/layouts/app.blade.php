@@ -51,6 +51,29 @@
     box-shadow: 0 6px 16px rgba(78, 115, 223, 0.45);
     color: white;
 }
+
+
+
+</style>
+<style>
+    /* Animasi pulse untuk badge notifikasi */
+    .badge.rounded-pill {
+        animation: badgePulse 2s infinite;
+    }
+
+    @keyframes badgePulse {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.1); }
+    }
+
+    /* Hover effect untuk row approval */
+    .approval-card {
+        cursor: pointer;
+    }
+
+    .approval-card:hover {
+        background-color: #f8f9fa;
+    }
 </style>
 @stack('css')
 </head>
@@ -452,6 +475,13 @@
                                     <span>Dashboard</span>
                                 </a>
                             </li>
+<li class="nav-item">
+    <a href="{{ route('approval-saya.index') }}"
+       class="nav-link {{ request()->routeIs('approval-saya.*') ? 'active' : '' }}">
+        <i class="fa fa-tasks me-2"></i>
+        <span>Approval Saya</span>
+    </a>
+</li>
                         </ul>
                     </li>
                     <li class="submenu-open">
