@@ -475,13 +475,13 @@
                                     <span>Dashboard</span>
                                 </a>
                             </li>
-<li class="nav-item">
+{{-- <li class="nav-item">
     <a href="{{ route('approval-saya.index') }}"
        class="nav-link {{ request()->routeIs('approval-saya.*') ? 'active' : '' }}">
         <i class="fa fa-tasks me-2"></i>
         <span>Approval Saya</span>
     </a>
-</li>
+</li> --}}
                         </ul>
                     </li>
                     <li class="submenu-open">
