@@ -38,16 +38,17 @@ class ApprovalController extends Controller
                                 $docQ->whereHas('getPengajuan');
                             });
                     })
-                        // Cek untuk Usulan Investasi: JenisFormId cocok, Dokumen ada, Pengajuan ada
+                        // ✅ PERUBAHAN DI SINI: Cek untuk Usulan Investasi + Status Pengajuan harus 'Siap Presentasi'
                         ->orWhere(function ($subQ) {
                         $subQ->whereIn('JenisFormId', [7, 11, 12, 13, 14, 15])
                             ->whereHas('getDokumenUsulanInvestasi', function ($docQ) {
-                                $docQ->whereHas('getPengajuan');
+                                $docQ->whereHas('getPengajuan', function ($pengajuanQ) {
+                                    $pengajuanQ->where('Status', 'Siap Presentasi'); // ✅ Hanya ambil yang Siap Presentasi
+                                });
                             });
                     });
                 })
                 ->orderByDesc('created_at');
-
 
             return DataTables::of($query)
                 ->addIndexColumn()
@@ -69,9 +70,9 @@ class ApprovalController extends Controller
                         $id = encrypt($pengajuan->id);
                         $kode = $pengajuan->KodePengajuan ?? '-';
                         return '<a href="' . route('ajukan.show', $id) . '"
-                                   class="kode-link"
-                                   target="_blank"
-                                   onclick="event.stopPropagation();">' . e($kode) . '</a>';
+                               class="kode-link"
+                               target="_blank"
+                               onclick="event.stopPropagation();">' . e($kode) . '</a>';
                     }
                     return '<span class="text-muted">-</span>';
                 })
@@ -104,18 +105,17 @@ class ApprovalController extends Controller
                     $docUrl = $this->getDocumentShowUrl($row);
                     if ($docUrl === '#') {
                         return '<button class="btn btn-secondary btn-sm" disabled>
-                                   <i class="fa fa-ban me-1"></i> Tidak Tersedia
-                               </button>';
+                               <i class="fa fa-ban me-1"></i> Tidak Tersedia
+                           </button>';
                     }
                     return '<a href="' . $docUrl . '"
-                               class="btn btn-primary btn-review"
-                               title="Review & Approve"
-                               target="_blank"
-                               onclick="event.stopPropagation();">
-                               <i class="fa fa-eye me-1"></i> Lihat
-                           </a>';
+                           class="btn btn-primary btn-review"
+                           title="Review & Approve"
+                           target="_blank"
+                           onclick="event.stopPropagation();">
+                           <i class="fa fa-eye me-1"></i> Lihat
+                       </a>';
                 })
-
 
                 // Hidden Column: Row Class (untuk border warna)
                 ->addColumn('row_class', function ($row) {
@@ -155,7 +155,9 @@ class ApprovalController extends Controller
                         ->orWhere(function ($subQ) {
                             $subQ->whereIn('JenisFormId', [7, 11, 12, 13, 14, 15])
                                 ->whereHas('getDokumenUsulanInvestasi', function ($docQ) {
-                                    $docQ->whereHas('getPengajuan');
+                                    $docQ->whereHas('getPengajuan', function ($pengajuanQ) {
+                                        $pengajuanQ->where('Status', 'Siap Presentasi'); // ✅ Update stats total juga
+                                    });
                                 });
                         });
                 })->count(),
@@ -172,7 +174,9 @@ class ApprovalController extends Controller
                 ->where('Status', 'Pending')
                 ->whereIn('JenisFormId', [7, 11, 12, 13, 14, 15])
                 ->whereHas('getDokumenUsulanInvestasi', function ($q) {
-                    $q->whereHas('getPengajuan');
+                    $q->whereHas('getPengajuan', function ($pengajuanQ) {
+                        $pengajuanQ->where('Status', 'Siap Presentasi'); // ✅ Update stats FUI juga
+                    });
                 })
                 ->count(),
         ];
