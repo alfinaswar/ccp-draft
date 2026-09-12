@@ -8,7 +8,7 @@ use App\Models\PengajuanPembelian;
 use App\Models\HtaDanGpa;
 use App\Models\UsulanInvestasi;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB; // ✅ WAJIB DITAMBAHKAN
+use Illuminate\Support\Facades\DB; // ✅ Wajib ada untuk whereNotExists
 use Yajra\DataTables\Facades\DataTables;
 
 class ApprovalController extends Controller
@@ -21,7 +21,7 @@ class ApprovalController extends Controller
         if ($request->ajax()) {
             $userId = Auth::id();
 
-            // Query Utama: Filter berlapis + LOGIKA BERJENJANG
+            // Query Utama: Filter berlapis + LOGIKA BERJENJANG + STATUS PENGAJUAN
             $query = DokumenApproval::with([
                 'getUser',
                 'getJabatan',
@@ -42,28 +42,28 @@ class ApprovalController extends Controller
                          ->whereColumn('prev.DokumenId', 'dokumen_approvals.DokumenId')
                          ->whereColumn('prev.Urutan', '<', 'dokumen_approvals.Urutan')
                          ->where('prev.Status', '!=', 'Approved');
-                         // Bisa juga diganti: ->whereIn('prev.Status', ['Pending', 'Rejected'])
             })
 
             ->where(function ($q) {
-                // Cek untuk HTA/GPA: JenisFormId cocok, Dokumen ada, Pengajuan ada
+                // 1. Cek untuk HTA/GPA: JenisFormId cocok, Dokumen ada, Pengajuan ada
                 $q->where(function ($subQ) {
                     $subQ->whereIn('JenisFormId', [1, 2, 16])
                         ->whereHas('getDokumenHTAGPA', function ($docQ) {
                             $docQ->whereHas('getPengajuan');
                         });
                 })
-                // Cek untuk Usulan Investasi: JenisFormId cocok, Dokumen ada, Pengajuan ada & Status Siap Presentasi
+                // 2. ✅ PERUBAHAN DI SINI: Cek untuk Usulan Investasi + Status Pengajuan harus 'Selesai' ATAU 'Disetujui CEO'
                 ->orWhere(function ($subQ) {
                     $subQ->whereIn('JenisFormId', [7, 11, 12, 13, 14, 15])
                         ->whereHas('getDokumenUsulanInvestasi', function ($docQ) {
                             $docQ->whereHas('getPengajuan', function ($pengajuanQ) {
-                                $pengajuanQ->where('Status', 'Siap Presentasi');
+                                // ✅ Gunakan whereIn untuk mengecek multiple status
+                                $pengajuanQ->whereIn('Status', ['Selesai', 'Disetujui CEO']);
                             });
                         });
                 });
             })
-            ->orderBy('Urutan', 'asc') // ✅ Urutkan berdasarkan urutan approval
+            ->orderBy('Urutan', 'asc') // Urutkan berdasarkan urutan approval (berjenjang)
             ->orderByDesc('created_at');
 
             return DataTables::of($query)
@@ -171,11 +171,12 @@ class ApprovalController extends Controller
                 })
                 ->count(),
 
+            // ✅ PERUBAHAN DI SINI JUGA: Update stats FUI agar sesuai dengan kondisi query utama
             'fui' => (clone $baseQuery)
                 ->whereIn('JenisFormId', [7, 11, 12, 13, 14, 15])
                 ->whereHas('getDokumenUsulanInvestasi', function ($q) {
                     $q->whereHas('getPengajuan', function ($pengajuanQ) {
-                        $pengajuanQ->where('Status', 'Siap Presentasi');
+                        $pengajuanQ->whereIn('Status', ['Selesai', 'Disetujui CEO']);
                     });
                 })
                 ->count(),
@@ -185,7 +186,7 @@ class ApprovalController extends Controller
     }
 
     // ==========================================
-    // HELPER METHODS (Tetap sama seperti sebelumnya)
+    // HELPER METHODS
     // ==========================================
     private function getPengajuanFromApproval($approval)
     {
