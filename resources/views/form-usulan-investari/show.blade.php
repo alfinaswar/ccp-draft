@@ -412,17 +412,9 @@
                                 <i class="fa fa-arrow-left"></i> Kembali
                             </a>
                             @if (!empty($usulan) && ($usulan->getPengajuan->Status ?? null) == 'Selesai')
-                                @php
-                                    $shownUserIds = [];
-                                @endphp
                                 @foreach ($approval as $item)
-                                    @php
-                                        $userId = $item->UserId ?? null;
-                                    @endphp
                                     @if (
-                                        $userId &&
-                                        !in_array($userId, $shownUserIds) &&
-                                        auth()->id() == $userId &&
+                                        auth()->id() == ($item->UserId ?? null) &&
                                         $item->Status != 'Approved' &&
                                         !empty($item->ApprovalToken))
                                         <a href="{{ route('usulan-investasi.approve', $item->ApprovalToken) }}"
@@ -431,13 +423,9 @@
                                             <i class="fa fa-check"></i>
                                             Setujui
                                         </a>
-                                        @php
-                                            $shownUserIds[] = $userId;
-                                        @endphp
                                     @endif
                                 @endforeach
                             @endif
-
 
 
                         </div>
