@@ -8,7 +8,8 @@ use App\Models\PengajuanPembelian;
 use App\Models\HtaDanGpa;
 use App\Models\UsulanInvestasi;
 use Illuminate\Support\Facades\Auth;
-use Yajra\DataTables\DataTables; // Pastikan package yajra/laravel-datatables terinstall
+use Illuminate\Support\Facades\DB; // ✅ WAJIB DITAMBAHKAN
+use Yajra\DataTables\Facades\DataTables;
 
 class ApprovalController extends Controller
 {
@@ -20,40 +21,54 @@ class ApprovalController extends Controller
         if ($request->ajax()) {
             $userId = Auth::id();
 
-            // Query Utama: Filter berlapis (Approval -> Dokumen -> Pengajuan)
+            // Query Utama: Filter berlapis + LOGIKA BERJENJANG
             $query = DokumenApproval::with([
                 'getUser',
                 'getJabatan',
                 'getDepartemen',
-                'getDokumenHTAGPA.getPengajuan',       // Eager load bertingkat
+                'getDokumenHTAGPA.getPengajuan',
                 'getDokumenUsulanInvestasi.getPengajuan'
             ])
-                ->where('UserId', $userId)
-                ->where('Status', 'Pending')
-                ->where(function ($q) {
-                    // Cek untuk HTA/GPA: JenisFormId cocok, Dokumen ada, Pengajuan ada
-                    $q->where(function ($subQ) {
-                        $subQ->whereIn('JenisFormId', [1, 2, 16])
-                            ->whereHas('getDokumenHTAGPA', function ($docQ) {
-                                $docQ->whereHas('getPengajuan');
-                            });
-                    })
-                        // ✅ PERUBAHAN DI SINI: Cek untuk Usulan Investasi + Status Pengajuan harus 'Siap Presentasi'
-                        ->orWhere(function ($subQ) {
-                        $subQ->whereIn('JenisFormId', [7, 11, 12, 13, 14, 15])
-                            ->whereHas('getDokumenUsulanInvestasi', function ($docQ) {
-                                $docQ->whereHas('getPengajuan', function ($pengajuanQ) {
-                                    $pengajuanQ->where('Status', 'Siap Presentasi'); // ✅ Hanya ambil yang Siap Presentasi
-                                });
-                            });
-                    });
+            ->where('UserId', $userId)
+            ->where('Status', 'Pending')
+
+            // ✅ LOGIKA BERJENJANG:
+            // Jangan tampilkan jika ada langkah sebelumnya (Urutan lebih kecil)
+            // untuk dokumen yang sama yang statusnya BUKAN 'Approved'
+            ->whereNotExists(function ($subQuery) {
+                $subQuery->select(DB::raw(1))
+                         ->from('dokumen_approvals as prev')
+                         ->whereColumn('prev.JenisFormId', 'dokumen_approvals.JenisFormId')
+                         ->whereColumn('prev.DokumenId', 'dokumen_approvals.DokumenId')
+                         ->whereColumn('prev.Urutan', '<', 'dokumen_approvals.Urutan')
+                         ->where('prev.Status', '!=', 'Approved');
+                         // Bisa juga diganti: ->whereIn('prev.Status', ['Pending', 'Rejected'])
+            })
+
+            ->where(function ($q) {
+                // Cek untuk HTA/GPA: JenisFormId cocok, Dokumen ada, Pengajuan ada
+                $q->where(function ($subQ) {
+                    $subQ->whereIn('JenisFormId', [1, 2, 16])
+                        ->whereHas('getDokumenHTAGPA', function ($docQ) {
+                            $docQ->whereHas('getPengajuan');
+                        });
                 })
-                ->orderByDesc('created_at');
+                // Cek untuk Usulan Investasi: JenisFormId cocok, Dokumen ada, Pengajuan ada & Status Siap Presentasi
+                ->orWhere(function ($subQ) {
+                    $subQ->whereIn('JenisFormId', [7, 11, 12, 13, 14, 15])
+                        ->whereHas('getDokumenUsulanInvestasi', function ($docQ) {
+                            $docQ->whereHas('getPengajuan', function ($pengajuanQ) {
+                                $pengajuanQ->where('Status', 'Siap Presentasi');
+                            });
+                        });
+                });
+            })
+            ->orderBy('Urutan', 'asc') // ✅ Urutkan berdasarkan urutan approval
+            ->orderByDesc('created_at');
 
             return DataTables::of($query)
                 ->addIndexColumn()
 
-                // Kolom: Jenis Dokumen
                 ->addColumn('jenis_dokumen', function ($row) {
                     if (in_array($row->JenisFormId, [1, 2, 16])) {
                         return '<span class="badge badge-doc hta">HTA / GPA</span>';
@@ -63,7 +78,6 @@ class ApprovalController extends Controller
                     return '<span class="badge badge-secondary">-</span>';
                 })
 
-                // Kolom: Kode Pengajuan
                 ->addColumn('kode_pengajuan', function ($row) {
                     $pengajuan = $this->getPengajuanFromApproval($row);
                     if ($pengajuan) {
@@ -77,7 +91,6 @@ class ApprovalController extends Controller
                     return '<span class="text-muted">-</span>';
                 })
 
-                // Kolom: Nama Barang
                 ->addColumn('nama_barang', function ($row) {
                     $pengajuan = $this->getPengajuanFromApproval($row);
                     if ($pengajuan && $pengajuan->getPengajuanItem && $pengajuan->getPengajuanItem->first()) {
@@ -88,19 +101,16 @@ class ApprovalController extends Controller
                     return '<span class="text-muted">-</span>';
                 })
 
-                // Kolom: Urutan
                 ->addColumn('urutan', function ($row) {
                     return '<span class="badge bg-secondary bg-opacity-75 rounded-pill px-3">#' . e($row->Urutan) . '</span>';
                 })
 
-                // Kolom: Tanggal
                 ->addColumn('tanggal', function ($row) {
                     return '<span class="text-muted small">' .
                         \Carbon\Carbon::parse($row->created_at)->translatedFormat('d M Y') .
                         '</span>';
                 })
 
-                // Kolom: Aksi
                 ->addColumn('aksi', function ($row) {
                     $docUrl = $this->getDocumentShowUrl($row);
                     if ($docUrl === '#') {
@@ -117,7 +127,6 @@ class ApprovalController extends Controller
                        </a>';
                 })
 
-                // Hidden Column: Row Class (untuk border warna)
                 ->addColumn('row_class', function ($row) {
                     if (in_array($row->JenisFormId, [1, 2, 16])) {
                         return 'border-success';
@@ -127,7 +136,6 @@ class ApprovalController extends Controller
                     return '';
                 })
 
-                // Hidden Column: Doc URL (untuk klik row)
                 ->addColumn('doc_url', function ($row) {
                     return $this->getDocumentShowUrl($row);
                 })
@@ -141,41 +149,33 @@ class ApprovalController extends Controller
         // ==========================================
         $userId = Auth::id();
 
-        // Hitung Statistik dengan filter yang SAMA PERSIS dengan query DataTables
-        $stats = [
-            'total' => DokumenApproval::where('UserId', $userId)
-                ->where('Status', 'Pending')
-                ->where(function ($q) {
-                    $q->where(function ($subQ) {
-                        $subQ->whereIn('JenisFormId', [1, 2, 16])
-                            ->whereHas('getDokumenHTAGPA', function ($docQ) {
-                                $docQ->whereHas('getPengajuan');
-                            });
-                    })
-                        ->orWhere(function ($subQ) {
-                            $subQ->whereIn('JenisFormId', [7, 11, 12, 13, 14, 15])
-                                ->whereHas('getDokumenUsulanInvestasi', function ($docQ) {
-                                    $docQ->whereHas('getPengajuan', function ($pengajuanQ) {
-                                        $pengajuanQ->where('Status', 'Siap Presentasi'); // ✅ Update stats total juga
-                                    });
-                                });
-                        });
-                })->count(),
+        // ✅ BASE QUERY: Gunakan query yang sama persis (termasuk logika berjenjang) untuk menghitung statistik
+        $baseQuery = DokumenApproval::where('UserId', $userId)
+            ->where('Status', 'Pending')
+            ->whereNotExists(function ($subQuery) {
+                $subQuery->select(DB::raw(1))
+                         ->from('dokumen_approvals as prev')
+                         ->whereColumn('prev.JenisFormId', 'dokumen_approvals.JenisFormId')
+                         ->whereColumn('prev.DokumenId', 'dokumen_approvals.DokumenId')
+                         ->whereColumn('prev.Urutan', '<', 'dokumen_approvals.Urutan')
+                         ->where('prev.Status', '!=', 'Approved');
+            });
 
-            'hta' => DokumenApproval::where('UserId', $userId)
-                ->where('Status', 'Pending')
+        $stats = [
+            'total' => (clone $baseQuery)->count(),
+
+            'hta' => (clone $baseQuery)
                 ->whereIn('JenisFormId', [1, 2, 16])
                 ->whereHas('getDokumenHTAGPA', function ($q) {
                     $q->whereHas('getPengajuan');
                 })
                 ->count(),
 
-            'fui' => DokumenApproval::where('UserId', $userId)
-                ->where('Status', 'Pending')
+            'fui' => (clone $baseQuery)
                 ->whereIn('JenisFormId', [7, 11, 12, 13, 14, 15])
                 ->whereHas('getDokumenUsulanInvestasi', function ($q) {
                     $q->whereHas('getPengajuan', function ($pengajuanQ) {
-                        $pengajuanQ->where('Status', 'Siap Presentasi'); // ✅ Update stats FUI juga
+                        $pengajuanQ->where('Status', 'Siap Presentasi');
                     });
                 })
                 ->count(),
@@ -184,39 +184,33 @@ class ApprovalController extends Controller
         return view('approval.index', compact('stats'));
     }
 
-    // Helper: Ambil data pengajuan dari approval
+    // ==========================================
+    // HELPER METHODS (Tetap sama seperti sebelumnya)
+    // ==========================================
     private function getPengajuanFromApproval($approval)
     {
         $doc = null;
-
         if (in_array($approval->JenisFormId, [1, 2, 16])) {
             $doc = $approval->getDokumenHTAGPA;
         } elseif (in_array($approval->JenisFormId, [7, 11, 12, 13, 14, 15])) {
             $doc = $approval->getDokumenUsulanInvestasi;
         }
 
-        // Validasi: Dokumen harus ada, dan Pengajuan di dalamnya juga harus ada
         if (!$doc || !$doc->getPengajuan) {
             return null;
         }
-
         return $doc->getPengajuan;
     }
 
-    /**
-     * Helper: Menggenerate URL Show untuk Dokumen
-     */
     private function getDocumentShowUrl($approval)
     {
         $doc = null;
-
         if (in_array($approval->JenisFormId, [1, 2, 16])) {
             $doc = $approval->getDokumenHTAGPA;
         } elseif (in_array($approval->JenisFormId, [7, 11, 12, 13, 14, 15])) {
             $doc = $approval->getDokumenUsulanInvestasi;
         }
 
-        // Validasi berlapis: Dokumen ada, Punya PengajuanItemId, dan Pengajuan ada
         if (!$doc || !$doc->PengajuanItemId || !$doc->getPengajuan) {
             return '#';
         }
@@ -224,28 +218,9 @@ class ApprovalController extends Controller
         if (in_array($approval->JenisFormId, [1, 2, 16])) {
             return route('htagpa.show', [$doc->IdPengajuan, $doc->PengajuanItemId]);
         }
-
         if (in_array($approval->JenisFormId, [7, 11, 12, 13, 14, 15])) {
             return route('usulan-investasi.show', [$doc->IdPengajuan, $doc->PengajuanItemId]);
         }
-
         return '#';
-    }
-
-    // Method untuk memproses approval (opsional)
-    public function process(Request $request, $token)
-    {
-        $approval = DokumenApproval::where('ApprovalToken', $token)->firstOrFail();
-
-        if ($approval->UserId !== Auth::id()) {
-            abort(403, 'Anda tidak memiliki akses untuk approval ini.');
-        }
-
-        if ($approval->Status !== 'Pending') {
-            return redirect()->back()->with('error', 'Approval ini sudah diproses sebelumnya.');
-        }
-
-        $redirectUrl = $this->getDocumentShowUrl($approval);
-        return redirect($redirectUrl);
     }
 }
