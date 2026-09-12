@@ -945,24 +945,15 @@ class UsulanInvestasiController extends Controller
     // }
     public function approve($token)
     {
+        // dd($token);
         $penilai = DokumenApproval::with('getUser')->where('ApprovalToken', $token)->first();
-
         if (!$penilai) {
             return view('errors.proses-verifikasi');
         }
-
-        // Jika step ini sudah di-approve sebelumnya, langsung tampilkan pesan sukses
-        if ($penilai->Status === 'Approved') {
-            return view('emails.setelah-approval', compact('penilai'))->with([
-                'message' => 'Persetujuan ini telah dicatat sebelumnya. Terima kasih.'
-            ]);
-        }
-
         $usulan = UsulanInvestasi::find($penilai->DokumenId);
         $pengajuan = null;
         $jenisPengajuan = null;
         $kodePengajuan = null;
-
         if ($usulan) {
             $pengajuan = PengajuanPembelian::find($usulan->IdPengajuan);
             if ($pengajuan) {
@@ -972,100 +963,66 @@ class UsulanInvestasiController extends Controller
                 $kodePengajuan = $usulan->id ?? null;
             }
         }
-
-        // Generate PDF (tetap dipertahankan)
-        $this->pdfGenerator->generateAll($usulan->IdPengajuan);
-
-        // 1. VALIDASI AWAL: Apakah langkah SAAT INI diblokir oleh langkah sebelumnya yang belum Approved/Rejected?
-        $isCurrentStepBlocked = DokumenApproval::where('DokumenId', $penilai->DokumenId)
+        $ada_approval_sebelumnya_pending = DokumenApproval::where('DokumenId', $penilai->DokumenId)
             ->where('JenisFormId', $penilai->JenisFormId)
             ->where('Urutan', '<', $penilai->Urutan)
-            ->where('Status', '!=', 'Approved') // Bisa Pending atau Rejected
-            ->exists();
-
-        if ($isCurrentStepBlocked) {
-            return view('emails.setelah-approval', compact('penilai'))->with([
-                'message' => 'Approval tidak dapat diproses karena ada urutan sebelumnya yang belum menyetujui atau ditolak.'
-            ]);
-        }
-
-        // 2. SMART LOOP: Ambil SEMUA langkah pending MILIK USER INI, diurutkan dari terkecil
-        $userPendingSteps = DokumenApproval::where('DokumenId', $penilai->DokumenId)
-            ->where('JenisFormId', $penilai->JenisFormId)
-            ->where('UserId', $penilai->UserId)
             ->where('Status', 'Pending')
-            ->orderBy('Urutan', 'asc')
-            ->get();
+            ->exists();
+            // dd($ada_approval_sebelumnya_pending);
+        $this->pdfGenerator->generateAll($usulan->IdPengajuan);
+        if (!$ada_approval_sebelumnya_pending) {
 
-        $approvedCount = 0;
-        $namaPenyetuju = $penilai->Nama ?? ($penilai->getUser ? $penilai->getUser->name : 'User');
-
-        foreach ($userPendingSteps as $step) {
-            // Cek ulang: Apakah langkah spesifik INI diblokir oleh user lain di depannya?
-            $isStepBlocked = DokumenApproval::where('DokumenId', $penilai->DokumenId)
+            $masih_ada_urutan_lebih_besar_pending = DokumenApproval::where('DokumenId', $penilai->DokumenId)
                 ->where('JenisFormId', $penilai->JenisFormId)
-                ->where('Urutan', '<', $step->Urutan)
-                ->where('Status', '!=', 'Approved')
+                ->where('Urutan', '>', $penilai->Urutan)
+                ->where('Status', 'Pending')
                 ->exists();
 
-            if ($isStepBlocked) {
-                // Berhenti melakukan auto-approve, karena ada user lain yang belum approve di tengah jalan
-                break;
-            }
-
-            // ✅ AMAN: Approve langkah ini
-            $step->update([
+            $penilai->update([
                 'Status' => 'Approved',
                 'TanggalApprove' => Carbon::now(),
             ]);
 
-            $approvedCount++;
+            if (!$masih_ada_urutan_lebih_besar_pending) {
+                if ($pengajuan) {
+                    $pengajuan->AccCeo = 'Y';
+                    $pengajuan->TanggalAccCeo = Carbon::now();
+                    $pengajuan->Status = 'Disetujui CEO';
+                    $pengajuan->save();
+                }
 
-            // Catat aktivitas untuk setiap langkah yang berhasil di-approve
-            AktivitasPengajuan::create([
-                'KodePengajuan' => $kodePengajuan,
-                'Jenis' => 'FUI',
-                'Keterangan' => $namaPenyetuju . ' telah menyetujui Form Usulan Investasi (FUI) [Urutan: ' . $step->Urutan . ']',
-                'UserCreate' => $namaPenyetuju,
+                AktivitasPengajuan::create([
+                    'KodePengajuan' => $kodePengajuan ?? null,
+                    'Jenis' => 'Persetujuan CEO',
+                    'Keterangan' => 'Arfan Awaloeddin (CEO) telah menyetujui Dokumen dengan Nomor Pengajuan: ' . ($kodePengajuan ?? '-'),
+                    'UserCreate' => 'Arfan Awaloeddin',
+                ]);
+
+                if (function_exists('activity')) {
+                    activity('approval_fui_ceo')
+                        ->causedBy($penilai->UserId)
+                        ->withProperties([
+                            'approval_token' => $token,
+                            'keterangan' => 'CEO Menyetujui Dokumen dengan Nomor pengajuan: ' . $kodePengajuan,
+                        ])
+                        ->log('CEO Menyetujui Dokumen dengan Nomor pengajuan: ' . $kodePengajuan);
+                }
+            }
+        } else {
+            return view('emails.setelah-approval', compact('penilai'))->with([
+                'message' => 'Approval tidak dapat diproses sebelum urutan sebelumnya menyetujui.'
             ]);
         }
+        AktivitasPengajuan::create([
+            'KodePengajuan' => $kodePengajuan,
+            'Jenis' => 'FUI',
+            'Keterangan' => ($penilai->Nama ?? '-') . ' telah menyetujui Form Usulan Investasi (FUI)',
+            'UserCreate' => $penilai->Nama ?? '-',
+        ]);
 
-        // 3. CEK FINAL: Apakah masih ada langkah Pending tersisa untuk dokumen ini?
-        $masihAdaYangPending = DokumenApproval::where('DokumenId', $penilai->DokumenId)
-            ->where('JenisFormId', $penilai->JenisFormId)
-            ->where('Status', 'Pending')
-            ->exists();
-
-        // Jika TIDAK ADA lagi yang pending, berarti dokumen ini sudah FULL APPROVED
-        if (!$masihAdaYangPending) {
-            if ($pengajuan) {
-                $pengajuan->AccCeo = 'Y';
-                $pengajuan->TanggalAccCeo = Carbon::now();
-                $pengajuan->Status = 'Disetujui CEO';
-                $pengajuan->save();
-            }
-
-            AktivitasPengajuan::create([
-                'KodePengajuan' => $kodePengajuan ?? null,
-                'Jenis' => 'Persetujuan CEO',
-                'Keterangan' => 'Arfan Awaloeddin (CEO) telah menyetujui Dokumen dengan Nomor Pengajuan: ' . ($kodePengajuan ?? '-'),
-                'UserCreate' => 'Arfan Awaloeddin',
-            ]);
-
-            if (function_exists('activity')) {
-                activity('approval_fui_ceo')
-                    ->causedBy($penilai->UserId)
-                    ->withProperties([
-                        'approval_token' => $token,
-                        'keterangan' => 'CEO Menyetujui Dokumen dengan Nomor pengajuan: ' . $kodePengajuan,
-                    ])
-                    ->log('CEO Menyetujui Dokumen dengan Nomor pengajuan: ' . $kodePengajuan);
-            }
-        }
-
-        // 4. NOTIFIKASI: Cari langkah selanjutnya yang masih Pending (milik user mana saja)
         $approvalSelanjutnya = DokumenApproval::where('DokumenId', $penilai->DokumenId)
             ->where('JenisFormId', $penilai->JenisFormId)
+            ->where('Urutan', '>', $penilai->Urutan)
             ->where('Status', 'Pending')
             ->orderBy('Urutan', 'asc')
             ->first();
@@ -1091,16 +1048,8 @@ class UsulanInvestasiController extends Controller
             }
         }
 
-        // 5. PESAN SUKSES
-        $pesanSukses = 'Terima kasih, persetujuan Anda berhasil dicatat.';
-        if ($approvedCount > 1) {
-            $pesanSukses .= " (Sistem juga otomatis menyetujui {$approvedCount} langkah approval lainnya yang ditujukan kepada Anda).";
-        } elseif ($approvedCount === 0) {
-            $pesanSukses = 'Persetujuan ini telah dicatat sebelumnya atau diblokir oleh urutan sebelumnya.';
-        }
-
         return view('emails.setelah-approval', compact('penilai'))->with([
-            'message' => $pesanSukses
+            'message' => 'Terima kasih, persetujuan Anda berhasil dicatat.'
         ]);
     }
 
