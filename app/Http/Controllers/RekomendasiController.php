@@ -249,7 +249,7 @@ class RekomendasiController extends Controller
                     }
 
                     // Gunakan ID terenkripsi
-                    $url = route('ajukan.show', $encryptedId);
+                    $url = route('rekomendasi.show', $encryptedId);
                     $kodeHtml = '<a href="' . $url . '" style="color:#0d6efd; font-weight:bold;" target="_blank" title="Review Pengajuan">' . $kode . '</a>';
 
                     if (!empty($catatan)) {
