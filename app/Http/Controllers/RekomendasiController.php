@@ -239,22 +239,26 @@ class RekomendasiController extends Controller
                     return $lokasi;
                 })
                 ->addColumn('KodePengajuan', function ($row) {
+                    // Gunakan enkripsi ID sebelum masukkan ke dalam URL
+                    $encryptedId = encrypt($row->id ?? 0);
+
                     $kode = e($row->KodePengajuan ?? '-');
                     $catatan = null;
                     if (isset($row->getRekomendasiCcp) && is_object($row->getRekomendasiCcp)) {
                         $catatan = $row->getRekomendasiCcp->Catatan ?? null;
                     }
 
-                    $url = route('ajukan.show', $row->id ?? 0);
+                    // Gunakan ID terenkripsi
+                    $url = route('ajukan.show', $encryptedId);
                     $kodeHtml = '<a href="' . $url . '" style="color:#0d6efd; font-weight:bold;" target="_blank" title="Review Pengajuan">' . $kode . '</a>';
 
                     if (!empty($catatan)) {
                         return $kodeHtml . ' <i class="fa fa-sticky-note text-warning btn-catatan-modal" style="font-size: 1.3em; margin-left: 6px; cursor:pointer;" title="Ada Catatan" data-catatan="' . e($catatan) . '"></i>';
                     }
 
-
                     return $kodeHtml;
                 })
+
 
 
 
