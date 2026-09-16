@@ -49,16 +49,15 @@
                                     <label for="filterStatus" class="form-label mb-0">Status</label>
                                     <select class="form-select select2" id="filterStatus" name="status">
                                        <option value="">Pilih Status</option>
-                                    <option value="Diajukan">Diajukan Ke CCP</option>
-                                    <option value="Dalam Review">Dalam Review CCP</option>
-                                    <option value="Selesai Review">Selesai Review CCP</option>
-                                    <option value="Menunggu Rekomendasi GH">Menunggu Rekomendasi GH CCP</option>
-                                    <option value="Siap Presentasi">Siap Presentasi</option>
-                                    <option value="Selesai">Selesai Presentasi Komite</option>
-                                    <option value="Ditolak CEO">Ditolak CEO</option>
-                                    <option value="Disetujui CEO">Disetujui CEO</option>
-                                    <option value="Ditolak">Ditolak</option>
-
+                                        <option value="Diajukan">Diajukan Ke CCP</option>
+                                        <option value="Dalam Review">Dalam Review CCP</option>
+                                        <option value="Selesai Review">Selesai Review CCP</option>
+                                        <option value="Menunggu Rekomendasi GH">Menunggu Rekomendasi GH CCP</option>
+                                        <option value="Siap Presentasi">Siap Presentasi</option>
+                                        <option value="Selesai">Selesai Presentasi Komite</option>
+                                        <option value="Ditolak CEO">Ditolak CEO</option>
+                                        <option value="Disetujui CEO">Disetujui CEO</option>
+                                        <option value="Ditolak">Ditolak</option>
                                     </select>
                                 </div>
                                 <div class="col-md-3">
@@ -76,8 +75,6 @@
                         </div>
                     </div>
                     <div class="card-body">
-
-
                         <div class="table-responsive">
                             <table class="table datanew cell-border compact stripe" id="pengajuanTable" width="100%">
                                 <thead>
@@ -98,16 +95,48 @@
                                 <tbody></tbody>
                             </table>
                         </div>
-
                     </div>
                 </div>
             </div>
         </div>
     </div>
+
+    {{-- Modal Catatan --}}
+    <div class="sticky-note" id="ccp-note"
+        style="display:none; position: fixed; left: 30px; top: 90px; z-index: 10000; min-width: 500px; max-width: 500px; background: #fffecf; color: #856404; border: 1.5px solid #f7d358; border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.07); padding: 22px 18px 18px 26px; font-family: 'Comic Sans MS', 'Comic Sans', cursive, sans-serif; font-size: 1.05em;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+            <span style="font-weight: bold; color: #d9534f; font-size: 1.13em;">
+                🗒️ Catatan dari CCP
+            </span>
+            <button type="button" class="btn-close" aria-label="Close"
+                onclick="document.getElementById('ccp-note').style.display='none';"
+                style="margin-left: 12px; filter: brightness(0.7);"></button>
+        </div>
+        <div id="ccp-note-content"></div>
+    </div>
+
     @include('rekomendasi-pembelian.modal-taggal-diajukan')
 @endsection
 
 @push('js')
+<script>
+    $(document).ready(function() {
+        $(document).on('click', '.btn-catatan-modal', function() {
+            let catatan = $(this).data('catatan');
+            let formattedCatatan = catatan.replace(/\n/g, '<br>');
+            $('#ccp-note-content').html(formattedCatatan);
+            $('#ccp-note').fadeIn(300);
+        });
+        $(document).on('click', '#ccp-note .btn-close', function() {
+            $('#ccp-note').fadeOut(300);
+        });
+        $(document).on('click', function(e) {
+            if (!$(e.target).closest('#ccp-note').length && !$(e.target).closest('.btn-catatan-modal').length) {
+                $('#ccp-note').fadeOut(300);
+            }
+        });
+    });
+</script>
     @if (Session::get('success'))
         <script>
             Swal.fire({
@@ -148,7 +177,12 @@
     <script>
         $(document).ready(function() {
 
-
+            // Handler for opening catatan modal
+            $('body').on('click', '.btn-catatan-modal', function() {
+                var catatan = $(this).data('catatan');
+                $('#modalCatatanContent').html(catatan ? catatan : '<em>Tidak ada catatan.</em>');
+                $('#modalCatatan').modal('show');
+            });
 
             $('body').on('click', '.btn-delete', function() {
                 var id = $(this).data('id');

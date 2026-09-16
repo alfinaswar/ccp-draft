@@ -56,7 +56,8 @@ class RekomendasiController extends Controller
                 'getPerusahaan',
                 'getPermintaan',
                 'getJenisPermintaan',
-                'getPengajuanItem.getBarang.getMerk'
+                'getPengajuanItem.getBarang.getMerk',
+                'getRekomendasiCcp'
             ])
                 // ->whereIn('Status', [
                 //     'Diajukan',
@@ -146,12 +147,6 @@ class RekomendasiController extends Controller
                     $id = encrypt($row->id);
                     $idPengajuan = encrypt($row->id);
 
-                    $buttonReview = '
-                        <a href="' . route('rekomendasi.show', $id) . '" class="btn btn-sm btn-info" title="Detail">
-                            <i class="fa fa-eye"></i> Review
-                        </a>
-                    ';
-
                     $idPengajuanItem = $row->getPengajuanItem[0]->id ?? null;
                     $buttonRekap = '
                         <a href="' . route('rekomendasi.rekap', [$idPengajuan, encrypt($idPengajuanItem)]) . '" class="btn btn-sm btn-success" title="Rekap" target="_blank">
@@ -165,8 +160,9 @@ class RekomendasiController extends Controller
                         </a>
                     ';
 
-                    return $buttonReview . ' ' . $buttonRekap . ' ' . $buttonTracking;
+                    return $buttonRekap . ' ' . $buttonTracking;
                 })
+
                 ->addColumn('Status', function ($row) {
                     switch ($row->Status) {
                         case 'Draft':
@@ -242,6 +238,28 @@ class RekomendasiController extends Controller
                     }
                     return $lokasi;
                 })
+                ->addColumn('KodePengajuan', function ($row) {
+                    $kode = e($row->KodePengajuan ?? '-');
+                    $catatan = null;
+                    if (isset($row->getRekomendasiCcp) && is_object($row->getRekomendasiCcp)) {
+                        $catatan = $row->getRekomendasiCcp->Catatan ?? null;
+                    }
+
+                    $url = route('ajukan.show', $row->id ?? 0);
+                    $kodeHtml = '<a href="' . $url . '" style="color:#0d6efd; font-weight:bold;" target="_blank" title="Review Pengajuan">' . $kode . '</a>';
+
+                    if (!empty($catatan)) {
+                        return $kodeHtml . ' <i class="fa fa-sticky-note text-warning btn-catatan-modal" style="font-size: 1.3em; margin-left: 6px; cursor:pointer;" title="Ada Catatan" data-catatan="' . e($catatan) . '"></i>';
+                    }
+
+
+                    return $kodeHtml;
+                })
+
+
+
+
+
                 ->addColumn('TanggalPresentasi', function ($row) {
                     if ($row->TanggalPresentasi) {
                         return Carbon::parse($row->TanggalPresentasi)->translatedFormat('d M Y');
@@ -256,7 +274,7 @@ class RekomendasiController extends Controller
     </button>';
                     }
                 })
-                ->rawColumns(['action','Jenis', 'Status', 'DiajukanPada', 'NamaBarang', 'TanggalPresentasi', 'LokasiPenempatan'])
+                ->rawColumns(['action','KodePengajuan','Jenis', 'Status', 'DiajukanPada', 'NamaBarang', 'TanggalPresentasi', 'LokasiPenempatan'])
                 ->make(true);
         }
         $jenis = MasterJenisPengajuan::get();
@@ -518,6 +536,14 @@ class RekomendasiController extends Controller
                 ->forceDelete();
 
             foreach ($request->rekomendasi as $key => $value) {
+                $namaFileSphBaru = null;
+                if ($request->hasFile('upload_sph_terbaru')) {
+                    $fileSphBaru = $request->file('upload_sph_terbaru')[$key] ?? null;
+                    if ($fileSphBaru) {
+                        $namaFileSphBaru = time() . '_' . uniqid() . '.' . $fileSphBaru->getClientOriginalExtension();
+                        $fileSphBaru->storeAs('rekomendasi_file/sph_update', $namaFileSphBaru, 'public');
+                    }
+                }
                 $isi = RekomendasiDetail::create([
                     'IdPengajuan' => $value['IdPengajuan'],
                     'PengajuanItemId' => $value['PengajuanItemId'],
@@ -541,6 +567,7 @@ class RekomendasiController extends Controller
                     'ReviewVendor' => $value['ReviewVendor'] ?? null,
                     'Rekomendasi' => $value['Rekomendasi'] ?? null,
                     'File' => $value['File'] ?? null,
+                    'SphBaru' => $namaFileSphBaru ?? $value['SphBaru'],
                     'UserNego' => auth()->user()->id,
                     'Keterangan' => $value['Keterangan'] ?? null,
                     'KodePerusahaan' => $request->rekomendasi[0]['KodePerusahaan'],
@@ -704,6 +731,7 @@ class RekomendasiController extends Controller
             $fileName = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
             $file->storeAs('rekomendasi_file', $fileName, 'public');
         }
+
         $existingRekomendasi = Rekomendasi::where([
             'IdPengajuan' => $request->rekomendasi[0]['IdPengajuan'],
             'PengajuanItemId' => $request->rekomendasi[0]['PengajuanItemId'],
@@ -738,6 +766,15 @@ class RekomendasiController extends Controller
             ])->forceDelete();
 
             foreach ($request->rekomendasi as $key => $value) {
+                $namaFileSphBaru = null;
+                if ($request->hasFile('upload_sph_terbaru')) {
+                    $fileSphBaru = $request->file('upload_sph_terbaru')[$key] ?? null;
+                    if ($fileSphBaru) {
+                        $namaFileSphBaru = time() . '_' . uniqid() . '.' . $fileSphBaru->getClientOriginalExtension();
+                        $fileSphBaru->storeAs('rekomendasi_file/sph_update', $namaFileSphBaru, 'public');
+                    }
+                }
+
                 RekomendasiDetail::create([
                     'IdPengajuan' => $value['IdPengajuan'],
                     'PengajuanItemId' => $value['PengajuanItemId'],
@@ -760,6 +797,7 @@ class RekomendasiController extends Controller
                     'Luasan' => $value['Luasan'] ?? null,
                     'ReviewVendor' => $value['ReviewVendor'] ?? null,
                     'File' => $value['File'] ?? null,
+                    'SphBaru' => $namaFileSphBaru ?? $value['SphBaru'],
                     'Rekomendasi' => $value['Rekomendasi'] ?? null,
                     'UserNego' => auth()->user()->id,
                     'Keterangan' => $value['Keterangan'] ?? null,
@@ -835,331 +873,6 @@ class RekomendasiController extends Controller
         ]);
     }
 
-    // public function rekap2($idPengajuan, $idPengajuanItem)
-    // {
-    //     $idPengajuan = decrypt($idPengajuan);
-    //     $idPengajuanItem = decrypt($idPengajuanItem);
-    //     $caripermintaan = PengajuanPembelian::find($idPengajuan);
-    //     // dd($idPengajuan);
-
-    //     // rekomendasi
-    //     $rekomendasi = Rekomendasi::with('getRekomedasiDetail.getPerusahaan', 'getRekomedasiDetail.getBarang', 'getRekomedasiDetail.getNegara')
-    //         ->where('PengajuanItemId', $idPengajuanItem)
-    //         ->whereNotNull('DisetujuiOleh')
-    //         ->first();
-
-    //     if (!$rekomendasi) {
-    //         return redirect()->back()->with('warning', 'Maaf, Rekomendasi Pembelian Masih Dalam Proses Menunggu Rekomendasi GH');
-    //     }
-
-    //     if ($rekomendasi->UserNego !== null) {
-    //         $qrCode = QrCode::create($rekomendasi->id)
-    //             ->setSize(300)
-    //             ->setMargin(10);
-
-    //         $writer = new PngWriter();
-    //         $result = $writer->write($qrCode);
-
-    //         $rekomendasi->qrCodeNego = base64_encode($result->getString());
-    //     }
-
-    //     if ($rekomendasi->DisetujuiOleh !== null) {
-    //         $qrCode = QrCode::create($rekomendasi->id ?? '')
-    //             ->setSize(300)
-    //             ->setMargin(10);
-
-    //         $writer = new PngWriter();
-    //         $result = $writer->write($qrCode);
-
-    //         $rekomendasi->qrCodeApprove = base64_encode($result->getString());
-    //     }
-    //     // dd($rekomendasi);
-    //     // DISPOSISI
-    //     $lembarDisposisi = LembarDisposisi::with(['getDetail', 'getBarang'])
-    //         ->where('IdPengajuan', $idPengajuan)
-    //         ->where('PengajuanItemId', $idPengajuanItem)
-    //         ->first();
-
-    //     if (!$lembarDisposisi) {
-    //         return redirect()->back()->with('error', 'Maaf, Lembar Disposisi Belum Dibuat / Disetujui');
-    //     }
-
-    //     $approval = DokumenApproval::with('getUser', 'getJabatan', 'getDepartemen')
-    //         ->where('JenisFormId', $lembarDisposisi->JenisForm)
-    //         ->where('DokumenId', $lembarDisposisi->id)
-    //         ->orderBy('Urutan', 'asc')
-    //         ->get();
-    //     // dd($approval);
-    //     foreach ($approval as $item) {
-    //         if ($item->Status == 'Approved') {
-    //             $qrCode = QrCode::create(route('approval.validasi', $item->ApprovalToken))
-    //                 ->setSize(300)
-    //                 ->setMargin(10);
-
-    //             $writer = new PngWriter();
-    //             $result = $writer->write($qrCode);
-
-    //             $item->qrCode = base64_encode($result->getString());
-    //         }
-    //     }
-    //     $data = [
-    //         'lembarDisposisi' => $lembarDisposisi,
-    //         'namaBarang' => $lembarDisposisi->getBarang->Nama,
-    //         'harga' => $lembarDisposisi->Harga,
-    //         'rencanaVendor' => $lembarDisposisi->getVendor->Nama,
-    //         'tujuanPenempatan' => $lembarDisposisi->TujuanPenempatan,
-    //         'formPermintaan' => $lembarDisposisi->FormPermintaanUser,
-    //         'approval' => $approval,
-    //     ];
-    //     // HTA
-    //     $dataHta = PengajuanPembelian::with([
-    //         'getVendor.getVendorDetail',
-    //         'getHtaGpa.getDetailHta' => function ($query) use ($idPengajuanItem) {
-    //             $query->where('PengajuanItemId', $idPengajuanItem);
-    //         },
-    //         'getVendor.getHtaGpa' => function ($query) use ($idPengajuanItem) {
-    //             $query->where('PengajuanItemId', $idPengajuanItem);
-    //         },
-    //         'getJenisPermintaan.getForm',
-    //         'getHtaGpa.getPenilai1',
-    //         'getHtaGpa.getPenilai2',
-    //         'getHtaGpa.getPenilai3',
-    //         'getHtaGpa.getPenilai4',
-    //         'getHtaGpa.getPenilai5',
-    //         'getHtaGpa.getPenilai',
-    //         'getPengajuanItem' => function ($query) use ($idPengajuanItem) {
-    //             $query->where('id', $idPengajuanItem)->with('getBarang.getMerk');
-    //         }
-    //     ])->find($idPengajuan);
-    //     // dd($dataHta);
-    //     $approvalHta = DokumenApproval::with('getUser', 'getJabatan', 'getDepartemen')
-    //         ->where('JenisFormId', $dataHta->getHtaGpa->JenisForm)
-    //         ->where('DokumenId', $dataHta->getHtaGpa->id)
-    //         ->orderBy('Urutan', 'asc')
-    //         ->get();
-
-    //     foreach ($approvalHta as $itemHta) {
-    //         if ($itemHta->Status == 'Approved') {
-    //             $qrCode = QrCode::create(route('approval.validasi', $itemHta->ApprovalToken ?? '0'))
-    //                 ->setSize(300)
-    //                 ->setMargin(10);
-
-    //             $writer = new PngWriter();
-    //             $result = $writer->write($qrCode);
-
-    //             $itemHta->qrCode = base64_encode($result->getString());
-    //         }
-    //     }
-
-    //     $parameter = MasterParameter::get();
-    //     // FUI
-    //     $usulan = UsulanInvestasi::with('getFuiDetail.getVendor', 'getBarang', 'getVendor', 'getAccDirektur', 'getAccKadiv', 'getDepartemen', 'getDepartemen2', 'getNamaForm')
-    //         ->where('IdPengajuan', $idPengajuan)
-    //         ->where('PengajuanItemId', $idPengajuanItem)
-    //         ->first();
-    //     $dataRekom = Rekomendasi::with('getRekomedasiDetail.getBarang', 'getRekomedasiDetail.getNamaVendor')->where('IdPengajuan', $idPengajuan)->first();
-
-    //     // dd($usulan);
-    //     $VendorAcc = Rekomendasi::with([
-    //         'getRekomedasiDetail' => function ($query2) {
-    //             $query2->where('Rekomendasi', 1);
-    //         },
-    //         'getRekomedasiDetail.getNamaVendor'
-    //     ])
-    //         ->where('PengajuanItemId', $idPengajuanItem)
-    //         ->first();
-    //     $approval2 = DokumenApproval::with('getUser', 'getJabatan', 'getDepartemen')
-    //         ->where('JenisFormId', $usulan->JenisForm)
-    //         ->where('DokumenId', $usulan->id)
-    //         ->orderBy('Urutan', 'asc')
-    //         ->get();
-    //     foreach ($approval2 as $item) {
-    //         if ($item->Status == 'Approved') {
-    //             $qrCode = QrCode::create(route('approval.validasi', $item->ApprovalToken))
-    //                 ->setSize(300)
-    //                 ->setMargin(10);
-
-    //             $writer = new PngWriter();
-    //             $result = $writer->write($qrCode);
-
-    //             $item->qrCode = base64_encode($result->getString());
-    //         }
-    //     }
-    //     $Acc = $VendorAcc->getRekomedasiDetail[0]->IdVendor;
-    //     // dd($Acc);
-    //     $NamaBarangAcc = $VendorAcc->getRekomedasiDetail[0]->NamaPermintaan;
-    //     $data2 = PengajuanPembelian::with([
-    //         'getVendor' => function ($query2) use ($Acc) {
-    //             $query2->where('NamaVendor', $Acc);
-    //         },
-    //         'getVendor.getVendorDetail' => function ($query) use ($NamaBarangAcc) {
-    //             $query->where('NamaBarang', $NamaBarangAcc);
-    //         },
-    //         'getRekomendasi' => function ($query) {
-    //             $query->with([
-    //                 'getRekomedasiDetail' => function ($query2) {
-    //                     $query2->where('Rekomendasi', 1);
-    //                 }
-    //             ]);
-    //         }
-    //     ])->find($idPengajuan);
-    //     // END FUI
-    //     // FS
-    //     $datafs = FeasibilityStudy::with('getFsDetail', 'getBarang')
-    //         ->where('IdPengajuan', $idPengajuan)
-    //         ->where('PengajuanItemId', $idPengajuanItem)
-    //         ->first();
-    //     // dd($datafs);
-    //     $approvalfS = collect();  // Default to empty collection
-
-    //     if (!is_null($datafs)) {
-    //         $approvalfS = DokumenApproval::with('getUser', 'getJabatan', 'getDepartemen')
-    //             ->where('JenisFormId', $datafs->JenisForm)
-    //             ->where('DokumenId', $datafs->id)
-    //             ->orderBy('Urutan', 'asc')
-    //             ->get();
-
-    //         // Generate QR code untuk setiap approval yang approved
-    //         foreach ($approvalfS as $itemFS) {
-    //             if ($itemFS->Status == 'Approved') {
-    //                 $qrCode = QrCode::create(route('approval.validasi', $itemFS->ApprovalToken))
-    //                     ->setSize(300)
-    //                     ->setMargin(10);
-
-    //                 $writer = new PngWriter();
-    //                 $result = $writer->write($qrCode);
-
-    //                 $itemFS->qrCode = base64_encode($result->getString());
-    //             }
-    //         }
-    //     }
-    //     // END FS
-    //     // PERMINTAAN
-    //     $permintaan = PermintaanPembelian::with([
-    //         'getDetail.getBarang.getMerk',
-    //         'getDiajukanOleh',
-    //         'getDetail.getBarang.getSatuan'
-    //     ])->find($caripermintaan->IdPermintaan);
-    //     // dd($permintaan);
-    //     $approval3 = DokumenApproval::with('getUser', 'getJabatan', 'getDepartemen')
-    //         ->where('JenisFormId', $permintaan->JenisForm)
-    //         ->where('DokumenId', $permintaan->id)
-    //         ->orderBy('Urutan', 'asc')
-    //         ->get();
-
-    //     // Generate QR code untuk setiap approval
-    //     foreach ($approval3 as $item) {
-    //         if ($item->Status == 'Approved') {
-    //             $qrCode = QrCode::create(route('approval.validasi', $item->ApprovalToken))
-    //                 ->setSize(80)
-    //                 ->setMargin(10);
-
-    //             $writer = new PngWriter();
-    //             $result = $writer->write($qrCode);
-
-    //             $item->qrCode = base64_encode($result->getString());
-    //         }
-    //     }
-    //     // dd($caripermintaan);
-    //     $pdf = Pdf::loadView('rekomendasi-pembelian.rekap-pdf', [
-    //         'rekomendasi' => $rekomendasi,
-    //         'data' => $data,
-    //         'data2' => $data2,
-    //         'usulan' => $usulan,
-    //         'approval' => $approval,
-    //         'VendorAcc' => $VendorAcc,
-    //         'approval2' => $approval2,
-    //         'permintaan' => $permintaan,
-    //         'approval3' => $approval3,
-    //         'dataHta' => $dataHta,
-    //         'approvalHta' => $approvalHta,
-    //         'parameter' => $parameter,
-    //         'datafs' => $datafs,
-    //         'approvalfS' => $approvalfS,
-    //         'dataRekom' => $dataRekom,
-    //     ]);
-    //     $pdf->setOptions([
-    //         'isHtml5ParserEnabled' => true,
-    //         'isRemoteEnabled' => true,
-    //     ]);
-    //     // dd($caripermintaan);
-    //     if ($caripermintaan->Jenis != 1) {
-    //         $hasAttachment = !empty($rekomendasi->File) &&
-    //             Storage::disk('public')->exists('rekomendasi_file/' . $rekomendasi->File);
-    //         if (!$hasAttachment) {
-    //             return $pdf->stream('rekap_pengajuan_' . $idPengajuan . '_' . $idPengajuanItem . '.pdf');
-    //         }
-
-    //         // Double check if file exists on disk
-    //         $storedFilePath = Storage::disk('public')->path('rekomendasi_file/' . $rekomendasi->File);
-    //         if (!file_exists($storedFilePath)) {
-    //             return $pdf->stream('rekap_pengajuan_' . $idPengajuan . '_' . $idPengajuanItem . '.pdf');
-    //         }
-
-    //         // Ensure merged directory exists
-    //         $mergedDir = storage_path('app/public/rekomendasi_file/merged');
-    //         if (!file_exists($mergedDir)) {
-    //             mkdir($mergedDir, 0755, true);
-    //         }
-
-    //         // Gunakan nama file konsisten berdasarkan ID
-    //         $mergedFileName = 'rekap_merged_' . $idPengajuan . '_' . $idPengajuanItem . '.pdf';
-    //         $mergedFullPath = $mergedDir . DIRECTORY_SEPARATOR . $mergedFileName;
-
-    //         // HAPUS file merged lama jika ada (untuk selalu generate yang baru)
-    //         if (file_exists($mergedFullPath)) {
-    //             unlink($mergedFullPath);
-    //         }
-
-    //         // Path for saving generated PDF
-    //         $generatedFileName = 'generated_' . time() . '_' . uniqid() . '.pdf';
-    //         $generatedFullPath = $mergedDir . DIRECTORY_SEPARATOR . $generatedFileName;
-
-    //         // Save generated PDF
-    //         $pdf->save($generatedFullPath);
-
-    //         // Merge PDFs
-    //         $fpdi = new Fpdi();
-
-    //         // 1. Add generated PDF pages
-    //         $pageCount = $fpdi->setSourceFile($generatedFullPath);
-    //         for ($i = 1; $i <= $pageCount; $i++) {
-    //             $template = $fpdi->importPage($i);
-    //             $size = $fpdi->getTemplateSize($template);
-    //             $fpdi->AddPage($size['orientation'], [$size['width'], $size['height']]);
-    //             $fpdi->useTemplate($template);
-    //         }
-
-    //         // 2. Add uploaded attachment PDF pages
-    //         $attachCount = $fpdi->setSourceFile($storedFilePath);
-    //         for ($i = 1; $i <= $attachCount; $i++) {
-    //             $template = $fpdi->importPage($i);
-    //             $size = $fpdi->getTemplateSize($template);
-    //             $fpdi->AddPage($size['orientation'], [$size['width'], $size['height']]);
-    //             $fpdi->useTemplate($template);
-    //         }
-
-    //         // 3. Output merged PDF
-    //         // Normalize path untuk TCPDF (gunakan forward slash)
-    //         $mergedFullPathNormalized = str_replace('\\', '/', $mergedFullPath);
-
-    //         $fpdi->Output($mergedFullPathNormalized, 'F');
-
-    //         // Clean up generated PDF after merging
-    //         if (file_exists($generatedFullPath)) {
-    //             unlink($generatedFullPath);
-    //         }
-
-    //         // Stream the merged PDF
-    //         return response()->file($mergedFullPath, [
-    //             'Content-Type' => 'application/pdf',
-    //             'Content-Disposition' => 'inline; filename="rekap_pengajuan_' . $idPengajuan . '_' . $idPengajuanItem . '.pdf"'
-    //         ]);
-    //     }
-
-    //     // Jika jenis = 1, stream PDF biasa tanpa lampiran
-    //     return $pdf->stream('rekap_pengajuan_' . $idPengajuan . '_' . $idPengajuanItem . '.pdf');
-    // }
 
     /**
      * Show the form for editing the specified resource.
@@ -1425,12 +1138,21 @@ class RekomendasiController extends Controller
         );
 
         if (isset($request->rekomendasi) && is_array($request->rekomendasi)) {
+
             RekomendasiDetail::where('IdPengajuan', $header->IdPengajuan)
                 ->where('PengajuanItemId', $header->PengajuanItemId)
                 ->where('IdRekomendasi', $header->id)
                 ->forceDelete();
 
             foreach ($request->rekomendasi as $key => $value) {
+                $namaFileSphBaru = null;
+                if ($request->hasFile('upload_sph_terbaru')) {
+                    $fileSphBaru = $request->file('upload_sph_terbaru')[$key] ?? null;
+                    if ($fileSphBaru) {
+                        $namaFileSphBaru = time() . '_' . uniqid() . '.' . $fileSphBaru->getClientOriginalExtension();
+                        $fileSphBaru->storeAs('rekomendasi_file/sph_update', $namaFileSphBaru, 'public');
+                    }
+                }
                 $isi = RekomendasiDetail::create([
                     'IdPengajuan' => $value['IdPengajuan'],
                     'PengajuanItemId' => $value['PengajuanItemId'],
@@ -1453,6 +1175,7 @@ class RekomendasiController extends Controller
                     'Luasan' => $value['Luasan'] ?? null,
                     'ReviewVendor' => $value['ReviewVendor'] ?? null,
                     'File' => $value['File'] ?? null,
+                    'SphBaru' => $namaFileSphBaru ?? $value['SphBaru'],
                     'UserNego' => auth()->user()->id,
                     'Keterangan' => $value['Keterangan'] ?? null,
                     'Rekomendasi' => $value['RekomendasiSelect'] ?? null,
