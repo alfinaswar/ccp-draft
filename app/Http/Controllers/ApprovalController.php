@@ -33,8 +33,7 @@ class ApprovalController extends Controller
             ->where('Status', 'Pending')
 
             // ✅ LOGIKA BERJENJANG:
-            // Jangan tampilkan jika ada langkah sebelumnya (Urutan lebih kecil)
-            // untuk dokumen yang sama yang statusnya BUKAN 'Approved'
+
             ->whereNotExists(function ($subQuery) {
                 $subQuery->select(DB::raw(1))
                          ->from('dokumen_approvals as prev')
@@ -106,10 +105,20 @@ class ApprovalController extends Controller
                 })
 
                 ->addColumn('tanggal', function ($row) {
+                    $pengajuan = $this->getPengajuanFromApproval($row);
+                    $tanggalPresentasi = $pengajuan->TanggalPresentasi ?? null;
                     return '<span class="text-muted small">' .
-                        \Carbon\Carbon::parse($row->created_at)->translatedFormat('d M Y') .
+                        ($tanggalPresentasi ? \Carbon\Carbon::parse($tanggalPresentasi)->translatedFormat('d M Y') : '-') .
                         '</span>';
                 })
+                ->addColumn('asal_perm_rs', function ($row) {
+                    $pengajuan = $this->getPengajuanFromApproval($row);
+                    if ($pengajuan && isset($pengajuan->getPerusahaan->Nama)) {
+                        return '<span class="text-dark">' . e($pengajuan->getPerusahaan->Nama) . '</span>';
+                    }
+                    return '<span class="text-muted">-</span>';
+                })
+
 
                 ->addColumn('aksi', function ($row) {
                     $docUrl = $this->getDocumentShowUrl($row);
@@ -140,7 +149,7 @@ class ApprovalController extends Controller
                     return $this->getDocumentShowUrl($row);
                 })
 
-                ->rawColumns(['jenis_dokumen', 'kode_pengajuan', 'nama_barang', 'urutan', 'tanggal', 'aksi'])
+                ->rawColumns(['asal_perm_rs','jenis_dokumen', 'kode_pengajuan', 'nama_barang', 'urutan', 'tanggal', 'aksi'])
                 ->make(true);
         }
 

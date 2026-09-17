@@ -347,8 +347,9 @@
                             <th width="5%">No</th>
                             <th>Jenis Dokumen</th>
                             <th>Kode Pengajuan</th>
+                            <th>Asal Permintaan</th>
                             <th>Barang / Item</th>
-                            <th width="8%">Urutan</th>
+                            {{-- <th width="8%">Urutan</th> --}}
                             <th width="15%">Tanggal</th>
                             <th width="12%" class="text-end">Aksi</th>
                             <th style="display:none">row_class</th>
@@ -388,9 +389,9 @@ $(document).ready(function() {
             { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false, className: 'text-center' },
             { data: 'jenis_dokumen', name: 'jenis_dokumen', className: 'text-center' },
             { data: 'kode_pengajuan', name: 'kode_pengajuan' },
+            { data: 'asal_perm_rs', name: 'asal_perm_rs' },
             { data: 'nama_barang', name: 'nama_barang' },
-            { data: 'urutan', name: 'Urutan', className: 'text-center' },
-            { data: 'tanggal', name: 'created_at', className: 'text-center' },
+            { data: 'tanggal', name: 'tanggal', className: 'text-center' },
             { data: 'aksi', name: 'aksi', orderable: false, searchable: false, className: 'text-end' },
             { data: 'row_class', name: 'row_class', visible: false },
             { data: 'doc_url', name: 'doc_url', visible: false }
