@@ -350,7 +350,7 @@
                             <th>Asal Permintaan</th>
                             <th>Barang / Item</th>
                             {{-- <th width="8%">Urutan</th> --}}
-                            <th width="15%">Tanggal</th>
+                            <th width="15%">Tanggal Presentasi</th>
                             <th width="12%" class="text-end">Aksi</th>
                             <th style="display:none">row_class</th>
                             <th style="display:none">doc_url</th>
