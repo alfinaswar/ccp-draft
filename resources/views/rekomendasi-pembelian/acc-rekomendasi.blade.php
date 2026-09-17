@@ -429,7 +429,10 @@
                                                             class="form-control rupiah-input"
                                                             placeholder="Masukkan Harga Awal"
                                                             value="{{ isset($data->getRekomendasi[0]->getRekomedasiDetail[$vIdx]->HargaAwal) ? $data->getRekomendasi[0]->getRekomedasiDetail[$vIdx]->HargaAwal : old("rekomendasi.$vIdx.HargaAwal") }}">
-                                                    </td>
+                                                                                          <input type="hidden"
+                                                        name="rekomendasi[{{ $vIdx }}][SphBaru]"
+                                                        value="{{ isset($data->getRekomendasi[0]->getRekomedasiDetail[$vIdx]->SphBaru) ? $data->getRekomendasi[0]->getRekomedasiDetail[$vIdx]->SphBaru : (old("rekomendasi.$vIdx.SphBaru") ?? '') }}">
+                                                        </td>
                                                 </tr>
                                                 <tr>
                                                     <td class="text-center">2</td>

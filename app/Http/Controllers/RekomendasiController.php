@@ -1149,14 +1149,14 @@ class RekomendasiController extends Controller
                 ->forceDelete();
 
             foreach ($request->rekomendasi as $key => $value) {
-                // $namaFileSphBaru = null;
-                // if ($request->hasFile('upload_sph_terbaru')) {
-                //     $fileSphBaru = $request->file('upload_sph_terbaru')[$key] ?? null;
-                //     if ($fileSphBaru) {
-                //         $namaFileSphBaru = time() . '_' . uniqid() . '.' . $fileSphBaru->getClientOriginalExtension();
-                //         $fileSphBaru->storeAs('rekomendasi_file/sph_update', $namaFileSphBaru, 'public');
-                //     }
-                // }
+                $namaFileSphBaru = null;
+                if ($request->hasFile('upload_sph_terbaru')) {
+                    $fileSphBaru = $request->file('upload_sph_terbaru')[$key] ?? null;
+                    if ($fileSphBaru) {
+                        $namaFileSphBaru = time() . '_' . uniqid() . '.' . $fileSphBaru->getClientOriginalExtension();
+                        $fileSphBaru->storeAs('rekomendasi_file/sph_update', $namaFileSphBaru, 'public');
+                    }
+                }
                 $isi = RekomendasiDetail::create([
                     'IdPengajuan' => $value['IdPengajuan'],
                     'PengajuanItemId' => $value['PengajuanItemId'],
@@ -1179,7 +1179,7 @@ class RekomendasiController extends Controller
                     'Luasan' => $value['Luasan'] ?? null,
                     'ReviewVendor' => $value['ReviewVendor'] ?? null,
                     'File' => $value['File'] ?? null,
-                    // 'SphBaru' => $namaFileSphBaru ?? ($value['SphBaru'] ?? null),
+                    'SphBaru' => $namaFileSphBaru ?? ($value['SphBaru'] ?? null),
                     'UserNego' => auth()->user()->id,
                     'Keterangan' => $value['Keterangan'] ?? null,
                     'Rekomendasi' => $value['RekomendasiSelect'] ?? null,
