@@ -157,7 +157,7 @@
                                                         <div class="card-body">
                                                             <div class="fw-bold mb-2" style="color:#1a6984;">SPH Terbaru</div>
                                                             <input type="file" name="upload_sph_terbaru[{{ $vIdx }}]"
-                                                                class="form-control" accept="application/pdf">
+                                                                class="form-control">
                                                             <div class="form-text mt-1 small">
                                                                 Hanya file dengan format <span class="fw-bold">PDF</span> yang dapat diunggah.
                                                             </div>
