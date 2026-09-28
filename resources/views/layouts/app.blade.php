@@ -30,11 +30,195 @@
 
     <!-- Main CSS -->
     <link rel="stylesheet" href="{{ asset('') }}assets/css/style.css">
+    <link rel="stylesheet" href="{{ asset('assets/css/custom/abproc.css') }}">
     <script src="{{ asset('ckeditor/ckeditor.js') }}"></script>
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
     @stack('css')
+    <style>
+        /* ==========================================================
+   SIDEBAR DREAMPOS — NAVY + PUTIH BOLD (VERSİ ANTI-KALAH)
+   ========================================================== */
 
+        /* 1) Container NAVY */
+        html body .main-wrapper .sidebar,
+        html body .main-wrapper .sidebar .sidebar-inner,
+        html body .main-wrapper #sidebar-menu {
+            background-color: #1e3a5f !important;
+            border: none !important;
+        }
+
+        /* 2) Bersihkan garis/border bawaan */
+        html body .main-wrapper .sidebar-menu ul,
+        html body .main-wrapper .sidebar-menu ul li,
+        html body .main-wrapper .sidebar-menu ul li a {
+            background: transparent !important;
+            border: none !important;
+            box-shadow: none !important;
+        }
+
+        /* 3) Judul grup */
+        html body .main-wrapper .sidebar-menu .submenu-hdr {
+            color: #9fb6d4 !important;
+            font-size: .72rem !important;
+            font-weight: 700 !important;
+            text-transform: uppercase !important;
+            letter-spacing: .09em !important;
+            margin: 20px 0 6px !important;
+            padding: 0 16px !important;
+        }
+
+        /* 4) Layout link menu */
+        html body .main-wrapper .sidebar-menu ul li a {
+            padding: 9px 12px !important;
+            margin: 1px 6px !important;
+            border-radius: 8px !important;
+            font-size: .9rem !important;
+            white-space: normal !important;
+            overflow: visible !important;
+            transition: background-color .18s ease !important;
+        }
+
+        /* 5) TEKS MENU: PUTIH + BOLD (termasuk span di dalamnya) */
+        html body .main-wrapper .sidebar-menu ul li a,
+        html body .main-wrapper .sidebar-menu ul li a span {
+            color: #ffffff !important;
+            font-weight: 700 !important;
+        }
+
+        /* 6) Icon putih lembut */
+        html body .main-wrapper .sidebar-menu ul li a i,
+        html body .main-wrapper .sidebar-menu ul li a svg,
+        html body .main-wrapper .sidebar-menu ul li a .feather,
+        html body .main-wrapper .sidebar svg.feather {
+            color: rgba(255, 255, 255, .85) !important;
+            stroke: rgba(255, 255, 255, .85) !important;
+        }
+
+        /* 7) Hover */
+        html body .main-wrapper .sidebar-menu ul li a:hover {
+            background-color: rgba(255, 255, 255, .12) !important;
+        }
+
+        html body .main-wrapper .sidebar-menu ul li a:hover,
+        html body .main-wrapper .sidebar-menu ul li a:hover span {
+            color: #ffffff !important;
+        }
+
+        html body .main-wrapper .sidebar-menu ul li a:hover i,
+        html body .main-wrapper .sidebar-menu ul li a:hover svg,
+        html body .main-wrapper .sidebar-menu ul li a:hover .feather {
+            color: #ffffff !important;
+            stroke: #ffffff !important;
+        }
+
+        /* 8) MENU AKTIF: azure selaras navy (teks putih, BUKAN oranye) */
+        html body .main-wrapper .sidebar-menu ul li.active>a {
+            background-color: #4dabf7 !important;
+        }
+
+        html body .main-wrapper .sidebar-menu ul li.active>a,
+        html body .main-wrapper .sidebar-menu ul li.active>a span {
+            color: #ffffff !important;
+        }
+
+        html body .main-wrapper .sidebar-menu ul li.active>a i,
+        html body .main-wrapper .sidebar-menu ul li.active>a svg,
+        html body .main-wrapper .sidebar-menu ul li.active>a .feather {
+            color: #ffffff !important;
+            stroke: #ffffff !important;
+        }
+
+        /* 9) Induk submenu terbuka */
+        html body .main-wrapper .sidebar-menu ul li>a.subdrop {
+            background-color: rgba(255, 255, 255, .14) !important;
+        }
+
+        html body .main-wrapper .sidebar-menu ul li>a.subdrop,
+        html body .main-wrapper .sidebar-menu ul li>a.subdrop span {
+            color: #ffffff !important;
+        }
+
+        /* 10) Panah submenu */
+        html body .main-wrapper .sidebar-menu .menu-arrow {
+            color: rgba(255, 255, 255, .65) !important;
+        }
+
+        html body .main-wrapper .sidebar-menu .menu-arrow::before,
+        html body .main-wrapper .sidebar-menu .menu-arrow::after {
+            border-color: rgba(255, 255, 255, .65) !important;
+        }
+
+        html body .main-wrapper .sidebar-menu li.active .menu-arrow,
+        html body .main-wrapper .sidebar-menu li a.subdrop .menu-arrow {
+            color: #ffffff !important;
+        }
+
+        /* 11) Submenu level 2: TANPA GARIS, tanpa bullet */
+        html body .main-wrapper .sidebar-menu ul ul {
+            list-style: none !important;
+            margin: 4px 6px 6px 16px !important;
+            padding-left: 8px !important;
+            border: none !important;
+        }
+
+        html body .main-wrapper .sidebar-menu ul ul li::before,
+        html body .main-wrapper .sidebar-menu ul ul li a::before {
+            display: none !important;
+            content: none !important;
+        }
+
+        html body .main-wrapper .sidebar-menu ul ul li a {
+            padding: 7px 8px !important;
+            margin: 1px 0 !important;
+            font-size: .84rem !important;
+            border-radius: 6px !important;
+        }
+
+        html body .main-wrapper .sidebar-menu ul ul li a,
+        html body .main-wrapper .sidebar-menu ul ul li a span {
+            color: rgba(255, 255, 255, .88) !important;
+            font-weight: 600 !important;
+        }
+
+        html body .main-wrapper .sidebar-menu ul ul li a:hover {
+            background-color: rgba(255, 255, 255, .10) !important;
+        }
+
+        html body .main-wrapper .sidebar-menu ul ul li.active>a {
+            background-color: #4dabf7 !important;
+        }
+
+        html body .main-wrapper .sidebar-menu ul ul li.active>a,
+        html body .main-wrapper .sidebar-menu ul ul li.active>a span {
+            color: #ffffff !important;
+        }
+
+        /* 12) Card profil user */
+        html body .main-wrapper .sidebar-menu>ul>li.submenu-open.d-flex {
+            background-color: #162c47 !important;
+            border: 1px solid rgba(255, 255, 255, .14) !important;
+            border-radius: 12px !important;
+            margin: 10px 8px 2px !important;
+        }
+
+        html body .main-wrapper .sidebar-menu>ul>li.submenu-open.d-flex .text-dark,
+        html body .main-wrapper .sidebar-menu>ul>li.submenu-open.d-flex .fw-bold {
+            color: #ffffff !important;
+        }
+
+        html body .main-wrapper .sidebar-menu>ul>li.submenu-open.d-flex .text-muted {
+            color: #b9cde6 !important;
+        }
+
+        /* 13) Scrollbar halus */
+        html body .main-wrapper .sidebar .slimScrollBar {
+            background: rgba(255, 255, 255, .25) !important;
+            width: 4px !important;
+            border-radius: 4px !important;
+            opacity: 1 !important;
+        }
+    </style>
     <style>
         .btn-ticket-trouble {
             background: linear-gradient(135deg, #4e73df, #224abe);
@@ -446,12 +630,12 @@
         <!-- /Header -->
 
         <!-- Sidebar Utama -->
-        <div class="sidebar" id="sidebar">
+        <div class="sidebar" id="sidebar" style="background: #212529;">
             <div class="sidebar-inner slimscroll">
                 <div id="sidebar-menu" class="sidebar-menu">
                     <ul>
                         <li class="submenu-open d-flex flex-column align-items-center py-4 mb-3"
-                            style="background: #f8f9fa; border-radius: 14px;">
+                            style="background: #343a40; border-radius: 14px;">
                             <div class="position-relative mb-2">
                                 @php $imgSize = 90; @endphp
                                 @if (Auth::user() && Auth::user()->foto)
@@ -471,26 +655,26 @@
                                 </span>
                             </div>
                             <div class="text-center">
-                                <span class="fw-bold text-dark"
+                                <span class="fw-bold text-white"
                                     style="font-size: 1.1rem;">{{ Str::limit(Auth::user()->name ?? 'User', 16) }}</span>
                                 @if (Auth::user() && Auth::user()->email)
-                                    <div class="text-muted small" style="font-size: 0.9rem;">
+                                    <div class="small text-white-50" style="font-size: 0.9rem;">
                                         {{ Str::limit(Auth::user()->email, 22) }}</div>
                                 @endif
                             </div>
                         </li>
 
                         <li class="submenu-open">
-                            <h6 class="submenu-hdr">Dashboard</h6>
+                            <h6 class="submenu-hdr fw-bold text-white">Dashboard</h6>
                             <ul>
                                 <li
                                     class="{{ Request::segment(1) == '' || Request::segment(1) == 'home' ? 'active' : '' }}">
-                                    <a href="{{ route('home') }}"><i
+                                    <a href="{{ route('home') }}" class="fw-bold text-white"><i
                                             data-feather="home"></i><span>Dashboard</span></a>
                                 </li>
                                 <li class="{{ request()->routeIs('approval-saya.*') ? 'active' : '' }}">
                                     <a href="{{ route('approval-saya.index') }}"
-                                        class="nav-link {{ request()->routeIs('approval-saya.*') ? 'active' : '' }}">
+                                        class="nav-link fw-bold text-white {{ request()->routeIs('approval-saya.*') ? 'active' : '' }}">
                                         <i class="fa fa-tasks me-2"></i><span>Approval Saya</span>
                                     </a>
                                 </li>
@@ -498,23 +682,24 @@
                         </li>
 
                         <li class="submenu-open">
-                            <h6 class="submenu-hdr">Form Pengajuan</h6>
+                            <h6 class="submenu-hdr fw-bold text-white">Form Pengajuan</h6>
                             <ul>
                                 @can('permintaan-list')
                                     <li class="{{ Request::segment(1) == 'permintaan-pembelian' ? 'active' : '' }}">
-                                        <a href="{{ route('pp.index') }}"><i
+                                        <a href="{{ route('pp.index') }}" class="fw-bold text-white"><i
                                                 data-feather="file-text"></i><span>Permintaan Pembelian</span></a>
                                     </li>
                                 @endcan
                                 @can('pengajuan-pembelian-list')
                                     <li class="{{ Request::segment(1) == 'ajukan-pembelian' ? 'active' : '' }}">
-                                        <a href="{{ route('ajukan.index') }}"><i data-feather="edit"></i><span>Ajukan
+                                        <a href="{{ route('ajukan.index') }}" class="fw-bold text-white"><i
+                                                data-feather="edit"></i><span>Ajukan
                                                 Pembelian</span></a>
                                     </li>
                                 @endcan
                                 @can('rekomendasi-list')
                                     <li class="{{ Request::segment(1) == 'rekomendasi' ? 'active' : '' }}">
-                                        <a href="{{ route('rekomendasi.index') }}"><i
+                                        <a href="{{ route('rekomendasi.index') }}" class="fw-bold text-white"><i
                                                 data-feather="thumbs-up"></i><span>Rekomendasi</span></a>
                                     </li>
                                 @endcan
@@ -523,11 +708,11 @@
 
                         @can('laporan-rekomendasi')
                             <li class="submenu-open">
-                                <h6 class="submenu-hdr">Laporan</h6>
+                                <h6 class="submenu-hdr fw-bold text-white">Laporan</h6>
                                 <ul>
                                     <li class="submenu">
                                         <a href="javascript:void(0);"
-                                            class="{{ Request::segment(1) == 'laporan' ? 'active subdrop' : '' }}">
+                                            class="fw-bold text-white {{ Request::segment(1) == 'laporan' ? 'active subdrop' : '' }}">
                                             <i data-feather="bar-chart-2"></i><span>Laporan</span><span
                                                 class="menu-arrow"></span>
                                         </a>
@@ -535,21 +720,21 @@
                                             @can('laporan-rekomendasi-ccp')
                                                 <li>
                                                     <a href="{{ route('rekomendasi.laporan') }}"
-                                                        class="{{ Request::segment(2) == 'rekomendasi-ccp' ? 'active' : '' }}">
+                                                        class="fw-bold text-white {{ Request::segment(2) == 'rekomendasi-ccp' ? 'active' : '' }}">
                                                         <i data-feather="check-circle"></i><span>Rekomendasi CCP</span>
                                                     </a>
                                                 </li>
                                             @endcan
                                             <li>
                                                 <a href="{{ route('laporan.history') }}"
-                                                    class="{{ Request::segment(2) == 'history' ? 'active' : '' }}">
+                                                    class="fw-bold text-white {{ Request::segment(2) == 'history' ? 'active' : '' }}">
                                                     <i data-feather="book-open"></i><span>History Pembelian Alat</span>
                                                 </a>
                                             </li>
                                             @can('laporan-total-pembelian')
                                                 <li>
                                                     <a href="{{ route('laporan.total-pembelian') }}"
-                                                        class="{{ Request::segment(2) == 'total-pembelian' ? 'active' : '' }}">
+                                                        class="fw-bold text-white {{ Request::segment(2) == 'total-pembelian' ? 'active' : '' }}">
                                                         <i data-feather="dollar-sign"></i><span>Total Pembelian</span>
                                                     </a>
                                                 </li>
@@ -562,10 +747,10 @@
 
                         @can('perencanaan-dan-anggaran')
                             <li class="submenu-open">
-                                <h6 class="submenu-hdr">Perencanaan dan Anggaran</h6>
+                                <h6 class="submenu-hdr fw-bold text-white">Perencanaan dan Anggaran</h6>
                                 <ul>
                                     <li class="{{ Request::segment(1) == 'rkap' ? 'active' : '' }}">
-                                        <a href="{{ route('rkap.index') }}"><i
+                                        <a href="{{ route('rkap.index') }}" class="fw-bold text-white"><i
                                                 data-feather="target"></i><span>RKAP</span></a>
                                     </li>
                                 </ul>
@@ -574,23 +759,23 @@
 
                         @can('kelola-pengguna')
                             <li class="submenu-open">
-                                <h6 class="submenu-hdr">Kelola Pengguna</h6>
+                                <h6 class="submenu-hdr fw-bold text-white">Kelola Pengguna</h6>
                                 <ul>
                                     @can('user-list')
                                         <li class="{{ Request::segment(1) == 'users' ? 'active' : '' }}">
-                                            <a href="{{ route('users.index') }}"><i
+                                            <a href="{{ route('users.index') }}" class="fw-bold text-white"><i
                                                     data-feather="user"></i><span>Akun</span></a>
                                         </li>
                                     @endcan
                                     @can('role-list')
                                         <li class="{{ Request::segment(1) == 'roles' ? 'active' : '' }}">
-                                            <a href="{{ route('roles.index') }}"><i
+                                            <a href="{{ route('roles.index') }}" class="fw-bold text-white"><i
                                                     data-feather="shield"></i><span>Role</span></a>
                                         </li>
                                     @endcan
                                     @can('permission-list')
                                         <li class="{{ Request::segment(1) == 'permission' ? 'active' : '' }}">
-                                            <a href="{{ route('permission.index') }}"><i
+                                            <a href="{{ route('permission.index') }}" class="fw-bold text-white"><i
                                                     data-feather="lock"></i><span>Permission</span></a>
                                         </li>
                                     @endcan
@@ -600,10 +785,10 @@
 
                         @can('pengaturan-pengajuan')
                             <li class="submenu-open">
-                                <h6 class="submenu-hdr">Pengaturan</h6>
+                                <h6 class="submenu-hdr fw-bold text-white">Pengaturan</h6>
                                 <ul>
                                     <li class="{{ Request::segment(1) == 'pengaturan' ? 'active' : '' }}">
-                                        <a href="{{ route('pengaturan.index') }}"><i
+                                        <a href="{{ route('pengaturan.index') }}" class="fw-bold text-white"><i
                                                 data-feather="settings"></i><span>Pengaturan Pengajuan</span></a>
                                     </li>
                                 </ul>
@@ -612,68 +797,68 @@
 
                         @can('data-master')
                             <li class="submenu-open">
-                                <h6 class="submenu-hdr">Master Data</h6>
+                                <h6 class="submenu-hdr fw-bold text-white">Master Data</h6>
                                 <ul>
                                     <li class="submenu">
                                         <a href="javascript:void(0);"
-                                            class="{{ Request::segment(1) == 'master' ? 'active subdrop' : '' }}">
+                                            class="fw-bold text-white {{ Request::segment(1) == 'master' ? 'active subdrop' : '' }}">
                                             <i data-feather="database"></i><span>Master Data</span><span
                                                 class="menu-arrow"></span>
                                         </a>
                                         <ul>
                                             @can('perusahaan-list')
                                                 <li><a href="{{ route('perusahaan.index') }}"
-                                                        class="{{ Request::segment(2) == 'perusahaan' ? 'active' : '' }}"><i
+                                                        class="fw-bold text-white {{ Request::segment(2) == 'perusahaan' ? 'active' : '' }}"><i
                                                             data-feather="briefcase"></i><span>Perusahaan</span></a></li>
                                             @endcan
                                             @can('departemen-list')
                                                 <li><a href="{{ route('departemen.index') }}"
-                                                        class="{{ Request::segment(2) == 'departemen' ? 'active' : '' }}"><i
+                                                        class="fw-bold text-white {{ Request::segment(2) == 'departemen' ? 'active' : '' }}"><i
                                                             data-feather="grid"></i><span>Departemen</span></a></li>
                                             @endcan
                                             @can('jabatan-list')
                                                 <li><a href="{{ route('jabatan.index') }}"
-                                                        class="{{ Request::segment(2) == 'jabatan' ? 'active' : '' }}"><i
+                                                        class="fw-bold text-white {{ Request::segment(2) == 'jabatan' ? 'active' : '' }}"><i
                                                             data-feather="grid"></i><span>Jabatan</span></a></li>
                                             @endcan
                                             @can('satuan-barang-list')
                                                 <li><a href="{{ route('satuan.index') }}"
-                                                        class="{{ Request::segment(2) == 'satuan' ? 'active' : '' }}"><i
+                                                        class="fw-bold text-white {{ Request::segment(2) == 'satuan' ? 'active' : '' }}"><i
                                                             data-feather="tag"></i><span>Satuan Barang</span></a></li>
                                             @endcan
                                             @can('master-merk-list')
                                                 <li><a href="{{ route('merk.index') }}"
-                                                        class="{{ Request::segment(2) == 'merk' ? 'active' : '' }}"><i
+                                                        class="fw-bold text-white {{ Request::segment(2) == 'merk' ? 'active' : '' }}"><i
                                                             data-feather="award"></i><span>Merek</span></a></li>
                                             @endcan
                                             @can('barang-list')
                                                 <li><a href="{{ route('barang.index') }}"
-                                                        class="{{ Request::segment(2) == 'barang' ? 'active' : '' }}"><i
+                                                        class="fw-bold text-white {{ Request::segment(2) == 'barang' ? 'active' : '' }}"><i
                                                             data-feather="box"></i><span>Barang</span></a></li>
                                             @endcan
                                             @can('vendor-list')
                                                 <li><a href="{{ route('vendor.index') }}"
-                                                        class="{{ Request::segment(2) == 'vendor' ? 'active' : '' }}"><i
+                                                        class="fw-bold text-white {{ Request::segment(2) == 'vendor' ? 'active' : '' }}"><i
                                                             data-feather="truck"></i><span>Vendor</span></a></li>
                                             @endcan
                                             @can('parameter-list')
                                                 <li><a href="{{ route('parameter.index') }}"
-                                                        class="{{ Request::segment(2) == 'parameter' ? 'active' : '' }}"><i
+                                                        class="fw-bold text-white {{ Request::segment(2) == 'parameter' ? 'active' : '' }}"><i
                                                             data-feather="sliders"></i><span>Parameter</span></a></li>
                                             @endcan
                                             @can('nama-form-list')
                                                 <li><a href="{{ route('nama-form.index') }}"
-                                                        class="{{ Request::segment(2) == 'form' ? 'active' : '' }}"><i
+                                                        class="fw-bold text-white {{ Request::segment(2) == 'form' ? 'active' : '' }}"><i
                                                             data-feather="file-text"></i><span>Master Form</span></a></li>
                                             @endcan
                                             @can('master-approval-list')
                                                 <li><a href="{{ route('master-approval.index') }}"
-                                                        class="{{ Request::segment(2) == 'pengaturan-approval' ? 'active' : '' }}"><i
+                                                        class="fw-bold text-white {{ Request::segment(2) == 'pengaturan-approval' ? 'active' : '' }}"><i
                                                             data-feather="file-text"></i><span>Master Approval</span></a></li>
                                             @endcan
                                             @can('jenis-pengajuan-list')
                                                 <li><a href="{{ route('jenis-pengajuan.index') }}"
-                                                        class="{{ Request::segment(2) == 'jenis-pengajuan' ? 'active' : '' }}"><i
+                                                        class="fw-bold text-white {{ Request::segment(2) == 'jenis-pengajuan' ? 'active' : '' }}"><i
                                                             data-feather="list"></i><span>Master Jenis Pengajuan</span></a>
                                                 </li>
                                             @endcan
@@ -686,6 +871,7 @@
                 </div>
             </div>
         </div>
+
         <!-- /Sidebar -->
 
         <!-- BAGIAN collapsed-sidebar YANG MEMBUAT KONFLIK TELAH DIHAPUS SEPENUHNYA DI SINI -->
@@ -696,18 +882,22 @@
             </div>
         </div>
 
-        <footer class="footer bg-white border-top shadow-sm"
-            style="position: fixed; bottom: 0; left: 0; width: 100%; z-index: 999; margin-top: 0; padding-top: 8px; padding-bottom: 8px; font-size: 0.88rem;">
+        <footer class="footer border-top shadow-sm"
+            style="background-color: #ffffff !important; border-top: 1px solid rgba(255,255,255,.14) !important; color: #fff; position: fixed; bottom: 0; left: 0; width: 100%; z-index: 999; margin-top: 0; padding-top: 8px; padding-bottom: 8px; font-size: 0.88rem;">
+            {{-- 1e3a5f --}}
             <div class="container text-center">
-                <span class="fw-semibold text-secondary" style="font-size: 0.92em;">
+                <span class="fw-semibold" style="font-size: 0.92em; color: #1e3a5f !important;">
                     &copy; {{ date('Y') }} {{ env('APP_NAME', 'CCP') }}
                 </span>
                 <br>
-                <span class="text-muted" style="font-size: 0.9em;">
-                    Dikembangkan dengan <i class="fas fa-heart text-danger"></i> oleh
-                    <a href="https://dih-digital.com/" target="_blank" rel="noopener">PT DIGITAL INDONESIA HEBAT</a>
+                <span style="font-size: 0.9em; color: #1e3a5f !important;">
+                    Dikembangkan dengan <i class="fas fa-heart" style="color: #f00909;"></i> oleh
+                    <a href="https://dih-digital.com/" target="_blank" rel="noopener"
+                        style="color: #1e3a5f; text-decoration: none; font-weight: 600;">PT DIGITAL INDONESIA HEBAT</a>
                 </span>
             </div>
+
+
         </footer>
         <div style="height: 70px;"></div>
 
