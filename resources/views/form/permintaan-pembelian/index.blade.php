@@ -1,35 +1,49 @@
 @extends('layouts.app')
 
 @section('content')
-    <div class="page-header">
-        <div class="row">
-            <div class="col">
-                <h3 class="page-title">Permintaan Pembelian</h3>
-                <ul class="breadcrumb">
-                    <li class="breadcrumb-item"><a href="{{ route('home') }}">Dashboard</a></li>
-                    <li class="breadcrumb-item active">Permintaan Pembelian</li>
+    <div class="page-header ph-redesign">
+        <div class="ph-container">
+            <!-- KIRI: Breadcrumb, Title, Subtitle -->
+            <div class="ph-left">
+                <ul class="ph-breadcrumb">
+                    <li><a href="{{ route('home') }}"><i class="fa fa-home"></i> Dashboard</a></li>
+                    <li class="active">Permintaan Pembelian</li>
                 </ul>
+                <h3 class="ph-title">
+                    <i class="fa fa-shopping-cart"></i>
+                    Permintaan Pembelian
+                </h3>
+                <p class="ph-subtitle">Lihat daftar dan detail permintaan pembelian yang diajukan</p>
             </div>
-        </div>
-    </div>
-
-    <div class="row mb-3">
-        <div class="col text-end">
-            <a class="btn btn-primary" href="{{ route('pp.create') }}">
-                <i class="fa fa-plus me-1"></i> Tambah Permintaan Baru
-            </a>
+            <!-- KANAN: Icon + Tombol Kembali -->
+            <div class="ph-right">
+                <div class="ph-icon">
+                    <i class="fa fa-file-invoice"></i>
+                </div>
+                <a href="{{ route('home') }}" class="ph-btn">
+                    <i class="fa fa-arrow-left"></i> Kembali
+                </a>
+            </div>
         </div>
     </div>
 
     <div class="row">
         <div class="col-sm-12">
             <div class="card">
-                <div class="card-header bg-dark">
-                    <h4 class="card-title">Daftar Permintaan Pembelian</h4>
-                    <p class="card-text">
-                        Tabel ini berisi semua data permintaan pembelian yang diajukan oleh departemen.
-                    </p>
+                <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                    <div>
+                        <h4 class="card-title mb-1">Daftar Permintaan Pembelian</h4>
+                        <p class="card-text mb-0">
+                            Tabel ini berisi semua data permintaan pembelian yang diajukan oleh departemen.
+                        </p>
+                    </div>
+                    <div class="text-end">
+                        <a class="btn btn-primary" href="{{ route('pp.create') }}">
+                            <i class="fa fa-plus me-1"></i> Tambah Permintaan Baru
+                        </a>
+                    </div>
                 </div>
+
                 <div class="card-body">
                     <div class="alert alert-info mb-3" role="alert">
                         <i class="fa fa-info-circle"></i>

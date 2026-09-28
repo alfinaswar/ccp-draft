@@ -2,8 +2,8 @@
     aria-hidden="true">
     <div class="modal-dialog modal-xl">
         <div class="modal-content">
-            <div class="modal-header bg-dark">
-                <h5 class="modal-title text-white" id="modalPermintaanPembelianLabel">Permintaan Pembelian</h5>
+            <div class="modal-header bg-white">
+                <h5 class="modal-title text-dark" id="modalPermintaanPembelianLabel">Permintaan Pembelian</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">

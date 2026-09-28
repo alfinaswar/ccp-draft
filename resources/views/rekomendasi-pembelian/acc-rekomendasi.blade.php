@@ -1,16 +1,33 @@
 @extends('layouts.app')
 
 @section('content')
-    <div class="page-header">
-        <div class="row">
-            <div class="col">
-                <h3 class="page-title">Form Rekomendasi Pembelian</h3>
-                <ul class="breadcrumb">
-                    <li class="breadcrumb-item"><a href="{{ route('home') }}">Dashboard</a></li>
-                    <li class="breadcrumb-item"><a href="#">Rekomendasi Pembelian</a></li>
-                    <li class="breadcrumb-item active">Form Rekomendasi</li>
+    <div class="page-header ph-redesign">
+        <div class="ph-container">
+
+            <!-- KIRI: Breadcrumb, Title, Subtitle -->
+            <div class="ph-left">
+                <ul class="ph-breadcrumb">
+                    <li><a href="{{ route('home') }}"><i class="fa fa-home"></i> Dashboard</a></li>
+                    <li><a href="{{ route('ajukan.index') }}">Pengajuan Pembelian</a></li>
+                    <li class="active">Detail</li>
                 </ul>
+                <h3 class="ph-title">
+                    <i class="fa fa-file-invoice"></i>
+                    Detail Pengajuan Pembelian
+                </h3>
+                <p class="ph-subtitle">Lihat informasi lengkap mengenai pengajuan pembelian ini</p>
             </div>
+
+            <!-- KANAN: Icon + Tombol Kembali -->
+            <div class="ph-right">
+                <div class="ph-icon">
+                    <i class="fa fa-shopping-cart"></i>
+                </div>
+                <a href="{{ route('ajukan.index') }}" class="ph-btn">
+                    <i class="fa fa-arrow-left"></i> Kembali
+                </a>
+            </div>
+
         </div>
     </div>
     <div class="row">
@@ -150,10 +167,8 @@
                         </ul>
                         <div class="tab-content" id="vendorTabPanes">
                             @if ($data->Jenis == 1)
-                            {{-- @dd(123) --}}
+                                {{-- @dd(123) --}}
                                 @foreach ($data->getVendor as $vIdx => $Vendor)
-
-
                                     <div class="tab-pane fade {{ $vIdx === 0 ? 'show active' : '' }}"
                                         id="vendor-pane-{{ $vIdx }}" role="tabpanel"
                                         aria-labelledby="vendor-tab-{{ $vIdx }}">
@@ -171,54 +186,65 @@
                                             value="{{ $data->getPengajuanItem[0]->getBarang->id ?? '' }}">
                                         <input type="hidden" name="rekomendasi[{{ $vIdx }}][KodePerusahaan]"
                                             value="{{ $data->KodePerusahaan ?? '' }}">
-@if (!empty($Vendor) && !empty($Vendor->SuratPenawaranVendor))
-                                        <div class="mb-4">
-                                            <div class="row g-3 align-items-stretch">
-                                                <!-- Kiri: Surat Penawaran Vendor -->
-                                                <div class="col-md-6">
-                                                    <div class="card border-0 shadow-sm h-100" style="background-color: #f7f3ea;"> {{-- Warna krem untuk surat penawaran --}}
-                                                        <div class="card-body d-flex align-items-center">
-                                                            <span class="me-3" style="font-size: 2rem; color: #dc3545;">
-                                                                <i class="fa fa-file-pdf"></i>
-                                                            </span>
-                                                            <div>
-                                                                <div class="fw-bold mb-1" style="color: #b88904;">Surat Penawaran Vendor</div>
-                                                                <a href="{{ asset('storage/penawaran_vendor/' . $Vendor->SuratPenawaranVendor) }}"
-                                                                    target="_blank" class="btn btn-sm px-3" style="background-color:#b88904; color: #fff;">
-                                                                    <i class="fa fa-eye"></i> Lihat Surat Penawaran
-                                                                </a>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                <!-- Kanan: SPH Terbaru -->
-                                                <div class="col-md-6">
-                                                    <div class="card border-0 shadow-sm h-100" style="background-color: #eaf6f7;"> {{-- Biru muda untuk upload SPH --}}
-                                                        <div class="card-body">
-                                                            <div class="fw-bold mb-2" style="color:#1a6984;">SPH Terbaru</div>
-                                                            <input type="file" name="upload_sph_terbaru[{{ $vIdx }}]"
-                                                                class="form-control" accept="application/pdf">
-                                                            <div class="form-text mt-1 small">
-                                                                Hanya file dengan format <span class="fw-bold">PDF</span> yang dapat diunggah.
-                                                            </div>
-                                                            @if (!empty($data->getRekomendasi[0]->getRekomedasiDetail[$vIdx]->SphBaru))
-                                                                <div class="mt-2">
-                                                                    <a href="{{ asset('storage/rekomendasi_file/sph_update/' . $data->getRekomendasi[0]->getRekomedasiDetail[$vIdx]->SphBaru) }}"
-                                                                       target="_blank" class="btn btn-link p-0" style="font-size: 0.98rem; color:#1a6984;">
-                                                                       <i class="fa fa-file-pdf-o"></i> Lihat SPH terbaru
+                                        @if (!empty($Vendor) && !empty($Vendor->SuratPenawaranVendor))
+                                            <div class="mb-4">
+                                                <div class="row g-3 align-items-stretch">
+                                                    <!-- Kiri: Surat Penawaran Vendor -->
+                                                    <div class="col-md-6">
+                                                        <div class="card border-0 shadow-sm h-100"
+                                                            style="background-color: #f7f3ea;"> {{-- Warna krem untuk surat penawaran --}}
+                                                            <div class="card-body d-flex align-items-center">
+                                                                <span class="me-3"
+                                                                    style="font-size: 2rem; color: #dc3545;">
+                                                                    <i class="fa fa-file-pdf"></i>
+                                                                </span>
+                                                                <div>
+                                                                    <div class="fw-bold mb-1" style="color: #b88904;">
+                                                                        Surat Penawaran Vendor</div>
+                                                                    <a href="{{ asset('storage/penawaran_vendor/' . $Vendor->SuratPenawaranVendor) }}"
+                                                                        target="_blank" class="btn btn-sm px-3"
+                                                                        style="background-color:#b88904; color: #fff;">
+                                                                        <i class="fa fa-eye"></i> Lihat Surat Penawaran
                                                                     </a>
                                                                 </div>
-                                                            @endif
-                                                            @error("upload_sph_terbaru.$vIdx")
-                                                                <div class="text-danger mt-1 small">{{ $message }}</div>
-                                                            @enderror
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <!-- Kanan: SPH Terbaru -->
+                                                    <div class="col-md-6">
+                                                        <div class="card border-0 shadow-sm h-100"
+                                                            style="background-color: #eaf6f7;"> {{-- Biru muda untuk upload SPH --}}
+                                                            <div class="card-body">
+                                                                <div class="fw-bold mb-2" style="color:#1a6984;">SPH
+                                                                    Terbaru</div>
+                                                                <input type="file"
+                                                                    name="upload_sph_terbaru[{{ $vIdx }}]"
+                                                                    class="form-control" accept="application/pdf">
+                                                                <div class="form-text mt-1 small">
+                                                                    Hanya file dengan format <span
+                                                                        class="fw-bold">PDF</span> yang dapat diunggah.
+                                                                </div>
+                                                                @if (!empty($data->getRekomendasi[0]->getRekomedasiDetail[$vIdx]->SphBaru))
+                                                                    <div class="mt-2">
+                                                                        <a href="{{ asset('storage/rekomendasi_file/sph_update/' . $data->getRekomendasi[0]->getRekomedasiDetail[$vIdx]->SphBaru) }}"
+                                                                            target="_blank" class="btn btn-link p-0"
+                                                                            style="font-size: 0.98rem; color:#1a6984;">
+                                                                            <i class="fa fa-file-pdf-o"></i> Lihat SPH
+                                                                            terbaru
+                                                                        </a>
+                                                                    </div>
+                                                                @endif
+                                                                @error("upload_sph_terbaru.$vIdx")
+                                                                    <div class="text-danger mt-1 small">{{ $message }}
+                                                                    </div>
+                                                                @enderror
+                                                            </div>
                                                         </div>
                                                     </div>
                                                 </div>
-                                            </div>
 
-                                        </div>
-                                    @endif
+                                            </div>
+                                        @endif
                                         <table class="table align-middle nilai-table" style="width:100%;"
                                             data-vidx="{{ $vIdx }}">
                                             <thead class="table-light">
@@ -238,10 +264,10 @@
                                                             class="form-control rupiah-input"
                                                             placeholder="Masukkan Harga Awal"
                                                             value="{{ isset($data->getRekomendasi[0]->getRekomedasiDetail[$vIdx]->HargaAwal) ? $data->getRekomendasi[0]->getRekomedasiDetail[$vIdx]->HargaAwal : old("rekomendasi.$vIdx.HargaAwal") }}">
-                                                    <input type="hidden"
-                                                        name="rekomendasi[{{ $vIdx }}][SphBaru]"
-                                                        value="{{ isset($data->getRekomendasi[0]->getRekomedasiDetail[$vIdx]->SphBaru) ? $data->getRekomendasi[0]->getRekomedasiDetail[$vIdx]->SphBaru : (old("rekomendasi.$vIdx.SphBaru") ?? '') }}">
-                                                        </td>
+                                                        <input type="hidden"
+                                                            name="rekomendasi[{{ $vIdx }}][SphBaru]"
+                                                            value="{{ isset($data->getRekomendasi[0]->getRekomedasiDetail[$vIdx]->SphBaru) ? $data->getRekomendasi[0]->getRekomedasiDetail[$vIdx]->SphBaru : old("rekomendasi.$vIdx.SphBaru") ?? '' }}">
+                                                    </td>
                                                 </tr>
                                                 <tr>
                                                     <td class="text-center">2</td>
@@ -479,10 +505,10 @@
                                                             class="form-control rupiah-input"
                                                             placeholder="Masukkan Harga Awal"
                                                             value="{{ isset($data->getRekomendasi[0]->getRekomedasiDetail[$vIdx]->HargaAwal) ? $data->getRekomendasi[0]->getRekomedasiDetail[$vIdx]->HargaAwal : old("rekomendasi.$vIdx.HargaAwal") }}">
-                                                                                          <input type="hidden"
-                                                        name="rekomendasi[{{ $vIdx }}][SphBaru]"
-                                                        value="{{ isset($data->getRekomendasi[0]->getRekomedasiDetail[$vIdx]->SphBaru) ? $data->getRekomendasi[0]->getRekomedasiDetail[$vIdx]->SphBaru : (old("rekomendasi.$vIdx.SphBaru") ?? '') }}">
-                                                        </td>
+                                                        <input type="hidden"
+                                                            name="rekomendasi[{{ $vIdx }}][SphBaru]"
+                                                            value="{{ isset($data->getRekomendasi[0]->getRekomedasiDetail[$vIdx]->SphBaru) ? $data->getRekomendasi[0]->getRekomedasiDetail[$vIdx]->SphBaru : old("rekomendasi.$vIdx.SphBaru") ?? '' }}">
+                                                    </td>
                                                 </tr>
                                                 <tr>
                                                     <td class="text-center">2</td>
@@ -547,7 +573,8 @@
                                                     <td class="text-center">8</td>
                                                     <td class="fw-bold">Populasi</td>
                                                     <td>
-                                                        <textarea class="ckeditor" id="ckeditor" name="rekomendasi[{{ $vIdx }}][Populasi]" placeholder="Populasi">{{ isset($data->getRekomendasi[0]->getRekomedasiDetail[$vIdx]->Populasi) ? $data->getRekomendasi[0]->getRekomedasiDetail[$vIdx]->Populasi : old("rekomendasi.$vIdx.Populasi") }}</textarea>
+                                                        <textarea class="ckeditor" id="ckeditor" name="rekomendasi[{{ $vIdx }}][Populasi]"
+                                                            placeholder="Populasi">{{ isset($data->getRekomendasi[0]->getRekomedasiDetail[$vIdx]->Populasi) ? $data->getRekomendasi[0]->getRekomedasiDetail[$vIdx]->Populasi : old("rekomendasi.$vIdx.Populasi") }}</textarea>
                                                     </td>
                                                 </tr>
                                                 <tr>

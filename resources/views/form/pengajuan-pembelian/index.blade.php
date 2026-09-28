@@ -1,52 +1,60 @@
 @extends('layouts.app')
 
 @section('content')
-@push('css')
-<style>
-    #pengajuanTable td a[title*="Klik untuk melihat"] {
-    position: relative;
-    padding: 4px 8px;
-    border-radius: 4px;
-    transition: all 0.2s ease;
-    border: 1px dashed transparent;
-}
+    @push('css')
+        <style>
+            #pengajuanTable td a[title*="Klik untuk melihat"] {
+                position: relative;
+                padding: 4px 8px;
+                border-radius: 4px;
+                transition: all 0.2s ease;
+                border: 1px dashed transparent;
+            }
 
-#pengajuanTable td a[title*="Klik untuk melihat"]:hover {
-    background-color: #fff5f5;
-    border-color: #dc3545;
-    color: #a71d2a !important;
-    text-decoration: none;
-}
+            #pengajuanTable td a[title*="Klik untuk melihat"]:hover {
+                background-color: #fff5f5;
+                border-color: #dc3545;
+                color: #a71d2a !important;
+                text-decoration: none;
+            }
 
-#pengajuanTable td a[title*="Klik untuk melihat"]:hover::after {
-    content: "🔗";
-    position: absolute;
-    right: -15px;
-    top: 50%;
-    transform: translateY(-50%);
-    font-size: 10px;
-    opacity: 0.7;
-}
-</style>
-@endpush
-    <div class="page-header">
-        <div class="row">
-            <div class="col">
-                <h3 class="page-title">Pengajuan Pembelian</h3>
-                <ul class="breadcrumb">
-                    <li class="breadcrumb-item"><a href="{{ route('home') }}">Dashboard</a></li>
-                    <li class="breadcrumb-item active">Pengajuan Pembelian</li>
+            #pengajuanTable td a[title*="Klik untuk melihat"]:hover::after {
+                content: "🔗";
+                position: absolute;
+                right: -15px;
+                top: 50%;
+                transform: translateY(-50%);
+                font-size: 10px;
+                opacity: 0.7;
+            }
+        </style>
+    @endpush
+
+    <div class="page-header ph-redesign">
+        <div class="ph-container">
+            <!-- KIRI: Breadcrumb, Title, Subtitle -->
+            <div class="ph-left">
+                <ul class="ph-breadcrumb">
+                    <li><a href="{{ route('home') }}"><i class="fa fa-home"></i> Dashboard</a></li>
+                    <li><a href="{{ route('ajukan.index') }}">Pengajuan Pembelian</a></li>
+                    <li class="active">Detail</li>
                 </ul>
+                <h3 class="ph-title">
+                    <i class="fa fa-file-invoice"></i>
+                    Detail Pengajuan Pembelian
+                </h3>
+                <p class="ph-subtitle">Lihat informasi lengkap mengenai pengajuan pembelian ini</p>
             </div>
-        </div>
-    </div>
 
-    <div class="row mb-3">
-        <div class="col text-end">
-            <button type="button" class="btn btn-success" data-bs-toggle="modal"
-                data-bs-target="#modalPermintaanPembelian">
-                Ambil Data Permintaan
-            </button>
+            <!-- KANAN: Icon + Tombol Kembali -->
+            <div class="ph-right">
+                <div class="ph-icon">
+                    <i class="fa fa-shopping-cart"></i>
+                </div>
+                <a href="{{ route('ajukan.index') }}" class="ph-btn">
+                    <i class="fa fa-arrow-left"></i> Kembali
+                </a>
+            </div>
         </div>
     </div>
 
@@ -56,12 +64,21 @@
     <div class="row">
         <div class="col-sm-12">
             <div class="card">
-                <div class="card-header bg-dark">
-                    <h4 class="card-title">Daftar Pengajuan Pembelian</h4>
-                    <p class="card-text">
-                        Tabel ini berisi semua data pengajuan pembelian.
-                    </p>
+                <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                    <div>
+                        <h4 class="card-title mb-0">Daftar Pengajuan Pembelian</h4>
+                        <p class="card-text mb-0">
+                            Tabel ini berisi semua data pengajuan pembelian.
+                        </p>
+                    </div>
+                    <div class="text-end d-none d-md-block">
+                        <button type="button" class="ph-btn" data-bs-toggle="modal"
+                            data-bs-target="#modalPermintaanPembelian">
+                            <i class="fa fa-database"></i> Ambil Data Permintaan
+                        </button>
+                    </div>
                 </div>
+
                 <div class="card-body">
                     {{-- <div class="alert alert-info mb-3" role="alert">
                         <i class="fa fa-info-circle"></i>
@@ -114,7 +131,8 @@
                             <!-- Tambah filter tanggal presentasi -->
                             <div class="col-md-3 mt-3 mt-md-0">
                                 <label for="filter-tanggal-presentasi" class="form-label">Filter Tanggal Presentasi</label>
-                                <input type="date" class="form-control" id="filter-tanggal-presentasi" name="tanggal_presentasi" />
+                                <input type="date" class="form-control" id="filter-tanggal-presentasi"
+                                    name="tanggal_presentasi" />
                             </div>
                             <div class="col-md-3 text-start pt-2 pt-md-0 mt-3">
                                 <button type="button" id="reset-filter" class="btn btn-secondary mt-3 mt-md-0">
@@ -291,9 +309,10 @@
                 loadDataTable();
 
                 // Filter event
-                $('#filter-jenis, #filter-status, #filter-perusahaan, #filter-tanggal-presentasi').on('change', function() {
-                    $('#pengajuanTable').DataTable().ajax.reload();
-                });
+                $('#filter-jenis, #filter-status, #filter-perusahaan, #filter-tanggal-presentasi').on('change',
+                    function() {
+                        $('#pengajuanTable').DataTable().ajax.reload();
+                    });
 
                 // Reset filter
                 $('#reset-filter').on('click', function() {

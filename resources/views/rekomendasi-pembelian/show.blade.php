@@ -1,22 +1,33 @@
 @extends('layouts.app')
 
 @section('content')
-    <div class="page-header">
-        <div class="row">
-            <div class="col">
-                <h3 class="page-title">Review Pengajuan Pembelian</h3>
-                <ul class="breadcrumb">
-                    <li class="breadcrumb-item"><a href="{{ route('home') }}">Dashboard</a></li>
-                    <li class="breadcrumb-item"><a href="{{ route('ajukan.index') }}">Review Pengajuan Pembelian</a></li>
-                    <li class="breadcrumb-item active">Detail Pengajuan Pembelian</li>
+    <div class="page-header ph-redesign">
+        <div class="ph-container">
+
+            <!-- KIRI: Breadcrumb, Title, Subtitle -->
+            <div class="ph-left">
+                <ul class="ph-breadcrumb">
+                    <li><a href="{{ route('home') }}"><i class="fa fa-home"></i> Dashboard</a></li>
+                    <li><a href="{{ route('ajukan.index') }}">Pengajuan Pembelian</a></li>
+                    <li class="active">Detail</li>
                 </ul>
+                <h3 class="ph-title">
+                    <i class="fa fa-file-invoice"></i>
+                    Detail Pengajuan Pembelian
+                </h3>
+                <p class="ph-subtitle">Lihat informasi lengkap mengenai pengajuan pembelian ini</p>
             </div>
 
-        </div>
-        <div class="col text-end">
-            <a href="{{ route('ajukan.index') }}" class="btn btn-secondary">
-                <i class="fa fa-arrow-left"></i> Kembali
-            </a>
+            <!-- KANAN: Icon + Tombol Kembali -->
+            <div class="ph-right">
+                <div class="ph-icon">
+                    <i class="fa fa-shopping-cart"></i>
+                </div>
+                <a href="{{ route('ajukan.index') }}" class="ph-btn">
+                    <i class="fa fa-arrow-left"></i> Kembali
+                </a>
+            </div>
+
         </div>
     </div>
     <div class="row">
@@ -595,26 +606,48 @@
 
                                                                     @if ($adaRekomendasi)
                                                                         <div class="d-flex flex-column gap-1">
-                                                                            <div class="d-flex gap-1">
-                                                                                <a href="{{ route('rekomendasi.detail-print', [encrypt($data->id), encrypt($item->id)]) }}"
-                                                                                    class="btn btn-info btn-sm flex-fill"
-                                                                                    target="_blank">
-                                                                                    <i class="fa fa-print"></i> Cetak
-                                                                                </a>
-                                                                                <a href="{{ route('rekomendasi.rekap', [encrypt($data->id), encrypt($item->id)]) }}"
-                                                                                    class="btn btn-warning btn-sm flex-fill"
-                                                                                    target="_blank">
-                                                                                    <i class="fa fa-file-alt"></i> Rekap
-                                                                                </a>
+                                                                            <div class="row gx-2">
+                                                                                <div class="col-6">
+                                                                                    <a href="{{ route('rekomendasi.detail-print', [encrypt($data->id), encrypt($item->id)]) }}"
+                                                                                        class="btn btn-info btn-sm w-100"
+                                                                                        target="_blank"
+                                                                                        style="min-width:150px">
+                                                                                        <i class="fa fa-print"></i> Cetak
+                                                                                    </a>
+                                                                                </div>
+                                                                                <div class="col-6">
+                                                                                    <a href="{{ route('rekomendasi.rekap', [encrypt($data->id), encrypt($item->id)]) }}"
+                                                                                        class="btn btn-warning btn-sm w-100"
+                                                                                        target="_blank"
+                                                                                        style="min-width:150px">
+                                                                                        <i class="fa fa-file-alt"></i>
+                                                                                        Rekap
+                                                                                    </a>
+                                                                                </div>
                                                                             </div>
-                                                                            @can('rekomendasi-show')
-                                                                                <a href="{{ route('rekomendasi.detail-view', [encrypt($data->id), encrypt($item->id)]) }}"
-                                                                                    class="btn btn-secondary btn-sm w-100"
-                                                                                    target="_blank">
-                                                                                    <i class="fa fa-eye"></i> Lihat Detail
-                                                                                </a>
-                                                                            @endcan
-
+                                                                            <div class="row gx-2 mt-1">
+                                                                                <div class="col-6">
+                                                                                    @if ($data->Status == 'Dalam Review' || $data->Status == 'Diajukan')
+                                                                                        <a href="{{ route('rekomendasi.create', [encrypt($data->id), encrypt($item->id)]) }}"
+                                                                                            class="btn btn-primary btn-sm w-100"
+                                                                                            style="min-width:150px">
+                                                                                            <i class="fa fa-pen"></i> Tulis
+                                                                                            Review CCP
+                                                                                        </a>
+                                                                                    @endif
+                                                                                </div>
+                                                                                <div class="col-6">
+                                                                                    @can('rekomendasi-show')
+                                                                                        <a href="{{ route('rekomendasi.detail-view', [encrypt($data->id), encrypt($item->id)]) }}"
+                                                                                            class="btn btn-secondary btn-sm w-100"
+                                                                                            style="min-width:150px"
+                                                                                            target="_blank">
+                                                                                            <i class="fa fa-eye"></i> Rekom
+                                                                                            GH
+                                                                                        </a>
+                                                                                    @endcan
+                                                                                </div>
+                                                                            </div>
                                                                             @if ($rekomendasiUpdate)
                                                                                 <div class="mt-2 small text-secondary">
                                                                                     <i class="fa fa-clock me-1"></i>
