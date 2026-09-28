@@ -1,14 +1,27 @@
 @extends('layouts.app')
 
 @section('content')
-    <div class="page-header">
-        <div class="row">
-            <div class="col">
-                <h3 class="page-title">Permission</h3>
-                <ul class="breadcrumb">
-                    <li class="breadcrumb-item"><a href="{{ route('home') }}">Dashboard</a></li>
-                    <li class="breadcrumb-item active">Permission</li>
+    <div class="page-header ph-redesign">
+        <div class="ph-container">
+            <!-- KIRI: Breadcrumb, Title, Subtitle -->
+            <div class="ph-left">
+                <ul class="ph-breadcrumb">
+                    <li><a href="{{ route('home') }}"><i class="fa fa-home"></i> Dashboard</a></li>
+                    <li class="active">Manajemen Permission</li>
                 </ul>
+                <h3 class="ph-title">
+                    <i class="fa fa-lock"></i>
+                    Manajemen Permission
+                </h3>
+                <p class="ph-subtitle">
+                    Kelola dan atur permission (hak akses) yang tersedia dalam aplikasi ini.
+                </p>
+            </div>
+            <!-- KANAN: Icon -->
+            <div class="ph-right">
+                <div class="ph-icon">
+                    <i class="fa fa-key"></i>
+                </div>
             </div>
         </div>
     </div>
@@ -26,21 +39,22 @@
         </script>
     @endif
 
-    <div class="row mb-3">
-        <div class="col text-end">
-            <a class="btn btn-primary" href="{{ route('permission.create') }}">Tambah Permission Baru</a>
-        </div>
-    </div>
 
     <div class="row">
         <div class="col-sm-12">
             <div class="card">
-                <div class="card-header bg-dark">
-                    <h4 class="card-title">Daftar Permission</h4>
-                    <p class="card-text">
-                        Tabel ini menampilkan seluruh permission yang tersedia.
-                    </p>
+                <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                    <div>
+                        <h4 class="card-title mb-1">Daftar Permission</h4>
+                        <p class="card-text mb-0">
+                            Tabel ini menampilkan seluruh permission yang tersedia.
+                        </p>
+                    </div>
+                    <div class="text-end">
+                        <a class="btn btn-primary" href="{{ route('permission.create') }}">Tambah Permission Baru</a>
+                    </div>
                 </div>
+
                 <div class="card-body">
                     <div class="table-responsive">
                         <table class="table datanew cell-border compact stripe" id="permissionTable" width="100%">

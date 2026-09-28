@@ -1,35 +1,47 @@
 @extends('layouts.app')
 
 @section('content')
-    <div class="page-header">
-        <div class="row">
-            <div class="col">
-                <h3 class="page-title">Manajemen Akun</h3>
-                <ul class="breadcrumb">
-                    <li class="breadcrumb-item"><a href="{{ route('home') }}">Dashboard</a></li>
-                    <li class="breadcrumb-item active">Users</li>
+    <div class="page-header ph-redesign">
+        <div class="ph-container">
+            <!-- KIRI: Breadcrumb, Title, Subtitle -->
+            <div class="ph-left">
+                <ul class="ph-breadcrumb">
+                    <li><a href="{{ route('home') }}"><i class="fa fa-home"></i> Dashboard</a></li>
+                    <li class="active">Manajemen Akun</li>
                 </ul>
+                <h3 class="ph-title">
+                    <i class="fa fa-users"></i>
+                    Manajemen Akun
+                </h3>
+                <p class="ph-subtitle">
+                    Kelola dan atur pengguna beserta hak akses di aplikasi ini.
+                </p>
+            </div>
+            <!-- KANAN: Icon -->
+            <div class="ph-right">
+                <div class="ph-icon">
+                    <i class="fa fa-user-cog"></i>
+                </div>
             </div>
         </div>
     </div>
 
-    {{-- Filter Nama RS --}}
-    <div class="row mb-3">
-
-        <div class="col text-end">
-            <a class="btn btn-primary" href="{{ route('users.create') }}">Buat Akun Baru</a>
-        </div>
-    </div>
     <div class="row">
 
         <div class="col-sm-12">
             <div class="card">
-                <div class="card-header bg-dark">
-                    <h4 class="card-title">Daftar Akun</h4>
-                    <p class="card-text">
-                        Tabel ini menampilkan seluruh pengguna yang terdaftar beserta peran yang telah diberikan.
-                    </p>
+                <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                    <div>
+                        <h4 class="card-title mb-1">Daftar Akun</h4>
+                        <p class="card-text mb-0">
+                            Tabel ini menampilkan seluruh pengguna yang terdaftar beserta peran yang telah diberikan.
+                        </p>
+                    </div>
+                    <div class="text-end">
+                        <a class="btn btn-primary" href="{{ route('users.create') }}">Buat Akun Baru</a>
+                    </div>
                 </div>
+
                 <div class="card-body">
                     <div class="table-responsive">
                         <table class="table datanew cell-border compact stripe">

@@ -29,7 +29,65 @@
         </div>
     </div>
 
-    {{-- End Filter Bar --}}
+    {{-- Filter Bar (dipisah cardnya) --}}
+    <div class="row">
+        <div class="col-sm-12">
+            <div class="card mb-3">
+                <div class="card-header bg-white">
+                    <h4 class="card-title mb-0">Filter Pengajuan Pembelian</h4>
+                </div>
+                <div class="card-body">
+                    <form id="filterForm" class="row g-2 align-items-end">
+                        <div class="col-md-3">
+                            <label for="filterJenis" class="form-label mb-0">Jenis</label>
+                            <select class="form-select" id="filterJenis" name="jenis">
+                                <option value="">Semua Jenis</option>
+                                @foreach ($jenis as $item)
+                                    <option value="{{ $item->id }}">{{ $item->Nama }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="filterPerusahaan" class="form-label mb-0">Perusahaan</label>
+                            <select class="select2" id="filterPerusahaan" name="perusahaan">
+                                <option value="">Semua Perusahaan</option>
+                                @foreach ($perusahaan as $item)
+                                    <option value="{{ $item->Kode }}">{{ $item->Nama }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="filterStatus" class="form-label mb-0">Status</label>
+                            <select class="form-select select2" id="filterStatus" name="status">
+                                <option value="">Pilih Status</option>
+                                <option value="Diajukan">Diajukan Ke CCP</option>
+                                <option value="Dalam Review">Dalam Review CCP</option>
+                                <option value="Selesai Review">Selesai Review CCP</option>
+                                <option value="Menunggu Rekomendasi GH">Menunggu Rekomendasi GH CCP</option>
+                                <option value="Siap Presentasi">Siap Presentasi</option>
+                                <option value="Selesai">Selesai Presentasi Komite</option>
+                                <option value="Ditolak CEO">Ditolak CEO</option>
+                                <option value="Disetujui CEO">Disetujui CEO</option>
+                                <option value="Ditolak">Ditolak</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="filterTanggalPresentasi" class="form-label mb-0">Tanggal Presentasi</label>
+                            <input type="date" class="form-control" id="filterTanggalPresentasi"
+                                name="tanggal_presentasi">
+                        </div>
+                        <div class="col-12 mt-2">
+                            <button type="button" id="resetFilterBtn" class="btn btn-secondary">
+                                <i class="fa fa-undo"></i> Reset Filter
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{-- DataTable Card --}}
     <div class="row">
         <div class="col-sm-12">
             <div class="card">
@@ -40,77 +98,26 @@
                     </p>
                 </div>
                 <div class="card-body">
-                    <div class="col-lg-12">
-                        <div class="card p-3">
-                            <form id="filterForm" class="row g-2 align-items-end">
-                                <div class="col-md-3">
-                                    <label for="filterJenis" class="form-label mb-0">Jenis</label>
-                                    <select class="form-select" id="filterJenis" name="jenis">
-                                        <option value="">Semua Jenis</option>
-                                        @foreach ($jenis as $item)
-                                            <option value="{{ $item->id }}">{{ $item->Nama }}</option>
-                                        @endforeach
-                                    </select>
-                                </div>
-                                <div class="col-md-3">
-                                    <label for="filterPerusahaan" class="form-label mb-0">Perusahaan</label>
-                                    <select class="select2" id="filterPerusahaan" name="perusahaan">
-                                        <option value="">Semua Perusahaan</option>
-                                        @foreach ($perusahaan as $item)
-                                            <option value="{{ $item->Kode }}">{{ $item->Nama }}</option>
-                                        @endforeach
-                                    </select>
-                                </div>
-                                <div class="col-md-3">
-                                    <label for="filterStatus" class="form-label mb-0">Status</label>
-                                    <select class="form-select select2" id="filterStatus" name="status">
-                                        <option value="">Pilih Status</option>
-                                        <option value="Diajukan">Diajukan Ke CCP</option>
-                                        <option value="Dalam Review">Dalam Review CCP</option>
-                                        <option value="Selesai Review">Selesai Review CCP</option>
-                                        <option value="Menunggu Rekomendasi GH">Menunggu Rekomendasi GH CCP</option>
-                                        <option value="Siap Presentasi">Siap Presentasi</option>
-                                        <option value="Selesai">Selesai Presentasi Komite</option>
-                                        <option value="Ditolak CEO">Ditolak CEO</option>
-                                        <option value="Disetujui CEO">Disetujui CEO</option>
-                                        <option value="Ditolak">Ditolak</option>
-                                    </select>
-                                </div>
-                                <div class="col-md-3">
-                                    <label for="filterTanggalPresentasi" class="form-label mb-0">Tanggal Presentasi</label>
-                                    <input type="date" class="form-control" id="filterTanggalPresentasi"
-                                        name="tanggal_presentasi">
-                                </div>
+                    <div class="table-responsive">
+                        <table class="table datanew cell-border compact table-striped" id="pengajuanTable" width="100%">
 
-                                <div class="col-12 mt-2">
-                                    <button type="button" id="resetFilterBtn" class="btn btn-secondary">
-                                        <i class="fa fa-undo"></i> Reset Filter
-                                    </button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-                    <div class="card-body">
-                        <div class="table-responsive">
-                            <table class="table datanew cell-border compact stripe" id="pengajuanTable" width="100%">
-                                <thead>
-                                    <tr>
-                                        <th width="5%">No</th>
-                                        <th>Nomor</th>
-                                        <th>Nama Barang</th>
-                                        <th>Lokasi / Penempatan</th>
-                                        <th>Jenis</th>
-                                        <th>Perusahaan</th>
-                                        <th>Dibuat Oleh</th>
-                                        <th>Tanggal Diajukan</th>
-                                        <th>Tanggal Presentasi</th>
-                                        <th>Status</th>
-                                        <th width="15%">Aksi</th>
-                                    </tr>
-                                </thead>
-                                <tbody></tbody>
-                            </table>
-                        </div>
+                            <thead>
+                                <tr>
+                                    <th width="5%">No</th>
+                                    <th>Nomor</th>
+                                    <th>Nama Barang</th>
+                                    <th>Lokasi / Penempatan</th>
+                                    <th>Jenis</th>
+                                    <th>Perusahaan</th>
+                                    <th>Dibuat Oleh</th>
+                                    <th>Tanggal Diajukan</th>
+                                    <th>Tanggal Presentasi</th>
+                                    <th>Status</th>
+                                    <th width="15%">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
                     </div>
                 </div>
             </div>

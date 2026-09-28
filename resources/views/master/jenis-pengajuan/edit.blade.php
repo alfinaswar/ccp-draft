@@ -6,9 +6,9 @@
             <div class="col">
                 <h3 class="page-title">Master Jenis Pengajuan</h3>
                 <ul class="breadcrumb">
-                    <li class="breadcrumb-item"><a href="{{ route('home') }}">Dashboard</a></li>
-                    <li class="breadcrumb-item"><a href="{{ route('jenis-pengajuan.index') }}">Master Jenis Pengajuan</a></li>
-                    <li class="breadcrumb-item active">Edit Jenis Pengajuan</li>
+                    <li class="breadcrumb-item"><a href="{{ route('home') }}">Beranda</a></li>
+                    <li class="breadcrumb-item"><a href="{{ route('jenis-pengajuan.index') }}">Daftar Jenis Pengajuan</a></li>
+                    <li class="breadcrumb-item active">Sesuaikan Jenis Pengajuan</li>
                 </ul>
             </div>
         </div>

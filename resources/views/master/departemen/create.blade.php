@@ -1,15 +1,28 @@
 @extends('layouts.app')
 
 @section('content')
-    <div class="page-header">
-        <div class="row">
-            <div class="col">
-                <h3 class="page-title">Master Departemen / Divisi</h3>
-                <ul class="breadcrumb">
-                    <li class="breadcrumb-item"><a href="{{ route('home') }}">Dashboard</a></li>
-                    <li class="breadcrumb-item"><a href="{{ route('departemen.index') }}">Master Departemen</a></li>
-                    <li class="breadcrumb-item active">Tambah Departemen</li>
+    <div class="page-header ph-redesign">
+        <div class="ph-container">
+            <!-- KIRI: Breadcrumb, Title, Subtitle -->
+            <div class="ph-left">
+                <ul class="ph-breadcrumb">
+                    <li><a href="{{ route('home') }}"><i class="fa fa-home"></i> Dashboard</a></li>
+                    <li><a href="{{ route('departemen.index') }}">Master Departemen</a></li>
+                    <li class="active">Tambah Departemen</li>
                 </ul>
+                <h3 class="ph-title">
+                    <i class="fa fa-sitemap"></i>
+                    Master Departemen / Divisi
+                </h3>
+                <p class="ph-subtitle">
+                    Tambahkan departemen atau divisi baru ke dalam sistem.
+                </p>
+            </div>
+            <!-- KANAN: Icon -->
+            <div class="ph-right">
+                <div class="ph-icon">
+                    <i class="fa fa-building"></i>
+                </div>
             </div>
         </div>
     </div>

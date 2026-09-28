@@ -1,14 +1,31 @@
 @extends('layouts.app')
 
 @section('content')
-    <div class="page-header">
-        <div class="row">
-            <div class="col">
-                <h3 class="page-title">Manajemen Role</h3>
-                <ul class="breadcrumb">
-                    <li class="breadcrumb-item"><a href="{{ route('home') }}">Dashboard</a></li>
-                    <li class="breadcrumb-item active">Role</li>
+    <div class="page-header ph-redesign">
+        <div class="ph-container">
+
+            <!-- KIRI: Breadcrumb, Title, Subtitle -->
+            <div class="ph-left">
+                <ul class="ph-breadcrumb">
+                    <li><a href="{{ route('home') }}"><i class="fa fa-home"></i> Dashboard</a></li>
+                    <li><a href="{{ route('roles.index') }}">Role</a></li>
+                    <li class="active">Manajemen Role</li>
                 </ul>
+                <h3 class="ph-title">
+                    <i class="fa fa-users-cog"></i>
+                    Manajemen Role
+                </h3>
+                <p class="ph-subtitle">Kelola role dan atur permission sesuai kebutuhan akses pengguna.</p>
+            </div>
+
+            <!-- KANAN: Icon + Tombol Kembali -->
+            <div class="ph-right">
+                <div class="ph-icon">
+                    <i class="fa fa-id-badge"></i>
+                </div>
+                <a href="{{ route('home') }}" class="ph-btn">
+                    <i class="fa fa-arrow-left"></i> Kembali
+                </a>
             </div>
 
         </div>
@@ -26,20 +43,24 @@
             </div>
         </div>
     @endif
-    <div class="row mb-3">
-        <div class="col text-end">
-            <a class="btn btn-primary" href="{{ route('roles.create') }}">Buat Role Baru</a>
-        </div>
-    </div>
+
     <div class="row">
         <div class="col-lg-12">
             <div class="card">
-                <div class="card-header bg-dark">
-                    <h4 class="card-title mb-0">Daftar Role</h4>
-                    <p class="card-text mb-0">
-                        Berikut adalah daftar role yang tersedia.
-                    </p>
+                <div class="card-header bg-white d-flex align-items-center justify-content-between">
+                    <div>
+                        <h4 class="card-title mb-0">Daftar Role</h4>
+                        <p class="card-text mb-0">
+                            Berikut adalah daftar role yang tersedia.
+                        </p>
+                    </div>
+                    <div class="text-end">
+                        <a class="btn btn-primary" href="{{ route('roles.create') }}">
+                            <i class="fa fa-plus"></i> Buat Role Baru
+                        </a>
+                    </div>
                 </div>
+
                 <div class="card-body">
                     <div class="table-responsive">
                         <table class="table datanew cell-border compact stripe">

@@ -4,11 +4,11 @@
     <div class="page-header">
         <div class="row">
             <div class="col">
-                <h3 class="page-title">Master Form</h3>
+                <h3 class="page-title">Edit Master Form</h3>
                 <ul class="breadcrumb">
                     <li class="breadcrumb-item"><a href="{{ route('home') }}">Dashboard</a></li>
                     <li class="breadcrumb-item"><a href="{{ route('nama-form.index') }}">Master Form</a></li>
-                    <li class="breadcrumb-item active">Edit Form</li>
+                    <li class="breadcrumb-item active">Sesuaikan</li>
                 </ul>
             </div>
         </div>

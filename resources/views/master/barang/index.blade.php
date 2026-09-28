@@ -1,33 +1,47 @@
 @extends('layouts.app')
 
 @section('content')
-    <div class="page-header">
-        <div class="row">
-            <div class="col">
-                <h3 class="page-title">Master Barang</h3>
-                <ul class="breadcrumb">
-                    <li class="breadcrumb-item"><a href="{{ route('home') }}">Dashboard</a></li>
-                    <li class="breadcrumb-item active">Master Barang</li>
+    <div class="page-header ph-redesign">
+        <div class="ph-container">
+            <!-- KIRI: Breadcrumb, Title, Subtitle -->
+            <div class="ph-left">
+                <ul class="ph-breadcrumb">
+                    <li><a href="{{ route('home') }}"><i class="fa fa-home"></i> Dashboard</a></li>
+                    <li class="active">Master Barang</li>
                 </ul>
+                <h3 class="ph-title">
+                    <i class="fa fa-box-open"></i>
+                    Master Barang
+                </h3>
+                <p class="ph-subtitle">
+                    Kelola dan atur seluruh data barang yang ada di sistem inventaris ini.
+                </p>
+            </div>
+            <!-- KANAN: Icon -->
+            <div class="ph-right">
+                <div class="ph-icon">
+                    <i class="fa fa-boxes"></i>
+                </div>
             </div>
         </div>
     </div>
 
-    <div class="row mb-3">
-        <div class="col text-end">
-            <a class="btn btn-primary" href="{{ route('barang.create') }}">Tambah Barang Baru</a>
-        </div>
-    </div>
 
     <div class="row">
         <div class="col-sm-12">
             <div class="card">
-                <div class="card-header bg-dark">
-                    <h4 class="card-title">List Barang</h4>
-                    <p class="card-text">
-                        Tabel ini berisi semua data barang yang ada.
-                    </p>
+                <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                    <div>
+                        <h4 class="card-title mb-1">Daftar Barang</h4>
+                        <p class="card-text mb-0">
+                            Tabel ini menampilkan seluruh data barang yang tersimpan di sistem.
+                        </p>
+                    </div>
+                    <div class="text-end">
+                        <a class="btn btn-primary" href="{{ route('barang.create') }}">Tambah Barang Baru</a>
+                    </div>
                 </div>
+
                 <div class="card-body">
                     <div class="row mb-3 align-items-end">
                         <div class="col-md-4">

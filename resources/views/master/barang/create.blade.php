@@ -1,15 +1,28 @@
 @extends('layouts.app')
 
 @section('content')
-    <div class="page-header">
-        <div class="row">
-            <div class="col">
-                <h3 class="page-title">Master Barang</h3>
-                <ul class="breadcrumb">
-                    <li class="breadcrumb-item"><a href="{{ route('home') }}">Dashboard</a></li>
-                    <li class="breadcrumb-item"><a href="{{ route('barang.index') }}">Master Barang</a></li>
-                    <li class="breadcrumb-item active">Tambah Barang</li>
+    <div class="page-header ph-redesign">
+        <div class="ph-container">
+            <!-- KIRI: Breadcrumb, Title, Subtitle -->
+            <div class="ph-left">
+                <ul class="ph-breadcrumb">
+                    <li><a href="{{ route('home') }}"><i class="fa fa-home"></i> Dashboard</a></li>
+                    <li><a href="{{ route('barang.index') }}">Master Barang</a></li>
+                    <li class="active">Tambah Barang</li>
                 </ul>
+                <h3 class="ph-title">
+                    <i class="fa fa-box-open"></i>
+                    Master Barang
+                </h3>
+                <p class="ph-subtitle">
+                    Tambahkan barang baru ke dalam sistem inventaris Anda di sini.
+                </p>
+            </div>
+            <!-- KANAN: Icon -->
+            <div class="ph-right">
+                <div class="ph-icon">
+                    <i class="fa fa-plus-square"></i>
+                </div>
             </div>
         </div>
     </div>

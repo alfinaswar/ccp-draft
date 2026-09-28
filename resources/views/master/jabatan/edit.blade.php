@@ -4,11 +4,11 @@
     <div class="page-header">
         <div class="row">
             <div class="col">
-                <h3 class="page-title">Master Jabatan</h3>
+                <h3 class="page-title">Kelola Jabatan</h3>
                 <ul class="breadcrumb">
-                    <li class="breadcrumb-item"><a href="{{ route('home') }}">Dashboard</a></li>
-                    <li class="breadcrumb-item"><a href="{{ route('jabatan.index') }}">Master Jabatan</a></li>
-                    <li class="breadcrumb-item active">Edit Jabatan</li>
+                    <li class="breadcrumb-item"><a href="{{ route('home') }}">Beranda</a></li>
+                    <li class="breadcrumb-item"><a href="{{ route('jabatan.index') }}">Daftar Jabatan</a></li>
+                    <li class="breadcrumb-item active">Ubah Jabatan</li>
                 </ul>
             </div>
         </div>

@@ -2,13 +2,15 @@
 
 @section('content')
     <div class="page-header">
-        <div class="row">
+        <div class="row align-items-center">
             <div class="col">
-                <h3 class="page-title">Master Jabatan</h3>
-                <ul class="breadcrumb">
-                    <li class="breadcrumb-item"><a href="{{ route('home') }}">Dashboard</a></li>
-                    <li class="breadcrumb-item active">Master Jabatan</li>
-                </ul>
+                <h3 class="page-title">Data Jabatan</h3>
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb mb-0">
+                        <li class="breadcrumb-item"><a href="{{ route('home') }}">Beranda</a></li>
+                        <li class="breadcrumb-item active" aria-current="page">Jabatan</li>
+                    </ol>
+                </nav>
             </div>
         </div>
     </div>

@@ -1,15 +1,33 @@
 @extends('layouts.app')
 
 @section('content')
-    <div class="page-header">
-        <div class="row">
-            <div class="col">
-                <h3 class="page-title">Laporan Rekomendasi Pembelian</h3>
-                <ul class="breadcrumb">
-                    <li class="breadcrumb-item"><a href="{{ route('home') }}">Dashboard</a></li>
-                    <li class="breadcrumb-item active">Laporan Rekomendasi Pembelian</li>
+    <div class="page-header ph-redesign">
+        <div class="ph-container">
+
+            <!-- KIRI: Breadcrumb, Title, Subtitle -->
+            <div class="ph-left">
+                <ul class="ph-breadcrumb">
+                    <li><a href="{{ route('home') }}"><i class="fa fa-home"></i> Dashboard</a></li>
+                    <li><a href="">Laporan Rekomendasi CCP</a></li>
+                    <li class="active">Laporan</li>
                 </ul>
+                <h3 class="ph-title">
+                    <i class="fa fa-chart-bar"></i>
+                    Laporan Rekomendasi CCP
+                </h3>
+                <p class="ph-subtitle">Lihat laporan rekomendasi pengajuan pembelian CCP secara lengkap</p>
             </div>
+
+            <!-- KANAN: Icon + Tombol Kembali -->
+            <div class="ph-right">
+                <div class="ph-icon">
+                    <i class="fa fa-clipboard-list"></i>
+                </div>
+                {{-- <a href="" class="ph-btn">
+                    <i class="fa fa-arrow-left"></i> Kembali
+                </a> --}}
+            </div>
+
         </div>
     </div>
 
