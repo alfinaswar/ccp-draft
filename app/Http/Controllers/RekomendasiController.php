@@ -239,25 +239,34 @@ class RekomendasiController extends Controller
                     return $lokasi;
                 })
                 ->addColumn('KodePengajuan', function ($row) {
-                    // Gunakan enkripsi ID sebelum masukkan ke dalam URL
                     $encryptedId = encrypt($row->id ?? 0);
-
                     $kode = e($row->KodePengajuan ?? '-');
+                    $catatanReview = null;
                     $catatan = null;
                     if (isset($row->getRekomendasiCcp) && is_object($row->getRekomendasiCcp)) {
+                        $catatanReview = $row->getRekomendasiCcp->CatatanReview ?? null;
                         $catatan = $row->getRekomendasiCcp->Catatan ?? null;
                     }
-
                     // Gunakan ID terenkripsi
                     $url = route('rekomendasi.show', $encryptedId);
                     $kodeHtml = '<a href="' . $url . '" style="color:#0d6efd; font-weight:bold;" target="_blank" title="Review Pengajuan">' . $kode . '</a>';
 
+                    $catatanIcons = '';
                     if (!empty($catatan)) {
-                        return $kodeHtml . ' <i class="fa fa-sticky-note text-warning btn-catatan-modal" style="font-size: 1.3em; margin-left: 6px; cursor:pointer;" title="Ada Catatan" data-catatan="' . e($catatan) . '"></i>';
+                        // Catatan GH CCP: sticky-note icon, warna kuning
+                        $catatanIcons .= ' <i class="fa fa-sticky-note btn-catatan-modal" style="color:#ffc107; font-size: 1.3em; margin-left: 6px; cursor:pointer;" title="Catatan GH CCP" data-catatan="' . e($catatan) . '" data-sumber="GH CCP"></i>';
+                    }
+                    if (!empty($catatanReview)) {
+                        // Catatan Review Tim CCP: sticky-note icon, warna biru
+                        $catatanIcons .= ' <i class="fa fa-sticky-note btn-catatan-modal" style="color:#0d6efd; font-size: 1.3em; margin-left: 2px; cursor:pointer;" title="Catatan Tim CCP" data-catatan="' . e($catatanReview) . '" data-sumber="Tim CCP"></i>';
                     }
 
-                    return $kodeHtml;
+
+                    return $kodeHtml . $catatanIcons;
                 })
+
+
+
 
 
 
@@ -278,7 +287,7 @@ class RekomendasiController extends Controller
     </button>';
                     }
                 })
-                ->rawColumns(['action','KodePengajuan','Jenis', 'Status', 'DiajukanPada', 'NamaBarang', 'TanggalPresentasi', 'LokasiPenempatan'])
+                ->rawColumns(['action', 'KodePengajuan', 'Jenis', 'Status', 'DiajukanPada', 'NamaBarang', 'TanggalPresentasi', 'LokasiPenempatan'])
                 ->make(true);
         }
         $jenis = MasterJenisPengajuan::get();
@@ -1101,6 +1110,7 @@ class RekomendasiController extends Controller
             $rekomendasi = Rekomendasi::where('IdPengajuan', $request->IdPengajuan)->first();
             if ($rekomendasi) {
                 $rekomendasi->Catatan = $request->Catatan;
+                $rekomendasi->JamCatatan = now();
                 $rekomendasi->save();
             }
 
@@ -1115,7 +1125,40 @@ class RekomendasiController extends Controller
             ], 500);
         }
     }
+    public function simpanNotesReview(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'IdPengajuan' => 'required|integer',
+            'Catatan' => 'required',
+        ]);
+        // dd($request->all());
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validasi gagal.',
+                'errors' => $validator->errors(),
+            ], 422);
+        }
 
+        try {
+            $rekomendasi = Rekomendasi::where('IdPengajuan', $request->IdPengajuan)->first();
+            if ($rekomendasi) {
+                $rekomendasi->CatatanReview = $request->Catatan;
+                $rekomendasi->JamCatatanReview = now();
+                $rekomendasi->save();
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Catatan berhasil disimpan.',
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Terjadi kesalahan: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
     /**
      * Update the specified resource in storage.
      */

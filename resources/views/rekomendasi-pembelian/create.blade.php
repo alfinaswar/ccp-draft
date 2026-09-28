@@ -22,12 +22,38 @@
                         Rekomendasi Pembelian untuk Pengajuan: <strong>{{ $data->KodePengajuan }} /
                             {{ $data->getPerusahaan->NamaLengkap }}</strong>
                     </div>
-                    <div class="text-end">
-                        <span class="badge bg-info" style="font-size:1rem;">
+                    <div class="d-flex flex-column align-items-end ms-auto">
+                        <span class="badge bg-info mb-2" style="font-size:1rem;">
                             Status: {{ $data->Status ?? '-' }}
                         </span>
+                        <button type="button" class="btn btn-info d-flex align-items-center mb-2" data-bs-toggle="modal"
+                            data-bs-target="#modalNotes">
+                            <i class="fa fa-sticky-note me-2"></i> Tambah Notes
+                        </button>
+                        @php
+                            $catatanTerakhir = $data->getRekomendasi[0]->JamCatatanReview ?? null;
+                        @endphp
+                        <div class="text-muted" style="font-size: 0.92rem;">
+                            <i class="fa fa-clock me-1"></i>
+                            <strong>Note terakhir dibuat:</strong>
+                            <strong>
+                                {{ $catatanTerakhir ? \Carbon\Carbon::parse($catatanTerakhir)->translatedFormat('d F Y H:i') : '—' }}
+                            </strong>
+                        </div>
+
+
+
+                        @if (isset($data->getPengajuanItem[0]->getRekomendasi->Notes) && $data->getPengajuanItem[0]->getRekomendasi->Notes)
+                            <div class="alert alert-secondary py-2 px-3 mt-2 mb-0"
+                                style="font-size: 0.96rem; word-break:break-word; max-width: 250px;">
+                                <strong>Notes:</strong><br>
+                                {{ $data->getPengajuanItem[0]->getRekomendasi->Notes }}
+                            </div>
+                        @endif
                     </div>
                 </div>
+
+
                 <form id="formRekomendasi" action="{{ route('rekomendasi.store') }}" method="POST"
                     enctype="multipart/form-data">
                     @csrf
@@ -136,15 +162,18 @@
                                             <div class="row g-3 align-items-stretch">
                                                 <!-- Kiri: Surat Penawaran Vendor -->
                                                 <div class="col-md-6">
-                                                    <div class="card border-0 shadow-sm h-100" style="background-color: #f7f3ea;"> {{-- Warna krem untuk surat penawaran --}}
+                                                    <div class="card border-0 shadow-sm h-100"
+                                                        style="background-color: #f7f3ea;"> {{-- Warna krem untuk surat penawaran --}}
                                                         <div class="card-body d-flex align-items-center">
                                                             <span class="me-3" style="font-size: 2rem; color: #dc3545;">
                                                                 <i class="fa fa-file-pdf"></i>
                                                             </span>
                                                             <div>
-                                                                <div class="fw-bold mb-1" style="color: #b88904;">Surat Penawaran Vendor</div>
+                                                                <div class="fw-bold mb-1" style="color: #b88904;">Surat
+                                                                    Penawaran Vendor</div>
                                                                 <a href="{{ asset('storage/penawaran_vendor/' . $Vendor->SuratPenawaranVendor) }}"
-                                                                    target="_blank" class="btn btn-sm px-3" style="background-color:#b88904; color: #fff;">
+                                                                    target="_blank" class="btn btn-sm px-3"
+                                                                    style="background-color:#b88904; color: #fff;">
                                                                     <i class="fa fa-eye"></i> Lihat Surat Penawaran
                                                                 </a>
                                                             </div>
@@ -153,19 +182,24 @@
                                                 </div>
                                                 <!-- Kanan: SPH Terbaru -->
                                                 <div class="col-md-6">
-                                                    <div class="card border-0 shadow-sm h-100" style="background-color: #eaf6f7;"> {{-- Biru muda untuk upload SPH --}}
+                                                    <div class="card border-0 shadow-sm h-100"
+                                                        style="background-color: #eaf6f7;"> {{-- Biru muda untuk upload SPH --}}
                                                         <div class="card-body">
-                                                            <div class="fw-bold mb-2" style="color:#1a6984;">SPH Terbaru</div>
-                                                            <input type="file" name="upload_sph_terbaru[{{ $vIdx }}]"
+                                                            <div class="fw-bold mb-2" style="color:#1a6984;">SPH Terbaru
+                                                            </div>
+                                                            <input type="file"
+                                                                name="upload_sph_terbaru[{{ $vIdx }}]"
                                                                 class="form-control">
                                                             <div class="form-text mt-1 small">
-                                                                Hanya file dengan format <span class="fw-bold">PDF</span> yang dapat diunggah.
+                                                                Hanya file dengan format <span class="fw-bold">PDF</span>
+                                                                yang dapat diunggah.
                                                             </div>
                                                             @if (!empty($data->getRekomendasi[0]->getRekomedasiDetail[$vIdx]->SphBaru))
                                                                 <div class="mt-2">
                                                                     <a href="{{ asset('storage/rekomendasi_file/sph_update/' . $data->getRekomendasi[0]->getRekomedasiDetail[$vIdx]->SphBaru) }}"
-                                                                       target="_blank" class="btn btn-link p-0" style="font-size: 0.98rem; color:#1a6984;">
-                                                                       <i class="fa fa-file-pdf-o"></i> Lihat SPH terbaru
+                                                                        target="_blank" class="btn btn-link p-0"
+                                                                        style="font-size: 0.98rem; color:#1a6984;">
+                                                                        <i class="fa fa-file-pdf-o"></i> Lihat SPH terbaru
                                                                     </a>
                                                                 </div>
                                                             @endif
@@ -204,10 +238,10 @@
                                                         class="form-control currency-input-global"
                                                         placeholder="Masukkan Harga Awal"
                                                         value="{{ isset($data->getRekomendasi[0]->getRekomedasiDetail[$vIdx]->HargaAwal) ? $data->getRekomendasi[0]->getRekomedasiDetail[$vIdx]->HargaAwal : (isset($Vendor->getHtaGpa->Deskripsi[$paramHarga]) ? $Vendor->getHtaGpa->Deskripsi[$paramHarga] : (old("rekomendasi.$vIdx.HargaAwal") ? preg_replace('/[^0-9]/', '', old("rekomendasi.$vIdx.HargaAwal")) : '')) }}">
-                                                 <input type="hidden"
+                                                    <input type="hidden"
                                                         name="rekomendasi[{{ $vIdx }}][SphBaru]"
-                                                        value="{{ isset($data->getRekomendasi[0]->getRekomedasiDetail[$vIdx]->SphBaru) ? $data->getRekomendasi[0]->getRekomedasiDetail[$vIdx]->SphBaru : (old("rekomendasi.$vIdx.SphBaru") ?? '') }}">
-                                                    </td>
+                                                        value="{{ isset($data->getRekomendasi[0]->getRekomedasiDetail[$vIdx]->SphBaru) ? $data->getRekomendasi[0]->getRekomedasiDetail[$vIdx]->SphBaru : old("rekomendasi.$vIdx.SphBaru") ?? '' }}">
+                                                </td>
                                             </tr>
                                             <tr>
                                                 <td class="text-center">2</td>
@@ -360,6 +394,7 @@
                                     <i class="fa fa-save me-2"></i> Simpan Rekomendasi
                                 </button>
                             @endif
+
                             @if (
                                 !empty($data->getRekomendasi[0]->getRekomedasiDetail[$vIdx]) &&
                                     !is_null($data->getRekomendasi[0]->getRekomedasiDetail[$vIdx]->IdPengajuan))
@@ -386,6 +421,40 @@
         </form>
 
     </div>
+    </div>
+    <div class="modal fade" id="modalNotes" tabindex="-1" aria-labelledby="modalNotesLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalNotesLabel">Tambah Catatan / Notes</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+
+                {{-- Form AJAX --}}
+                <form id="formNotes" action="{{ route('rekomendasi.simpan-notes-review') }}" method="POST">
+                    @csrf
+                    <input type="hidden" name="IdPengajuan" value="{{ $data->id }}">
+
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label for="notes_content" class="form-label">Isi Catatan</label>
+                            <textarea class="form-control" id="notes_content" name="Catatan" rows="5"
+                                placeholder="Tulis catatan penting di sini..." required>{{ $data->getRekomendasi[0]->CatatanReview ?? '' }}</textarea>
+
+                            <div class="invalid-feedback" id="errorCatatan" style="display:none;"></div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                        <button type="submit" class="btn btn-primary" id="btnSimpanNotes">
+                            <span class="spinner-border spinner-border-sm d-none" id="loadingNotes" role="status"
+                                aria-hidden="true"></span>
+                            <span id="textBtnSimpan">Simpan Notes</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
     </div>
 @endsection
 @push('js')
@@ -567,6 +636,95 @@
                     fileNameDisplay.textContent = '';
                     fileNameDisplay.classList.remove('text-success');
                 }
+            });
+        });
+    </script>
+    <script>
+        $(document).ready(function() {
+            $('#formNotes').on('submit', function(e) {
+                e.preventDefault(); // Cegah submit biasa (reload)
+
+                const form = $(this);
+                const url = form.attr('action');
+                const btnSimpan = $('#btnSimpanNotes');
+                const loading = $('#loadingNotes');
+                const textBtn = $('#textBtnSimpan');
+                const errorCatatan = $('#errorCatatan');
+                const textarea = $('#notes_content');
+
+                // Reset error state
+                textarea.removeClass('is-invalid');
+                errorCatatan.hide().text('');
+
+                // Tampilkan loading
+                btnSimpan.prop('disabled', true);
+                loading.removeClass('d-none');
+                textBtn.text('Menyimpan...');
+
+                $.ajax({
+                    url: url,
+                    type: 'POST',
+                    data: form.serialize(),
+                    dataType: 'json',
+                    success: function(response) {
+                        // Tutup modal
+                        $('#modalNotes').modal('hide');
+
+                        // Reset form
+                        form[0].reset();
+
+                        // Tampilkan notifikasi sukses, lalu reload page
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Berhasil!',
+                            text: response.message || 'Catatan berhasil disimpan.',
+                            iconColor: '#4BCC1F',
+                            confirmButtonColor: '#4BCC1F',
+                            timer: 1200,
+                            showConfirmButton: false
+                        }).then(function() {
+                            // Reload page setelah popup success
+                            location.reload();
+                        });
+                    },
+                    error: function(xhr) {
+                        let message = 'Gagal menyimpan catatan. Silakan coba lagi.';
+
+                        // Handle validasi error dari Laravel
+                        if (xhr.status === 422) {
+                            const errors = xhr.responseJSON?.errors;
+                            if (errors && errors.Catatan) {
+                                textarea.addClass('is-invalid');
+                                errorCatatan.text(errors.Catatan[0]).show();
+                                message = errors.Catatan[0];
+                            }
+                        } else if (xhr.responseJSON?.message) {
+                            message = xhr.responseJSON.message;
+                        }
+
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Gagal!',
+                            text: message,
+                            iconColor: '#dc3545',
+                            confirmButtonColor: '#dc3545'
+                        });
+                    },
+
+                    complete: function() {
+                        // Kembalikan tombol ke state semula
+                        btnSimpan.prop('disabled', false);
+                        loading.addClass('d-none');
+                        textBtn.text('Simpan Notes');
+                    }
+                });
+            });
+
+            // Reset form & error ketika modal ditutup
+            $('#modalNotes').on('hidden.bs.modal', function() {
+                $('#formNotes')[0].reset();
+                $('#notes_content').removeClass('is-invalid');
+                $('#errorCatatan').hide().text('');
             });
         });
     </script>

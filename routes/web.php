@@ -253,6 +253,8 @@ Route::group(['middleware' => ['auth']], function () {
         Route::get('/', [RekomendasiController::class, 'index'])->name('rekomendasi.index');
         Route::post('/simpan-notes', [RekomendasiController::class, 'simpanNotes'])
             ->name('rekomendasi.simpan-notes');
+        Route::post('/simpan-notes-review', [RekomendasiController::class, 'simpanNotesReview'])
+            ->name('rekomendasi.simpan-notes-review');
         Route::get('/index-selesai', [RekomendasiController::class, 'indexSelesai'])->name('rekomendasi.index-selesai');
         Route::get('/rekomendasi-pembelian/{idPengajuan}/{idPengajuanItem}', [RekomendasiController::class, 'create'])->name('rekomendasi.create');
         Route::get('/review-pembelian/{IdPengajuan}/{barang}', [RekomendasiController::class, 'Review'])->name('rekomendasi.review');
