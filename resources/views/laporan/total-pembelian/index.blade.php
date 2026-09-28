@@ -1,18 +1,56 @@
 @extends('layouts.app')
 
 @section('content')
-    <div class="page-header mb-4">
-        <div class="row align-items-center">
-            <div class="col">
-                <h3 class="page-title mb-1">Laporan Total Pembelian per RS <span class="fw-normal" style="font-size: 70%"></span></h3>
-                <nav aria-label="breadcrumb">
-                    <ol class="breadcrumb mb-0 py-0 bg-white px-0 ps-1">
-                        <li class="breadcrumb-item"><a href="{{ route('home') }}">Dashboard</a></li>
-                        <li class="breadcrumb-item active" aria-current="page">Laporan Total Pembelian</li>
-                    </ol>
-                </nav>
+    <div class="page-header ph-redesign">
+
+        <div class="ph-container">
+
+            <!-- KIRI: Breadcrumb, Title, Subtitle -->
+
+            <div class="ph-left">
+
+                <ul class="ph-breadcrumb">
+
+                    <li><a href="{{ route('home') }}"><i class="fa fa-home"></i> Dashboard</a></li>
+
+                    <li><a href="{{ route('ajukan.index') }}">Pengajuan Pembelian</a></li>
+
+                    <li class="active">Detail</li>
+
+                </ul>
+
+                <h3 class="ph-title">
+
+                    <i class="fa fa-file-invoice"></i>
+
+                    Detail Pengajuan Pembelian
+
+                </h3>
+
+                <p class="ph-subtitle">Lihat informasi lengkap mengenai pengajuan pembelian ini</p>
+
             </div>
+
+            <!-- KANAN: Icon + Tombol Kembali -->
+
+            <div class="ph-right">
+
+                <div class="ph-icon">
+
+                    <i class="fa fa-shopping-cart"></i>
+
+                </div>
+
+                <a href="{{ route('ajukan.index') }}" class="ph-btn">
+
+                    <i class="fa fa-arrow-left"></i> Kembali
+
+                </a>
+
+            </div>
+
         </div>
+
     </div>
 
     <div class="row">
@@ -20,7 +58,8 @@
             <div class="card shadow-sm border-0">
                 <div class="card-header bg-dark text-white">
                     <h4 class="card-title mb-1">Rekapitulasi Penghematan per Rumah Sakit</h4>
-                    <small class="card-text text-white-50">Perbandingan total Harga Awal vs Harga Negosiasi (Khusus Rekomendasi 1).</small>
+                    <small class="card-text text-white-50">Perbandingan total Harga Awal vs Harga Negosiasi (Khusus
+                        Rekomendasi 1).</small>
                 </div>
                 <div class="card-body">
                     <!-- Filter Section -->
@@ -28,11 +67,13 @@
                         <div class="row g-3 align-items-end mb-4">
                             <div class="col-md-3">
                                 <label for="start_month" class="form-label fw-bold text-secondary mb-1">Bulan Awal</label>
-                                <input type="month" name="start_month" id="start_month" class="form-control" autocomplete="off">
+                                <input type="month" name="start_month" id="start_month" class="form-control"
+                                    autocomplete="off">
                             </div>
                             <div class="col-md-3">
                                 <label for="end_month" class="form-label fw-bold text-secondary mb-1">Bulan Akhir</label>
-                                <input type="month" name="end_month" id="end_month" class="form-control" autocomplete="off">
+                                <input type="month" name="end_month" id="end_month" class="form-control"
+                                    autocomplete="off">
                             </div>
                             <div class="col-md-6 d-flex gap-2 pt-2 pt-md-0">
                                 <button type="button" id="btnFilter" class="btn btn-primary">
@@ -41,7 +82,8 @@
                                 <button type="button" id="btnReset" class="btn btn-secondary">
                                     <i class="fa fa-undo me-1"></i> Reset
                                 </button>
-                                <a href="{{ route('laporan.total-pembelian.export') }}" id="btnExport" class="btn btn-success" target="_blank">
+                                <a href="{{ route('laporan.total-pembelian.export') }}" id="btnExport"
+                                    class="btn btn-success" target="_blank">
                                     <i class="fa fa-file-excel-o me-1"></i> Export Excel
                                 </a>
                             </div>
@@ -98,30 +140,34 @@
             let table;
 
             function numberFormat(number) {
-                return 'Rp ' + parseFloat(number).toLocaleString('id-ID', {minimumFractionDigits: 0});
+                return 'Rp ' + parseFloat(number).toLocaleString('id-ID', {
+                    minimumFractionDigits: 0
+                });
             }
 
             function loadDataTable() {
                 table = $('#laporanTable').DataTable({
                     responsive: true,
-                    serverSide: false,    // DISABLE SERVER SIDE
+                    serverSide: false, // DISABLE SERVER SIDE
                     processing: true,
                     bDestroy: true,
-                    paging: false,        // DISABLE PAGINATION
-                    searching: false,     // Optional: disable search
-                    ordering: true,       // Enable/disable as needed
-                    info: false,          // Optional: hide table info
+                    paging: false, // DISABLE PAGINATION
+                    searching: false, // Optional: disable search
+                    ordering: true, // Enable/disable as needed
+                    info: false, // Optional: hide table info
                     ajax: {
                         url: "{{ route('laporan.total-pembelian') }}",
-                        dataSrc: function (json) {
+                        dataSrc: function(json) {
                             // Calculate totals for HargaAwal, HargaNego, and Selisih
                             let totalHargaAwal = 0;
                             let totalHargaNego = 0;
                             let totalSelisih = 0;
 
                             json.data.forEach(function(row) {
-                                const hargaAwal = parseFloat((row.TotalHargaAwal ?? "0").toString().replace(/\D/g, '')) || 0;
-                                const hargaNego = parseFloat((row.TotalHargaNego ?? "0").toString().replace(/\D/g, '')) || 0;
+                                const hargaAwal = parseFloat((row.TotalHargaAwal ?? "0")
+                                    .toString().replace(/\D/g, '')) || 0;
+                                const hargaNego = parseFloat((row.TotalHargaNego ?? "0")
+                                    .toString().replace(/\D/g, '')) || 0;
                                 totalHargaAwal += hargaAwal;
                                 totalHargaNego += hargaNego;
                                 totalSelisih += (hargaAwal - hargaNego);
@@ -135,15 +181,17 @@
                             // Update Export Excel link dynamically
                             let exportUrl = "{{ route('laporan.total-pembelian.export') }}";
                             let params = [];
-                            if ($('#start_month').val()) params.push('start_month=' + $('#start_month').val());
-                            if ($('#end_month').val()) params.push('end_month=' + $('#end_month').val());
+                            if ($('#start_month').val()) params.push('start_month=' + $('#start_month')
+                                .val());
+                            if ($('#end_month').val()) params.push('end_month=' + $('#end_month')
+                                .val());
                             if (params.length > 0) exportUrl += '?' + params.join('&');
                             $('#btnExport').attr('href', exportUrl);
 
                             // DataTables expects an array for client mode
                             return json.data;
                         },
-                        data: function (d) {
+                        data: function(d) {
                             // Because no paging, only send the filter params
                             d.start_month = $('#start_month').val();
                             d.end_month = $('#end_month').val();
@@ -153,26 +201,33 @@
                         processing: '<i class="fa fa-spinner fa-spin fa-3x fa-fw"></i> <span class="sr-only">Memuat...</span>',
                         emptyTable: "Data tidak tersedia"
                     },
-                    columns: [
-                        {
+                    columns: [{
                             data: null,
                             name: 'DT_RowIndex',
                             orderable: false,
                             searchable: false,
                             className: "text-center",
-                            render: function (data, type, row, meta) {
+                            render: function(data, type, row, meta) {
                                 return meta.row + 1;
                             }
                         },
-                        { data: 'Kode', name: 'Kode', className: "text-center" },
-                        { data: 'Nama', name: 'Nama' },
+                        {
+                            data: 'Kode',
+                            name: 'Kode',
+                            className: "text-center"
+                        },
+                        {
+                            data: 'Nama',
+                            name: 'Nama'
+                        },
                         {
                             data: 'TotalHargaAwal',
                             name: 'TotalHargaAwal',
                             orderable: false,
                             className: "text-end",
                             render: function(data, type, row) {
-                                let val = parseFloat((data ?? "0").toString().replace(/\D/g, '')) || 0;
+                                let val = parseFloat((data ?? "0").toString().replace(/\D/g, '')) ||
+                                    0;
                                 return '<span class="fw-bold">' + numberFormat(val) + '</span>';
                             }
                         },
@@ -182,8 +237,10 @@
                             orderable: false,
                             className: "text-end",
                             render: function(data, type, row) {
-                                let val = parseFloat((data ?? "0").toString().replace(/\D/g, '')) || 0;
-                                return '<span class="fw-bold text-info">' + numberFormat(val) + '</span>';
+                                let val = parseFloat((data ?? "0").toString().replace(/\D/g, '')) ||
+                                    0;
+                                return '<span class="fw-bold text-info">' + numberFormat(val) +
+                                    '</span>';
                             }
                         },
                         {
@@ -193,13 +250,21 @@
                             orderable: false,
                             className: "text-end text-success",
                             render: function(data, type, row) {
-                                let hargaAwal = parseFloat((row.TotalHargaAwal ?? "0").toString().replace(/\D/g, '')) || 0;
-                                let hargaNego = parseFloat((row.TotalHargaNego ?? "0").toString().replace(/\D/g, '')) || 0;
+                                let hargaAwal = parseFloat((row.TotalHargaAwal ?? "0").toString()
+                                    .replace(/\D/g, '')) || 0;
+                                let hargaNego = parseFloat((row.TotalHargaNego ?? "0").toString()
+                                    .replace(/\D/g, '')) || 0;
                                 let selisih = hargaAwal - hargaNego;
                                 return '<span class="fw-bold">' + numberFormat(selisih) + '</span>';
                             }
                         },
-                        { data: 'action', name: 'action', orderable: false, searchable: false, className: "text-center" }
+                        {
+                            data: 'action',
+                            name: 'action',
+                            orderable: false,
+                            searchable: false,
+                            className: "text-center"
+                        }
                     ]
                 });
             }
