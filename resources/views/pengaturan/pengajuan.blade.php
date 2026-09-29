@@ -1,15 +1,28 @@
 @extends('layouts.app')
 
 @section('content')
-    <div class="page-header">
-        <div class="row">
-            <div class="col">
-                <h3 class="page-title">Pengaturan</h3>
-                <ul class="breadcrumb">
-                    <li class="breadcrumb-item"><a href="{{ route('home') }}">Dashboard</a></li>
-                    <li class="breadcrumb-item"><a href="{{ route('barang.index') }}">Pengaturan</a></li>
-                    <li class="breadcrumb-item active">Pengajuan</li>
+    <div class="page-header ph-redesign">
+        <div class="ph-container">
+            <!-- KIRI: Breadcrumb, Title, Subtitle -->
+            <div class="ph-left">
+                <ul class="ph-breadcrumb">
+                    <li><a href="{{ route('home') }}"><i class="fa fa-home"></i> Dashboard</a></li>
+                    <li><a href="{{ route('barang.index') }}">Pengaturan</a></li>
+                    <li class="active">Sesuaikan Pengajuan</li>
                 </ul>
+                <h3 class="ph-title">
+                    <i class="fa fa-cog"></i>
+                    Sesuaikan Pengajuan
+                </h3>
+                <p class="ph-subtitle">
+                    Silakan sesuaikan data pengajuan di bawah ini.
+                </p>
+            </div>
+            <!-- KANAN: Icon -->
+            <div class="ph-right">
+                <div class="ph-icon">
+                    <i class="fa fa-cog"></i>
+                </div>
             </div>
         </div>
     </div>

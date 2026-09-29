@@ -1,15 +1,28 @@
 @extends('layouts.app')
 
 @section('content')
-    <div class="page-header">
-        <div class="row">
-            <div class="col">
-                <h3 class="page-title">Master Jenis Pengajuan</h3>
-                <ul class="breadcrumb">
-                    <li class="breadcrumb-item"><a href="{{ route('home') }}">Beranda</a></li>
-                    <li class="breadcrumb-item"><a href="{{ route('jenis-pengajuan.index') }}">Daftar Jenis Pengajuan</a></li>
-                    <li class="breadcrumb-item active">Sesuaikan Jenis Pengajuan</li>
+    <div class="page-header ph-redesign">
+        <div class="ph-container">
+            <!-- KIRI: Breadcrumb, Title, Subtitle -->
+            <div class="ph-left">
+                <ul class="ph-breadcrumb">
+                    <li><a href="{{ route('home') }}"><i class="fa fa-home"></i> Dashboard</a></li>
+                    <li><a href="{{ route('jenis-pengajuan.index') }}">Master Jenis Pengajuan</a></li>
+                    <li class="active">Sesuaikan</li>
                 </ul>
+                <h3 class="ph-title">
+                    <i class="fa fa-list-alt"></i>
+                    Sesuaikan Jenis Pengajuan
+                </h3>
+                <p class="ph-subtitle">
+                    Silakan sesuaikan data jenis pengajuan di bawah ini.
+                </p>
+            </div>
+            <!-- KANAN: Icon -->
+            <div class="ph-right">
+                <div class="ph-icon">
+                    <i class="fa fa-list-alt"></i>
+                </div>
             </div>
         </div>
     </div>
@@ -17,12 +30,13 @@
     <div class="row justify-content-center">
         <div class="col-lg-12">
             <div class="card">
-                <div class="card-header bg-dark">
+                <div class="card-header bg-white">
                     <h4 class="card-title mb-0">Formulir Edit Jenis Pengajuan</h4>
                     <p class="card-text mb-0">
-                        Silakan ubah data jenis pengajuan di bawah ini.
+                        Silakan sesuaikan data jenis pengajuan di bawah ini.
                     </p>
                 </div>
+
                 <div class="card-body">
                     <form action="{{ route('jenis-pengajuan.update', $jenisPengajuan->id) }}" method="POST">
                         @csrf

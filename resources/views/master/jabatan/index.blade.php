@@ -1,35 +1,50 @@
 @extends('layouts.app')
 
 @section('content')
-    <div class="page-header">
-        <div class="row align-items-center">
-            <div class="col">
-                <h3 class="page-title">Data Jabatan</h3>
-                <nav aria-label="breadcrumb">
-                    <ol class="breadcrumb mb-0">
-                        <li class="breadcrumb-item"><a href="{{ route('home') }}">Beranda</a></li>
-                        <li class="breadcrumb-item active" aria-current="page">Jabatan</li>
-                    </ol>
-                </nav>
+    <div class="page-header ph-redesign">
+        <div class="ph-container">
+            <!-- KIRI: Breadcrumb, Title, Subtitle -->
+            <div class="ph-left">
+                <ul class="ph-breadcrumb">
+                    <li><a href="{{ route('home') }}"><i class="fa fa-home"></i> Dashboard</a></li>
+                    <li class="active">Master Jabatan</li>
+                </ul>
+                <h3 class="ph-title">
+                    <i class="fa fa-briefcase"></i>
+                    Master Jabatan
+                </h3>
+                <p class="ph-subtitle">
+                    Kelola dan atur seluruh data jabatan yang ada di sistem ini.
+                </p>
+            </div>
+            <!-- KANAN: Icon -->
+            <div class="ph-right">
+                <div class="ph-icon">
+                    <i class="fa fa-briefcase"></i>
+                </div>
             </div>
         </div>
     </div>
 
     <div class="row mb-3">
-        <div class="col text-end">
-            <a class="btn btn-primary" href="{{ route('jabatan.create') }}">Tambah Jabatan Baru</a>
-        </div>
+
     </div>
 
     <div class="row">
         <div class="col-sm-12">
             <div class="card">
-                <div class="card-header bg-dark">
-                    <h4 class="card-title">List Jabatan</h4>
-                    <p class="card-text">
-                        Tabel ini berisi semua data jabatan yang ada.
-                    </p>
+                <div class="card-header bg-white text-white d-flex justify-content-between align-items-center">
+                    <div>
+                        <h4 class="card-title mb-0">List Jabatan</h4>
+                        <small class="card-text">
+                            Tabel ini berisi semua data jabatan yang ada.
+                        </small>
+                    </div>
+                    <a class="btn btn-primary btn-md" href="{{ route('jabatan.create') }}">
+                        <i class="fa fa-plus"></i> Tambah Jabatan Baru
+                    </a>
                 </div>
+
                 <div class="card-body">
                     <div class="table-responsive">
                         <table class="table datanew cell-border compact stripe" id="jabatanTable" width="100%">

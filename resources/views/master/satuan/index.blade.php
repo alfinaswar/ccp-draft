@@ -1,14 +1,27 @@
 @extends('layouts.app')
 
 @section('content')
-    <div class="page-header">
-        <div class="row">
-            <div class="col">
-                <h3 class="page-title">Master Satuan</h3>
-                <ul class="breadcrumb">
-                    <li class="breadcrumb-item"><a href="{{ route('home') }}">Dashboard</a></li>
-                    <li class="breadcrumb-item active">Master Satuan</li>
+    <div class="page-header ph-redesign">
+        <div class="ph-container">
+            <!-- KIRI: Breadcrumb, Title, Subtitle -->
+            <div class="ph-left">
+                <ul class="ph-breadcrumb">
+                    <li><a href="{{ route('home') }}"><i class="fa fa-home"></i> Dashboard</a></li>
+                    <li class="active">Master Satuan</li>
                 </ul>
+                <h3 class="ph-title">
+                    <i class="fa fa-balance-scale"></i>
+                    Master Satuan
+                </h3>
+                <p class="ph-subtitle">
+                    Kelola dan atur seluruh data satuan yang ada di sistem ini.
+                </p>
+            </div>
+            <!-- KANAN: Icon -->
+            <div class="ph-right">
+                <div class="ph-icon">
+                    <i class="fa fa-balance-scale"></i>
+                </div>
             </div>
         </div>
     </div>
@@ -27,20 +40,24 @@
     @endif
 
     <div class="row mb-3">
-        <div class="col text-end">
-            <a class="btn btn-primary" href="{{ route('satuan.create') }}">Tambah Satuan Baru</a>
-        </div>
+
     </div>
 
     <div class="row">
         <div class="col-sm-12">
             <div class="card">
-                <div class="card-header bg-dark">
-                    <h4 class="card-title">Daftar Satuan</h4>
-                    <p class="card-text">
-                        Tabel ini menampilkan seluruh satuan yang tersedia.
-                    </p>
+                <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                    <div>
+                        <h4 class="card-title mb-0">Daftar Satuan</h4>
+                        <p class="card-text mb-0">
+                            Tabel ini menampilkan seluruh satuan yang tersedia.
+                        </p>
+                    </div>
+                    <div>
+                        <a class="btn btn-primary" href="{{ route('satuan.create') }}">Tambah Satuan Baru</a>
+                    </div>
                 </div>
+
                 <div class="card-body">
                     <div class="table-responsive">
                         <table class="table datanew cell-border compact stripe" id="satuanTable" width="100%">
@@ -62,8 +79,8 @@
 
 @push('js')
     <script>
-        $(document).ready(function () {
-            $('body').on('click', '.btn-delete', function () {
+        $(document).ready(function() {
+            $('body').on('click', '.btn-delete', function() {
                 var id = $(this).data('id');
                 Swal.fire({
                     title: 'Hapus Data?',
@@ -80,7 +97,7 @@
                             data: {
                                 _token: '{{ csrf_token() }}'
                             },
-                            success: function (response) {
+                            success: function(response) {
                                 if (response.status === 200) {
                                     Swal.fire('Dihapus!', response.message, 'success');
                                     $('#satuanTable').DataTable().ajax.reload();
@@ -88,8 +105,9 @@
                                     Swal.fire('Gagal!', response.message, 'error');
                                 }
                             },
-                            error: function (xhr) {
-                                Swal.fire('Gagal!', xhr.responseJSON?.message ?? 'Terjadi kesalahan saat menghapus.', 'error');
+                            error: function(xhr) {
+                                Swal.fire('Gagal!', xhr.responseJSON?.message ??
+                                    'Terjadi kesalahan saat menghapus.', 'error');
                             }
                         });
                     }
@@ -110,8 +128,7 @@
                             previous: '<i class="fa fa-angle-double-left" aria-hidden="true"></i>'
                         }
                     },
-                    columns: [
-                        {
+                    columns: [{
                             data: 'DT_RowIndex',
                             name: 'DT_RowIndex',
                             orderable: false,

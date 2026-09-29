@@ -1,33 +1,49 @@
 @extends('layouts.app')
 
 @section('content')
-    <div class="page-header">
-        <div class="row">
-            <div class="col">
-                <h3 class="page-title">Master Perusahaan</h3>
-                <ul class="breadcrumb">
-                    <li class="breadcrumb-item"><a href="{{ route('home') }}">Dashboard</a></li>
-                    <li class="breadcrumb-item active">Master Perusahaan</li>
+    <div class="page-header ph-redesign">
+        <div class="ph-container">
+            <!-- KIRI: Breadcrumb, Title, Subtitle -->
+            <div class="ph-left">
+                <ul class="ph-breadcrumb">
+                    <li><a href="{{ route('home') }}"><i class="fa fa-home"></i> Dashboard</a></li>
+                    <li class="active">Pengaturan TTD</li>
                 </ul>
+                <h3 class="ph-title">
+                    <i class="fa fa-signature"></i>
+                    Pengaturan TTD
+                </h3>
+                <p class="ph-subtitle">
+                    Kelola dan atur seluruh data pengaturan TTD yang ada di sistem ini.
+                </p>
+            </div>
+            <!-- KANAN: Icon -->
+            <div class="ph-right">
+                <div class="ph-icon">
+                    <i class="fa fa-signature"></i>
+                </div>
             </div>
         </div>
     </div>
 
-    <div class="row mb-3">
-        <div class="col text-end">
-            <a class="btn btn-primary" href="{{ route('perusahaan.create') }}">Tambah Perusahaan Baru</a>
-        </div>
-    </div>
 
     <div class="row">
         <div class="col-sm-12">
             <div class="card">
-                <div class="card-header bg-dark">
-                    <h4 class="card-title">List Perusahaan</h4>
-                    <p class="card-text">
-                        Tabel ini berisi semua data perusahaan yang ada.
-                    </p>
+                <div class="card-header d-flex justify-content-between align-items-center bg-white">
+                    <div>
+                        <h4 class="card-title mb-0">List Pengaturan TTD</h4>
+                        <p class="card-text mb-0">
+                            Tabel ini berisi semua data pengaturan TTD yang ada.
+                        </p>
+                    </div>
+                    <div>
+                        <a class="btn btn-primary" href="{{ route('pengaturan-ttd.create') }}">Tambah Pengaturan TTD
+                            Baru</a>
+                    </div>
                 </div>
+
+
                 <div class="card-body">
                     <div class="table-responsive">
                         <table class="table datanew cell-border compact stripe" id="perusahaanTable" width="100%">

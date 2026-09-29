@@ -1,15 +1,28 @@
 @extends('layouts.app')
 
 @section('content')
-    <div class="page-header">
-        <div class="row">
-            <div class="col">
-                <h3 class="page-title">Master Satuan</h3>
-                <ul class="breadcrumb">
-                    <li class="breadcrumb-item"><a href="{{ route('home') }}">Dashboard</a></li>
-                    <li class="breadcrumb-item"><a href="{{ route('satuan.index') }}">Master Satuan</a></li>
-                    <li class="breadcrumb-item active">Tambah Satuan</li>
+    <div class="page-header ph-redesign">
+        <div class="ph-container">
+            <!-- KIRI: Breadcrumb, Title, Subtitle -->
+            <div class="ph-left">
+                <ul class="ph-breadcrumb">
+                    <li><a href="{{ route('home') }}"><i class="fa fa-home"></i> Dashboard</a></li>
+                    <li><a href="{{ route('satuan.index') }}">Master Satuan</a></li>
+                    <li class="active">Tambah</li>
                 </ul>
+                <h3 class="ph-title">
+                    <i class="fa fa-balance-scale"></i>
+                    Tambah Satuan
+                </h3>
+                <p class="ph-subtitle">
+                    Silakan isi data satuan baru di bawah ini.
+                </p>
+            </div>
+            <!-- KANAN: Icon -->
+            <div class="ph-right">
+                <div class="ph-icon">
+                    <i class="fa fa-balance-scale"></i>
+                </div>
             </div>
         </div>
     </div>
@@ -17,7 +30,7 @@
     <div class="row justify-content-center">
         <div class="col-lg-12">
             <div class="card">
-                <div class="card-header bg-dark">
+                <div class="card-header bg-white">
                     <h4 class="card-title mb-0">Formulir Tambah Satuan</h4>
                     <p class="card-text mb-0">
                         Silakan isi data satuan baru di bawah ini.

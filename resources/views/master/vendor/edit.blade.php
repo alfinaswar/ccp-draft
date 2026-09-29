@@ -1,15 +1,28 @@
 @extends('layouts.app')
 
 @section('content')
-    <div class="page-header">
-        <div class="row">
-            <div class="col">
-                <h3 class="page-title">Master Vendor</h3>
-                <ul class="breadcrumb">
-                    <li class="breadcrumb-item"><a href="{{ route('home') }}">Dashboard</a></li>
-                    <li class="breadcrumb-item"><a href="{{ route('vendor.index') }}">Master Vendor</a></li>
-                    <li class="breadcrumb-item active">Edit Vendor</li>
+    <div class="page-header ph-redesign">
+        <div class="ph-container">
+            <!-- KIRI: Breadcrumb, Title, Subtitle -->
+            <div class="ph-left">
+                <ul class="ph-breadcrumb">
+                    <li><a href="{{ route('home') }}"><i class="fa fa-home"></i> Dashboard</a></li>
+                    <li><a href="{{ route('vendor.index') }}">Master Vendor</a></li>
+                    <li class="active">Sesuaikan</li>
                 </ul>
+                <h3 class="ph-title">
+                    <i class="fa fa-truck"></i>
+                    Sesuaikan Vendor
+                </h3>
+                <p class="ph-subtitle">
+                    Silakan sesuaikan data vendor di bawah ini.
+                </p>
+            </div>
+            <!-- KANAN: Icon -->
+            <div class="ph-right">
+                <div class="ph-icon">
+                    <i class="fa fa-truck"></i>
+                </div>
             </div>
         </div>
     </div>
@@ -17,12 +30,13 @@
     <div class="row justify-content-center">
         <div class="col-lg-12">
             <div class="card">
-                <div class="card-header bg-dark">
+                <div class="card-header bg-white">
                     <h4 class="card-title mb-0">Formulir Edit Vendor</h4>
                     <p class="card-text mb-0">
-                        Silakan ubah data vendor di bawah ini.
+                        Silakan sesuaikan data vendor di bawah ini.
                     </p>
                 </div>
+
                 <div class="card-body">
                     <form action="{{ route('vendor.update', $vendor->id) }}" method="POST">
                         @csrf

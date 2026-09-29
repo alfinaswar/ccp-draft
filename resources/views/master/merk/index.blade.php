@@ -1,33 +1,45 @@
 @extends('layouts.app')
 
 @section('content')
-    <div class="page-header">
-        <div class="row">
-            <div class="col">
-                <h3 class="page-title">Master Merk</h3>
-                <ul class="breadcrumb">
-                    <li class="breadcrumb-item"><a href="{{ route('home') }}">Dashboard</a></li>
-                    <li class="breadcrumb-item active">Master Merk</li>
+    <div class="page-header ph-redesign">
+        <div class="ph-container">
+            <!-- KIRI: Breadcrumb, Title, Subtitle -->
+            <div class="ph-left">
+                <ul class="ph-breadcrumb">
+                    <li><a href="{{ route('home') }}"><i class="fa fa-home"></i> Dashboard</a></li>
+                    <li class="active">Master Merk</li>
                 </ul>
+                <h3 class="ph-title">
+                    <i class="fa fa-tags"></i>
+                    Master Merk
+                </h3>
+                <p class="ph-subtitle">
+                    Kelola dan atur seluruh data merk yang ada di sistem ini.
+                </p>
+            </div>
+            <!-- KANAN: Icon -->
+            <div class="ph-right">
+                <div class="ph-icon">
+                    <i class="fa fa-tags"></i>
+                </div>
             </div>
         </div>
     </div>
 
-    <div class="row mb-3">
-        <div class="col text-end">
-            <a class="btn btn-primary" href="{{ route('merk.create') }}">Tambah Merk Baru</a>
-        </div>
-    </div>
 
     <div class="row">
         <div class="col-sm-12">
             <div class="card">
-                <div class="card-header bg-dark">
-                    <h4 class="card-title">List Merk</h4>
-                    <p class="card-text">
-                        Tabel ini berisi semua data merk yang ada.
-                    </p>
+                <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                    <div>
+                        <h4 class="card-title mb-0">List Merk</h4>
+                        <small class="card-text text-muted">
+                            Tabel ini berisi semua data merk yang ada.
+                        </small>
+                    </div>
+                    <a class="btn btn-primary" href="{{ route('merk.create') }}">Tambah Merk Baru</a>
                 </div>
+
                 <div class="card-body">
                     <div class="table-responsive">
                         <table class="table datanew cell-border compact stripe" id="merkTable" width="100%">
@@ -61,8 +73,8 @@
         </script>
     @endif
     <script>
-        $(document).ready(function () {
-            $('body').on('click', '.btn-delete', function () {
+        $(document).ready(function() {
+            $('body').on('click', '.btn-delete', function() {
                 var id = $(this).data('id');
                 Swal.fire({
                     title: 'Hapus Data?',
@@ -79,7 +91,7 @@
                             data: {
                                 _token: '{{ csrf_token() }}'
                             },
-                            success: function (response) {
+                            success: function(response) {
                                 if (response.status === 200) {
                                     Swal.fire('Dihapus!', response.message, 'success');
                                     $('#merkTable').DataTable().ajax.reload();
@@ -87,8 +99,9 @@
                                     Swal.fire('Gagal!', response.message, 'error');
                                 }
                             },
-                            error: function (xhr) {
-                                Swal.fire('Gagal!', xhr.responseJSON?.message ?? 'Terjadi kesalahan saat menghapus.', 'error');
+                            error: function(xhr) {
+                                Swal.fire('Gagal!', xhr.responseJSON?.message ??
+                                    'Terjadi kesalahan saat menghapus.', 'error');
                             }
                         });
                     }
@@ -111,8 +124,7 @@
                             previous: '<i class="fa fa-angle-double-left" aria-hidden="true"></i>'
                         }
                     },
-                    columns: [
-                        {
+                    columns: [{
                             data: 'DT_RowIndex',
                             name: 'DT_RowIndex',
                             orderable: false,

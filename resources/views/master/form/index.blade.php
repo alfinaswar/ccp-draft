@@ -27,20 +27,24 @@
     </div>
 
     <div class="row mb-3">
-        <div class="col text-end">
-            <a class="btn btn-primary" href="{{ route('nama-form.create') }}">Tambah Form Baru</a>
-        </div>
+
     </div>
 
     <div class="row">
         <div class="col-sm-12">
             <div class="card">
-                <div class="card-header bg-dark">
-                    <h4 class="card-title">List Form</h4>
-                    <p class="card-text">
-                        Tabel ini berisi semua data form yang ada.
-                    </p>
+                <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                    <div>
+                        <h4 class="card-title mb-0">List Form</h4>
+                        <p class="card-text mb-0">
+                            Tabel ini berisi semua data form yang ada.
+                        </p>
+                    </div>
+                    <div>
+                        <a class="btn btn-primary" href="{{ route('nama-form.create') }}">Tambah Form Baru</a>
+                    </div>
                 </div>
+
                 <div class="card-body">
                     <div class="table-responsive">
                         <table class="table datanew cell-border compact stripe" id="formTable" width="100%">
