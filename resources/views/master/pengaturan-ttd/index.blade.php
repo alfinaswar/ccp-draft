@@ -37,10 +37,10 @@
                             Tabel ini berisi semua data pengaturan TTD yang ada.
                         </p>
                     </div>
-                    <div>
+                    {{-- <div>
                         <a class="btn btn-primary" href="{{ route('pengaturan-ttd.create') }}">Tambah Pengaturan TTD
                             Baru</a>
-                    </div>
+                    </div> --}}
                 </div>
 
 
