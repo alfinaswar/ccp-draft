@@ -627,7 +627,7 @@
                                                                             </div>
                                                                             <div class="row gx-2 mt-1">
                                                                                 <div class="col-6">
-                                                                                    @if ($data->Status == 'Dalam Review' || $data->Status == 'Diajukan')
+                                                                                    @if ($data->Status == 'Dalam Review' || $data->Status == 'Diajukan' || $data->Status == 'Menunggu Rekomendasi GH')
                                                                                         <a href="{{ route('rekomendasi.create', [encrypt($data->id), encrypt($item->id)]) }}"
                                                                                             class="btn btn-primary btn-sm w-100"
                                                                                             style="min-width:150px">
