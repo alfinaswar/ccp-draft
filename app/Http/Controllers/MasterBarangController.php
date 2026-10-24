@@ -50,13 +50,18 @@ class MasterBarangController extends Controller
         $satuan = MasterSatuan::get();
         $merekList = MasterMerk::get();
         $jenis = MasterJenisPengajuan::get();
-        return view('master.barang.create', compact('satuan', 'merekList', 'jenis'));
+        $namaBarangList = MasterBarang::with('getJenis', 'getMerk')
+            ->orderBy('Nama')
+            ->get()
+            ->unique('Nama')
+            ->values();
+        return view('master.barang.create', compact('satuan', 'merekList', 'jenis', 'namaBarangList'));
     }
 
     public function store(Request $request)
     {
         $rules = [
-            'Nama' => 'required|string|max:255',
+            'Nama' => ['required', 'string', 'max:255', 'unique:master_barangs,Nama,NULL,id,deleted_at,NULL'],
             'Jenis' => 'required|string|max:190',
             'Satuan' => 'required|string|max:190',
         ];

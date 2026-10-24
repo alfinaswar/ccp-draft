@@ -59,9 +59,23 @@
                             </div>
                             <div class="col-md-6">
                                 <label for="Nama" class="form-label"><strong>Nama</strong></label>
-                                <input type="text" name="Nama"
+                                <input type="text" name="Nama" list="namaBarangList"
                                     class="form-control @error('Nama') is-invalid @enderror" id="Nama"
-                                    placeholder="Nama Barang" value="{{ old('Nama') }}">
+                                    placeholder="Nama Barang" value="{{ old('Nama') }}" autocomplete="off">
+                                <datalist id="namaBarangList">
+                                    @foreach ($namaBarangList ?? [] as $barang)
+                                        <option value="{{ $barang->Nama }}"
+                                            data-jenis="{{ optional($barang->getJenis)->Nama }}"
+                                            data-merek="{{ optional($barang->getMerk)->Nama }}">
+                                        </option>
+                                    @endforeach
+                                </datalist>
+                                <div id="namaBarangWarning"
+                                    class="alert alert-warning py-2 px-3 mt-2 mb-0 d-none" role="alert">
+                                    <i class="fa fa-exclamation-triangle"></i>
+                                    Barang ini sudah terdaftar: <strong id="namaBarangWarningText"></strong>
+                                    <span class="d-block">Ubah nama untuk mengaktifkan tombol Simpan.</span>
+                                </div>
                                 @error('Nama')
                                     <div class="text-danger mt-1">
                                         {{ $message }}
@@ -120,7 +134,7 @@
                                 <a href="{{ route('barang.index') }}" class="btn btn-secondary me-2">
                                     <i class="fa fa-arrow-left"></i> Kembali
                                 </a>
-                                <button type="submit" class="btn btn-primary">
+                                <button type="submit" class="btn btn-primary" id="btnSimpan">
                                     <i class="fa fa-save"></i> Simpan
                                 </button>
                             </div>
@@ -150,6 +164,38 @@
         document.addEventListener('DOMContentLoaded', function() {
             updateMerekTipeDisable();
             document.getElementById('Jenis').addEventListener('change', updateMerekTipeDisable);
+
+            var namaInput = document.getElementById('Nama');
+            var warning = document.getElementById('namaBarangWarning');
+            var warningText = document.getElementById('namaBarangWarningText');
+            var submitBtn = document.getElementById('btnSimpan');
+            var options = Array.from(document.querySelectorAll('#namaBarangList option'));
+
+            function checkNamaBarang() {
+                var value = namaInput.value.trim().toLowerCase();
+                var match = value === '' ? null : options.find(function(option) {
+                    return option.value.trim().toLowerCase() === value;
+                });
+
+                submitBtn.disabled = !!match;
+
+                if (!match) {
+                    warning.classList.add('d-none');
+                    return;
+                }
+
+                var detail = [match.dataset.jenis, match.dataset.merek].filter(Boolean).join(' / ');
+                warningText.textContent = match.value + (detail ? ' (' + detail + ')' : '');
+                warning.classList.remove('d-none');
+            }
+
+            namaInput.addEventListener('input', checkNamaBarang);
+            namaInput.closest('form').addEventListener('submit', function(e) {
+                if (submitBtn.disabled) {
+                    e.preventDefault();
+                }
+            });
+            checkNamaBarang();
         });
     </script>
 @endpush
