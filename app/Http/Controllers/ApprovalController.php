@@ -297,7 +297,8 @@ class ApprovalController extends Controller
                 ->whereIn('JenisFormId', [7, 11, 12, 13, 14, 15])
                 ->whereHas('getDokumenUsulanInvestasi', function ($q) {
                     $q->whereHas('getPengajuan', function ($pengajuanQ) {
-                        $pengajuanQ->whereIn('Status', ['Selesai', 'Disetujui CEO']);
+                        // $pengajuanQ->whereIn('Status', ['Selesai', 'Disetujui CEO']);
+                        $pengajuanQ->whereIn('Status', ['Selesai']);
                     });
                 })
                 ->count(),
