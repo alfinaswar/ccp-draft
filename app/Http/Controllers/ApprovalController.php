@@ -52,7 +52,8 @@ class ApprovalController extends Controller
                             $subQ->whereIn('JenisFormId', [7, 11, 12, 13, 14, 15])
                                 ->whereHas('getDokumenUsulanInvestasi', function ($docQ) {
                                     $docQ->whereHas('getPengajuan', function ($pengajuanQ) {
-                                        $pengajuanQ->whereIn('Status', ['Selesai', 'Disetujui CEO']);
+                                        // $pengajuanQ->whereIn('Status', ['Selesai', 'Disetujui CEO']);
+                                        $pengajuanQ->whereIn('Status', ['Selesai']);
                                     });
                                 });
                         });
