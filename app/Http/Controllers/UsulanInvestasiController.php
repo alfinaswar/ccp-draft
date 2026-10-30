@@ -669,6 +669,13 @@ class UsulanInvestasiController extends Controller
         // 3. LOGIKA PENGIRIMAN EMAIL KHUSUS DIREKTUR
         // Cek apakah DirekturId diisi dan tidak kosong
         if (!empty($request->DirekturId)) {
+            if ($pengajuan) {
+                $pengajuan->update([
+                    'DirekturId' => $request->DirekturId,           // ID Direktur yang meng-approve
+                    // 'AccDirektur' => 'Y',                            // Status persetujuan
+                    // 'AccDirekturPada' => \Carbon\Carbon::now(),         // Waktu persetujuan
+                ]);
+            }
             // dd($request->DirekturId);
             // Cari data user berdasarkan DirekturId
             $direkturUser = User::find($request->DirekturId);
