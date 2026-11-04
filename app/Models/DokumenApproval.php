@@ -50,4 +50,8 @@ class DokumenApproval extends Model
         }
         return null;
     }
+    public function getDokumenFS()
+    {
+        return $this->belongsTo(FeasibilityStudy::class, 'DokumenId', 'id');
+    }
 }

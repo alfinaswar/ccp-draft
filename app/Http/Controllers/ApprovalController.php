@@ -15,21 +15,19 @@ class ApprovalController extends Controller
 {
     public function index(Request $request)
     {
-        // ==========================================
-        // 1. PROSES REQUEST AJAX DATATABLES
-        // ==========================================
         if ($request->ajax()) {
             $userId = Auth::id();
 
             // ==========================================
-            // A. QUERY APPROVAL DOKUMEN (Existing)
+            // A. QUERY APPROVAL DOKUMEN (HTA + FUI + FS)
             // ==========================================
             $approvalDokumenQuery = DokumenApproval::with([
                 'getUser',
                 'getJabatan',
                 'getDepartemen',
                 'getDokumenHTAGPA.getPengajuan',
-                'getDokumenUsulanInvestasi.getPengajuan'
+                'getDokumenUsulanInvestasi.getPengajuan',
+                'getDokumenFS.getPengajuan', // ✅ Tambahkan relasi FS
             ])
                 ->where('UserId', $userId)
                 ->where('Status', 'Pending')
@@ -42,41 +40,49 @@ class ApprovalController extends Controller
                         ->where('prev.Status', '!=', 'Approved');
                 })
                 ->where(function ($q) {
+                    // 1. HTA/GPA
                     $q->where(function ($subQ) {
                         $subQ->whereIn('JenisFormId', [1, 2, 16])
                             ->whereHas('getDokumenHTAGPA', function ($docQ) {
                                 $docQ->whereHas('getPengajuan');
                             });
                     })
+                        // 2. FUI (Usulan Investasi)
                         ->orWhere(function ($subQ) {
-                            $subQ->whereIn('JenisFormId', [7, 11, 12, 13, 14, 15])
-                                ->whereHas('getDokumenUsulanInvestasi', function ($docQ) {
-                                    $docQ->whereHas('getPengajuan', function ($pengajuanQ) {
-                                        // $pengajuanQ->whereIn('Status', ['Selesai', 'Disetujui CEO']);
-                                        $pengajuanQ->whereIn('Status', ['Selesai']);
-                                    });
+                        $subQ->whereIn('JenisFormId', [7, 11, 12, 13, 14, 15])
+                            ->whereHas('getDokumenUsulanInvestasi', function ($docQ) {
+                                $docQ->whereHas('getPengajuan', function ($pengajuanQ) {
+                                    $pengajuanQ->whereIn('Status', ['Selesai']);
                                 });
-                        });
+                            });
+                    })
+                        // 3. ✅ FS (Feasibility Study) - TAMBAHKAN INI
+                        ->orWhere(function ($subQ) {
+                        $subQ->whereIn('JenisFormId', [3, 4, 5, 6]) // ⚠️ SESUAIKAN dengan JenisFormId FS di database Anda
+                            ->whereHas('getDokumenFS', function ($docQ) {
+                                $docQ->whereHas('getPengajuan', function ($pengajuanQ) {
+                                    $pengajuanQ->whereIn('Status', ['Selesai', 'Selesai Review', 'Disetujui Direktur']);
+                                });
+                            });
+                    });
                 })
                 ->get();
 
             // ==========================================
-            // B. QUERY APPROVAL DIREKTUR (BARU)
+            // B. QUERY APPROVAL DIREKTUR
             // ==========================================
             $approvalDirekturQuery = PengajuanPembelian::with(['getPerusahaan', 'getPengajuanItem.getBarang'])
                 ->where('DirekturId', $userId)
                 ->whereNull('AccDirektur')
-                // ->where('AccDirektur', 'N')
                 ->whereNotNull('DirekturId')
                 ->whereNull('AccDirekturPada')
                 ->get();
 
             // ==========================================
-            // C. GABUNGKAN KEDUA SUMBER DATA
+            // C. GABUNGKAN DATA
             // ==========================================
             $mergedData = collect();
 
-            // Tambahkan approval dokumen
             foreach ($approvalDokumenQuery as $row) {
                 $mergedData->push([
                     'type' => 'dokumen',
@@ -85,16 +91,14 @@ class ApprovalController extends Controller
                 ]);
             }
 
-            // Tambahkan approval direktur
             foreach ($approvalDirekturQuery as $row) {
                 $mergedData->push([
                     'type' => 'direktur',
                     'data' => $row,
-                    'sort_order' => 0, // Approval direktur muncul paling atas
+                    'sort_order' => 0,
                 ]);
             }
 
-            // Sort by sort_order ascending
             $mergedData = $mergedData->sortBy('sort_order')->values();
 
             // ==========================================
@@ -104,7 +108,7 @@ class ApprovalController extends Controller
                 ->addIndexColumn()
                 ->addColumn('jenis_dokumen', function ($row) {
                     if ($row['type'] === 'direktur') {
-                        return '<span class="badge badge-doc direktur">Approval Direktur Sebelum Presentasi Komiter</span>';
+                        return '<span class="badge badge-doc direktur">Approval Direktur</span>';
                     }
 
                     $data = $row['data'];
@@ -112,6 +116,8 @@ class ApprovalController extends Controller
                         return '<span class="badge badge-doc hta">HTA / GPA</span>';
                     } elseif (in_array($data->JenisFormId, [7, 11, 12, 13, 14, 15])) {
                         return '<span class="badge badge-doc fui">Usulan Investasi</span>';
+                    } elseif (in_array($data->JenisFormId, [3, 4, 5, 6])) { // ⚠️ SESUAIKAN
+                        return '<span class="badge badge-doc fs">Feasibility Study</span>';
                     }
                     return '<span class="badge badge-secondary">-</span>';
                 })
@@ -121,9 +127,8 @@ class ApprovalController extends Controller
                         $id = encrypt($pengajuan->id);
                         $kode = $pengajuan->KodePengajuan ?? '-';
                         return '<a href="' . route('ajukan.show', $id) . '"
-                           class="kode-link"
-                           target="_blank"
-                           onclick="event.stopPropagation();">' . e($kode) . '</a>';
+                       class="kode-link" target="_blank"
+                       onclick="event.stopPropagation();">' . e($kode) . '</a>';
                     }
 
                     $data = $row['data'];
@@ -132,9 +137,8 @@ class ApprovalController extends Controller
                         $id = encrypt($pengajuan->id);
                         $kode = $pengajuan->KodePengajuan ?? '-';
                         return '<a href="' . route('ajukan.show', $id) . '"
-                           class="kode-link"
-                           target="_blank"
-                           onclick="event.stopPropagation();">' . e($kode) . '</a>';
+                       class="kode-link" target="_blank"
+                       onclick="event.stopPropagation();">' . e($kode) . '</a>';
                     }
                     return '<span class="text-muted">-</span>';
                 })
@@ -143,8 +147,7 @@ class ApprovalController extends Controller
                         $pengajuan = $row['data'];
                         if ($pengajuan && $pengajuan->getPengajuanItem && $pengajuan->getPengajuanItem->first()) {
                             return '<span class="text-dark">' .
-                                e($pengajuan->getPengajuanItem->first()->getBarang->Nama ?? '-') .
-                                '</span>';
+                                e($pengajuan->getPengajuanItem->first()->getBarang->Nama ?? '-') . '</span>';
                         }
                         return '<span class="text-muted">-</span>';
                     }
@@ -153,8 +156,7 @@ class ApprovalController extends Controller
                     $pengajuan = $this->getPengajuanFromApproval($data);
                     if ($pengajuan && $pengajuan->getPengajuanItem && $pengajuan->getPengajuanItem->first()) {
                         return '<span class="text-dark">' .
-                            e($pengajuan->getPengajuanItem->first()->getBarang->Nama ?? '-') .
-                            '</span>';
+                            e($pengajuan->getPengajuanItem->first()->getBarang->Nama ?? '-') . '</span>';
                     }
                     return '<span class="text-muted">-</span>';
                 })
@@ -170,16 +172,14 @@ class ApprovalController extends Controller
                         $pengajuan = $row['data'];
                         $tanggalPresentasi = $pengajuan->TanggalPresentasi ?? null;
                         return '<span class="text-muted small">' .
-                            ($tanggalPresentasi ? \Carbon\Carbon::parse($tanggalPresentasi)->translatedFormat('d M Y') : '-') .
-                            '</span>';
+                            ($tanggalPresentasi ? \Carbon\Carbon::parse($tanggalPresentasi)->translatedFormat('d M Y') : '-') . '</span>';
                     }
 
                     $data = $row['data'];
                     $pengajuan = $this->getPengajuanFromApproval($data);
                     $tanggalPresentasi = $pengajuan->TanggalPresentasi ?? null;
                     return '<span class="text-muted small">' .
-                        ($tanggalPresentasi ? \Carbon\Carbon::parse($tanggalPresentasi)->translatedFormat('d M Y') : '-') .
-                        '</span>';
+                        ($tanggalPresentasi ? \Carbon\Carbon::parse($tanggalPresentasi)->translatedFormat('d M Y') : '-') . '</span>';
                 })
                 ->addColumn('asal_perm_rs', function ($row) {
                     if ($row['type'] === 'direktur') {
@@ -205,28 +205,28 @@ class ApprovalController extends Controller
                             'direkturId' => $pengajuan->DirekturId
                         ]);
                         return '<a href="' . $approvalUrl . '"
-                           class="btn btn-danger btn-review"
-                           title="Approve sebagai Direktur"
-                           target="_blank"
-                           onclick="event.stopPropagation();">
-                           <i class="fa fa-check-circle me-1"></i> Approve
-                       </a>';
+                       class="btn btn-danger btn-review"
+                       title="Approve sebagai Direktur"
+                       target="_blank"
+                       onclick="event.stopPropagation();">
+                       <i class="fa fa-check-circle me-1"></i> Approve
+                   </a>';
                     }
 
                     $data = $row['data'];
                     $docUrl = $this->getDocumentShowUrl($data);
                     if ($docUrl === '#') {
                         return '<button class="btn btn-secondary btn-sm" disabled>
-                           <i class="fa fa-ban me-1"></i> Tidak Tersedia
-                       </button>';
+                       <i class="fa fa-ban me-1"></i> Tidak Tersedia
+                   </button>';
                     }
                     return '<a href="' . $docUrl . '"
-                       class="btn btn-primary btn-review"
-                       title="Review & Approve"
-                       target="_blank"
-                       onclick="event.stopPropagation();">
-                       <i class="fa fa-eye me-1"></i> Lihat
-                   </a>';
+                   class="btn btn-primary btn-review"
+                   title="Review & Approve"
+                   target="_blank"
+                   onclick="event.stopPropagation();">
+                   <i class="fa fa-eye me-1"></i> Lihat
+               </a>';
                 })
                 ->addColumn('row_class', function ($row) {
                     if ($row['type'] === 'direktur') {
@@ -237,6 +237,8 @@ class ApprovalController extends Controller
                         return 'border-success';
                     } elseif (in_array($data->JenisFormId, [7, 11, 12, 13, 14, 15])) {
                         return 'border-warning';
+                    } elseif (in_array($data->JenisFormId, [3, 4, 5, 6])) { // ⚠️ SESUAIKAN
+                        return 'border-info';
                     }
                     return '';
                 })
@@ -256,13 +258,10 @@ class ApprovalController extends Controller
         }
 
         // ==========================================
-        // 2. PROSES REQUEST HALAMAN PERTAMA (NON-AJAX)
+        // 2. NON-AJAX (STATS)
         // ==========================================
         $userId = Auth::id();
 
-        // ==========================================
-        // A. STATS APPROVAL DOKUMEN
-        // ==========================================
         $baseQuery = DokumenApproval::where('UserId', $userId)
             ->where('Status', 'Pending')
             ->whereNotExists(function ($subQuery) {
@@ -274,16 +273,12 @@ class ApprovalController extends Controller
                     ->where('prev.Status', '!=', 'Approved');
             });
 
-        // ==========================================
-        // B. STATS APPROVAL DIREKTUR
-        // ==========================================
         $approvalDirekturCount = PengajuanPembelian::where('DirekturId', $userId)
-            // ->whereNotNull('AccDirektur')
             ->whereNull('AccDirektur')
             ->whereNotNull('DirekturId')
             ->whereNull('AccDirekturPada')
             ->count();
-        // dd($approvalDirekturCount);
+
         $stats = [
             'total' => (clone $baseQuery)->count() + $approvalDirekturCount,
 
@@ -298,8 +293,17 @@ class ApprovalController extends Controller
                 ->whereIn('JenisFormId', [7, 11, 12, 13, 14, 15])
                 ->whereHas('getDokumenUsulanInvestasi', function ($q) {
                     $q->whereHas('getPengajuan', function ($pengajuanQ) {
-                        // $pengajuanQ->whereIn('Status', ['Selesai', 'Disetujui CEO']);
                         $pengajuanQ->whereIn('Status', ['Selesai']);
+                    });
+                })
+                ->count(),
+
+            // ✅ TAMBAHKAN STATS UNTUK FS
+            'fs' => (clone $baseQuery)
+                ->whereIn('JenisFormId', [6]) //
+                ->whereHas('getDokumenFS', function ($q) {
+                    $q->whereHas('getPengajuan', function ($pengajuanQ) {
+                        $pengajuanQ->whereIn('Status', ['Selesai', 'Selesai Review', 'Disetujui Direktur']);
                     });
                 })
                 ->count(),
