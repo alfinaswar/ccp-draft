@@ -202,6 +202,15 @@
                 color: #0f5132;
             }
 
+            .badge-doc.fs {
+                background: #cfe2ff;
+                color: #084298;
+            }
+
+            .approval-table tbody tr.border-info {
+                border-left-color: #0dcaf0;
+            }
+
             .badge-doc.fui {
                 background: #fff3cd;
                 color: #664d03;

@@ -323,6 +323,8 @@ class ApprovalController extends Controller
             $doc = $approval->getDokumenHTAGPA;
         } elseif (in_array($approval->JenisFormId, [7, 11, 12, 13, 14, 15])) {
             $doc = $approval->getDokumenUsulanInvestasi;
+        } elseif (in_array($approval->JenisFormId, [6])) { // ⚠️ SESUAIKAN
+            $doc = $approval->getDokumenFS;
         }
 
         if (!$doc || !$doc->getPengajuan) {
@@ -331,6 +333,7 @@ class ApprovalController extends Controller
         return $doc->getPengajuan;
     }
 
+
     private function getDocumentShowUrl($approval)
     {
         $doc = null;
@@ -338,9 +341,11 @@ class ApprovalController extends Controller
             $doc = $approval->getDokumenHTAGPA;
         } elseif (in_array($approval->JenisFormId, [7, 11, 12, 13, 14, 15])) {
             $doc = $approval->getDokumenUsulanInvestasi;
+        } elseif (in_array($approval->JenisFormId, [6])) { // ⚠️ SESUAIKAN
+            $doc = $approval->getDokumenFS;
         }
 
-        if (!$doc || !$doc->PengajuanItemId || !$doc->getPengajuan) {
+        if (!$doc || !$doc->getPengajuan) {
             return '#';
         }
 
@@ -349,6 +354,9 @@ class ApprovalController extends Controller
         }
         if (in_array($approval->JenisFormId, [7, 11, 12, 13, 14, 15])) {
             return route('usulan-investasi.show', [$doc->IdPengajuan, $doc->PengajuanItemId]);
+        }
+        if (in_array($approval->JenisFormId, [6])) { // ⚠️ SESUAIKAN
+            return route('fs.show', [$doc->IdPengajuan, $doc->PengajuanItemId]);
         }
         return '#';
     }
