@@ -58,10 +58,10 @@ class ApprovalController extends Controller
                     })
                         // 3. ✅ FS (Feasibility Study) - TAMBAHKAN INI
                         ->orWhere(function ($subQ) {
-                        $subQ->whereIn('JenisFormId', [3, 4, 5, 6]) // ⚠️ SESUAIKAN dengan JenisFormId FS di database Anda
+                        $subQ->whereIn('JenisFormId', [6]) // ⚠️ SESUAIKAN dengan JenisFormId FS di database Anda
                             ->whereHas('getDokumenFS', function ($docQ) {
                                 $docQ->whereHas('getPengajuan', function ($pengajuanQ) {
-                                    $pengajuanQ->whereIn('Status', ['Selesai', 'Selesai Review', 'Disetujui Direktur']);
+                                    $pengajuanQ->whereIn('Status', ['Selesai', 'Selesai Review']);
                                 });
                             });
                     });
@@ -116,7 +116,7 @@ class ApprovalController extends Controller
                         return '<span class="badge badge-doc hta">HTA / GPA</span>';
                     } elseif (in_array($data->JenisFormId, [7, 11, 12, 13, 14, 15])) {
                         return '<span class="badge badge-doc fui">Usulan Investasi</span>';
-                    } elseif (in_array($data->JenisFormId, [3, 4, 5, 6])) { // ⚠️ SESUAIKAN
+                    } elseif (in_array($data->JenisFormId, [6])) { // ⚠️ SESUAIKAN
                         return '<span class="badge badge-doc fs">Feasibility Study</span>';
                     }
                     return '<span class="badge badge-secondary">-</span>';
@@ -237,7 +237,7 @@ class ApprovalController extends Controller
                         return 'border-success';
                     } elseif (in_array($data->JenisFormId, [7, 11, 12, 13, 14, 15])) {
                         return 'border-warning';
-                    } elseif (in_array($data->JenisFormId, [3, 4, 5, 6])) { // ⚠️ SESUAIKAN
+                    } elseif (in_array($data->JenisFormId, [6])) { // ⚠️ SESUAIKAN
                         return 'border-info';
                     }
                     return '';
@@ -298,12 +298,11 @@ class ApprovalController extends Controller
                 })
                 ->count(),
 
-            // ✅ TAMBAHKAN STATS UNTUK FS
             'fs' => (clone $baseQuery)
                 ->whereIn('JenisFormId', [6]) //
                 ->whereHas('getDokumenFS', function ($q) {
                     $q->whereHas('getPengajuan', function ($pengajuanQ) {
-                        $pengajuanQ->whereIn('Status', ['Selesai', 'Selesai Review', 'Disetujui Direktur']);
+                        $pengajuanQ->whereIn('Status', ['Selesai Review',]);
                     });
                 })
                 ->count(),
