@@ -63,18 +63,15 @@
                                     class="form-control @error('Nama') is-invalid @enderror" id="Nama"
                                     placeholder="Nama Barang" value="{{ old('Nama') }}" autocomplete="off">
                                 <datalist id="namaBarangList">
-                                    @foreach ($namaBarangList ?? [] as $barang)
-                                        <option value="{{ $barang->Nama }}"
-                                            data-jenis="{{ optional($barang->getJenis)->Nama }}"
-                                            data-merek="{{ optional($barang->getMerk)->Nama }}">
-                                        </option>
+                                    @foreach ($namaBarangList ?? [] as $nama)
+                                        <option value="{{ $nama }}"></option>
                                     @endforeach
                                 </datalist>
                                 <div id="namaBarangWarning"
                                     class="alert alert-warning py-2 px-3 mt-2 mb-0 d-none" role="alert">
                                     <i class="fa fa-exclamation-triangle"></i>
-                                    Barang ini sudah terdaftar: <strong id="namaBarangWarningText"></strong>
-                                    <span class="d-block">Ubah nama untuk mengaktifkan tombol Simpan.</span>
+                                    Barang dengan kombinasi ini sudah terdaftar: <strong id="namaBarangWarningText"></strong>
+                                    <span class="d-block">Ubah Nama, Merek, atau Tipe untuk mengaktifkan tombol Simpan.</span>
                                 </div>
                                 @error('Nama')
                                     <div class="text-danger mt-1">
@@ -147,34 +144,50 @@
 @endsection
 @push('js')
     <script>
+        var existingBarangs = @json($existingBarangs ?? []);
+
         function updateMerekTipeDisable() {
             var jenisVal = document.getElementById('Jenis').value;
             var merek = document.getElementById('Merek');
             var tipe = document.getElementById('Tipe');
-            if (jenisVal === '1' || jenisVal === '2') {
-                merek.disabled = false;
-                tipe.disabled = false;
-            } else {
-                merek.disabled = true;
-                tipe.disabled = true;
+            var isDisabled = !(jenisVal === '1' || jenisVal === '2');
 
+            merek.disabled = isDisabled;
+            tipe.disabled = isDisabled;
+
+            if (window.jQuery && $(merek).data('select2')) {
+                $(merek).prop('disabled', isDisabled).trigger('change.select2');
             }
         }
 
         document.addEventListener('DOMContentLoaded', function() {
             updateMerekTipeDisable();
-            document.getElementById('Jenis').addEventListener('change', updateMerekTipeDisable);
 
             var namaInput = document.getElementById('Nama');
+            var jenisSelect = document.getElementById('Jenis');
+            var merekSelect = document.getElementById('Merek');
+            var tipeInput = document.getElementById('Tipe');
             var warning = document.getElementById('namaBarangWarning');
             var warningText = document.getElementById('namaBarangWarningText');
             var submitBtn = document.getElementById('btnSimpan');
-            var options = Array.from(document.querySelectorAll('#namaBarangList option'));
 
-            function checkNamaBarang() {
-                var value = namaInput.value.trim().toLowerCase();
-                var match = value === '' ? null : options.find(function(option) {
-                    return option.value.trim().toLowerCase() === value;
+            function checkDuplicate() {
+                var namaVal = (namaInput.value || '').trim().toLowerCase();
+                var merekVal = merekSelect.disabled ? '' : (merekSelect.value || '').trim();
+                var tipeVal = tipeInput.disabled ? '' : (tipeInput.value || '').trim().toLowerCase();
+
+                if (!namaVal) {
+                    submitBtn.disabled = false;
+                    warning.classList.add('d-none');
+                    return;
+                }
+
+                var match = existingBarangs.find(function(item) {
+                    var itemNama = (item.nama || '').trim().toLowerCase();
+                    var itemMerek = (item.merek_id || '').toString().trim();
+                    var itemTipe = (item.tipe || '').trim().toLowerCase();
+
+                    return itemNama === namaVal && itemMerek === merekVal && itemTipe === tipeVal;
                 });
 
                 submitBtn.disabled = !!match;
@@ -184,18 +197,31 @@
                     return;
                 }
 
-                var detail = [match.dataset.jenis, match.dataset.merek].filter(Boolean).join(' / ');
-                warningText.textContent = match.value + (detail ? ' (' + detail + ')' : '');
+                var detail = [match.merek_nama, match.tipe].filter(Boolean).join(' - ');
+                warningText.textContent = match.nama + (detail ? ' (' + detail + ')' : '');
                 warning.classList.remove('d-none');
             }
 
-            namaInput.addEventListener('input', checkNamaBarang);
+            namaInput.addEventListener('input', checkDuplicate);
+            merekSelect.addEventListener('change', checkDuplicate);
+            tipeInput.addEventListener('input', checkDuplicate);
+
+            jenisSelect.addEventListener('change', function() {
+                updateMerekTipeDisable();
+                checkDuplicate();
+            });
+
+            if (window.jQuery) {
+                $('#Merek').on('change', checkDuplicate);
+            }
+
             namaInput.closest('form').addEventListener('submit', function(e) {
                 if (submitBtn.disabled) {
                     e.preventDefault();
                 }
             });
-            checkNamaBarang();
+
+            checkDuplicate();
         });
     </script>
 @endpush

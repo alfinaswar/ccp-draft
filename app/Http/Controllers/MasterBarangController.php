@@ -8,6 +8,7 @@ use App\Models\MasterJenisPengajuan;
 use App\Models\MasterMerk;
 use App\Models\MasterSatuan;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Yajra\DataTables\Facades\DataTables;
 
 class MasterBarangController extends Controller
@@ -50,18 +51,55 @@ class MasterBarangController extends Controller
         $satuan = MasterSatuan::get();
         $merekList = MasterMerk::get();
         $jenis = MasterJenisPengajuan::get();
-        $namaBarangList = MasterBarang::with('getJenis', 'getMerk')
-            ->orderBy('Nama')
-            ->get()
-            ->unique('Nama')
+        $namaBarangList = MasterBarang::orderBy('Nama')
+            ->pluck('Nama')
+            ->filter()
+            ->unique()
             ->values();
-        return view('master.barang.create', compact('satuan', 'merekList', 'jenis', 'namaBarangList'));
+        $existingBarangs = MasterBarang::with('getMerk')
+            ->get(['id', 'Nama', 'Merek', 'Tipe'])
+            ->map(function ($item) {
+                return [
+                    'nama' => trim((string) $item->Nama),
+                    'merek_id' => (string) ($item->Merek ?? ''),
+                    'merek_nama' => optional($item->getMerk)->Nama ?? '',
+                    'tipe' => trim((string) ($item->Tipe ?? '')),
+                ];
+            });
+
+        return view('master.barang.create', compact('satuan', 'merekList', 'jenis', 'namaBarangList', 'existingBarangs'));
     }
 
     public function store(Request $request)
     {
+        $merek = $request->input('Merek');
+        $tipe = $request->input('Tipe');
+
         $rules = [
-            'Nama' => ['required', 'string', 'max:255', 'unique:master_barangs,Nama,NULL,id,deleted_at,NULL'],
+            'Nama' => [
+                'required',
+                'string',
+                'max:255',
+                Rule::unique('master_barangs', 'Nama')->where(function ($query) use ($merek, $tipe) {
+                    $query->whereNull('deleted_at');
+
+                    if (!empty($merek)) {
+                        $query->where('Merek', $merek);
+                    } else {
+                        $query->where(function ($q) {
+                            $q->whereNull('Merek')->orWhere('Merek', '');
+                        });
+                    }
+
+                    if (!empty($tipe)) {
+                        $query->where('Tipe', $tipe);
+                    } else {
+                        $query->where(function ($q) {
+                            $q->whereNull('Tipe')->orWhere('Tipe', '');
+                        });
+                    }
+                }),
+            ],
             'Jenis' => 'required|string|max:190',
             'Satuan' => 'required|string|max:190',
         ];
@@ -72,7 +110,9 @@ class MasterBarangController extends Controller
             $rules['Merek'] = 'nullable|string|max:190';
             $rules['Tipe'] = 'nullable|string|max:190';
         }
-        $validatedData = $request->validate($rules);
+        $validatedData = $request->validate($rules, [
+            'Nama.unique' => 'Barang dengan Nama, Merek, dan Tipe tersebut sudah terdaftar.',
+        ]);
         MasterBarang::create([
             'KodeBarang' => $this->generateKode($request->Jenis),
             'Nama' => $validatedData['Nama'],
@@ -129,9 +169,36 @@ class MasterBarangController extends Controller
     public function update(Request $request, $id)
     {
         $barang = MasterBarang::findOrFail($id);
+        $merek = $request->input('Merek');
+        $tipe = $request->input('Tipe');
 
         $rules = [
-            'Nama' => 'required|string|max:255',
+            'Nama' => [
+                'required',
+                'string',
+                'max:255',
+                Rule::unique('master_barangs', 'Nama')
+                    ->ignore($barang->id)
+                    ->where(function ($query) use ($merek, $tipe) {
+                        $query->whereNull('deleted_at');
+
+                        if (!empty($merek)) {
+                            $query->where('Merek', $merek);
+                        } else {
+                            $query->where(function ($q) {
+                                $q->whereNull('Merek')->orWhere('Merek', '');
+                            });
+                        }
+
+                        if (!empty($tipe)) {
+                            $query->where('Tipe', $tipe);
+                        } else {
+                            $query->where(function ($q) {
+                                $q->whereNull('Tipe')->orWhere('Tipe', '');
+                            });
+                        }
+                    }),
+            ],
             'Jenis' => 'required|string|max:190',
             'Satuan' => 'required|string|max:190',
         ];
@@ -142,7 +209,9 @@ class MasterBarangController extends Controller
             $rules['Merek'] = 'nullable|string|max:190';
             $rules['Tipe'] = 'nullable|string|max:190';
         }
-        $validatedData = $request->validate($rules);
+        $validatedData = $request->validate($rules, [
+            'Nama.unique' => 'Barang dengan Nama, Merek, dan Tipe tersebut sudah terdaftar.',
+        ]);
 
         $barang->update([
             'Nama' => $request->Nama,
