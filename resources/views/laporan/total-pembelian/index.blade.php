@@ -1,5 +1,15 @@
 @extends('layouts.app')
 
+@push('css')
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/plugins/monthSelect/style.css">
+    <style>
+        .flatpickr-calendar.MonthSelect {
+            width: 280px;
+        }
+    </style>
+@endpush
+
 @section('content')
     <div class="page-header ph-redesign">
 
@@ -67,13 +77,13 @@
                         <div class="row g-3 align-items-end mb-4">
                             <div class="col-md-3">
                                 <label for="start_month" class="form-label fw-bold text-secondary mb-1">Bulan Awal</label>
-                                <input type="month" name="start_month" id="start_month" class="form-control"
-                                    autocomplete="off">
+                                <input type="text" name="start_month" id="start_month" class="form-control bg-white"
+                                    placeholder="Pilih Bulan Awal" autocomplete="off">
                             </div>
                             <div class="col-md-3">
                                 <label for="end_month" class="form-label fw-bold text-secondary mb-1">Bulan Akhir</label>
-                                <input type="month" name="end_month" id="end_month" class="form-control"
-                                    autocomplete="off">
+                                <input type="text" name="end_month" id="end_month" class="form-control bg-white"
+                                    placeholder="Pilih Bulan Akhir" autocomplete="off">
                             </div>
                             <div class="col-md-6 d-flex gap-2 pt-2 pt-md-0">
                                 <button type="button" id="btnFilter" class="btn btn-primary">
@@ -122,6 +132,9 @@
 @endsection
 
 @push('js')
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/plugins/monthSelect/index.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/id.js"></script>
     @if (Session::get('success'))
         <script>
             Swal.fire({
@@ -138,6 +151,23 @@
     <script>
         $(document).ready(function() {
             let table;
+
+            const flatpickrConfig = {
+                plugins: [
+                    new monthSelectPlugin({
+                        shorthand: true,
+                        dateFormat: "Y-m",
+                        altFormat: "F Y"
+                    })
+                ],
+                altInput: true,
+                altInputClass: "form-control bg-white",
+                locale: "id",
+                allowInput: false
+            };
+
+            const startPicker = flatpickr("#start_month", flatpickrConfig);
+            const endPicker = flatpickr("#end_month", flatpickrConfig);
 
             function numberFormat(number) {
                 return 'Rp ' + parseFloat(number).toLocaleString('id-ID', {
@@ -276,6 +306,8 @@
             });
 
             $('#btnReset').on('click', function() {
+                if (startPicker) startPicker.clear();
+                if (endPicker) endPicker.clear();
                 $('#start_month').val('');
                 $('#end_month').val('');
                 table.ajax.reload();

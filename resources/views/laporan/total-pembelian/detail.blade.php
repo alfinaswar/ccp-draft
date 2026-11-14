@@ -61,15 +61,15 @@
                     <div class="row mb-3 g-3">
                         <div class="col-md-3">
                             <label class="form-label fw-bold text-secondary small">Bulan Awal</label>
-                            <input type="month" name="start_month" id="start_month"
-                                   class="form-control form-control-sm"
-                                   value="{{ request('start_month') }}" readonly>
+                            <input type="hidden" name="start_month" id="start_month" value="{{ request('start_month') }}">
+                            <input type="text" class="form-control form-control-sm bg-light"
+                                   value="{{ request('start_month') ? \Carbon\Carbon::parse(request('start_month'))->translatedFormat('F Y') : 'Semua Bulan' }}" readonly>
                         </div>
                         <div class="col-md-3">
                             <label class="form-label fw-bold text-secondary small">Bulan Akhir</label>
-                            <input type="month" name="end_month" id="end_month"
-                                   class="form-control form-control-sm"
-                                   value="{{ request('end_month') }}" readonly>
+                            <input type="hidden" name="end_month" id="end_month" value="{{ request('end_month') }}">
+                            <input type="text" class="form-control form-control-sm bg-light"
+                                   value="{{ request('end_month') ? \Carbon\Carbon::parse(request('end_month'))->translatedFormat('F Y') : 'Semua Bulan' }}" readonly>
                         </div>
                         <div class="col-md-6 d-flex align-items-end gap-2">
                             {{-- Buttons disabled in read-only mode --}}
