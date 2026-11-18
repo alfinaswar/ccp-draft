@@ -8,6 +8,7 @@ use App\Http\Controllers\HomeController;
 use App\Http\Controllers\HtaDanGpaController;
 use App\Http\Controllers\HtaGpaController;
 use App\Http\Controllers\JadwalImsak;
+use App\Http\Controllers\KomplainVendorController;
 use App\Http\Controllers\LaporanController;
 use App\Http\Controllers\LembarDisposisiController;
 use App\Http\Controllers\MasterApprovalController;
@@ -18,8 +19,10 @@ use App\Http\Controllers\MasterJabatanController;
 use App\Http\Controllers\MasterJenisPengajuanController;
 use App\Http\Controllers\MasterMerkController;
 use App\Http\Controllers\MasterParameterController;
+use App\Http\Controllers\MasterParameterKomplainController;
 use App\Http\Controllers\MasterPerusahaanController;
 use App\Http\Controllers\MasterSatuanController;
+use App\Http\Controllers\MasterUnitController;
 use App\Http\Controllers\MasterVendorController;
 use App\Http\Controllers\PengajuanPembelianController;
 use App\Http\Controllers\PermintaanPembelianController;
@@ -60,6 +63,12 @@ Route::get('/logout', function () {
     request()->session()->regenerateToken();
     return redirect('/login');
 })->name('logout');
+
+// Form Komplain Vendor — publik, tanpa login
+Route::get('/komplain-vendor/form', [KomplainVendorController::class, 'form'])->name('komplain.form');
+Route::post('/komplain-vendor/kirim', [KomplainVendorController::class, 'simpan'])->name('komplain.simpan');
+Route::get('/komplain-vendor/terima-kasih/{kode}', [KomplainVendorController::class, 'terimaKasih'])
+    ->name('komplain.terima-kasih');
 // routes/web.php
 Route::post('/ai/rapikan', [AiController::class, 'rapikan'])->name('ai.rapikan');
 Route::get('/home', [HomeController::class, 'index'])->name('home');
@@ -350,6 +359,30 @@ Route::group(['middleware' => ['auth']], function () {
         Route::put('/ticket/{tiketTrouble}', [TiketTroubleController::class, 'update'])->name('ticket.update');
         Route::delete('/ticket/{tiketTrouble}', [TiketTroubleController::class, 'destroy'])->name('ticket.delete');
         Route::get('/ticket/{tiketTrouble}', [TiketTroubleController::class, 'show'])->name('ticket.show');
+    });
+    Route::prefix('komplain-vendor')->group(function () {
+        Route::get('/', [KomplainVendorController::class, 'index'])->name('komplain.index');
+        Route::get('/show/{id}', [KomplainVendorController::class, 'show'])->name('komplain.show');
+        Route::post('/approve/{id}', [KomplainVendorController::class, 'approve'])->name('komplain.approve');
+        Route::post('/logistik-umum/{id}', [KomplainVendorController::class, 'logistikUmum'])->name('komplain.logistik-umum');
+        Route::post('/tindakan-ccp/{id}', [KomplainVendorController::class, 'tindakanCcp'])->name('komplain.tindakan-ccp');
+    });
+    Route::prefix('master/unit')->group(function () {
+        Route::get('/', [MasterUnitController::class, 'index'])->name('unit.index');
+        Route::get('/perusahaan/{kode}', [MasterUnitController::class, 'perusahaan'])->name('unit.perusahaan');
+        Route::get('/create', [MasterUnitController::class, 'create'])->name('unit.create');
+        Route::post('/store', [MasterUnitController::class, 'store'])->name('unit.store');
+        Route::get('/edit/{id}', [MasterUnitController::class, 'edit'])->name('unit.edit');
+        Route::put('/update/{id}', [MasterUnitController::class, 'update'])->name('unit.update');
+        Route::delete('/delete/{id}', [MasterUnitController::class, 'destroy'])->name('unit.destroy');
+    });
+    Route::prefix('master/parameter-komplain')->group(function () {
+        Route::get('/', [MasterParameterKomplainController::class, 'index'])->name('parameter-komplain.index');
+        Route::get('/create', [MasterParameterKomplainController::class, 'create'])->name('parameter-komplain.create');
+        Route::post('/store', [MasterParameterKomplainController::class, 'store'])->name('parameter-komplain.store');
+        Route::get('/edit/{id}', [MasterParameterKomplainController::class, 'edit'])->name('parameter-komplain.edit');
+        Route::put('/update/{id}', [MasterParameterKomplainController::class, 'update'])->name('parameter-komplain.update');
+        Route::delete('/delete/{id}', [MasterParameterKomplainController::class, 'destroy'])->name('parameter-komplain.destroy');
     });
     Route::prefix('pengaturan/pengajuan')->group(function () {
         Route::get('/', [TutupPengajuanController::class, 'index'])->name('pengaturan.index');

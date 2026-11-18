@@ -1,0 +1,23 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration {
+    public function up(): void
+    {
+        Schema::table('komplain_vendors', function (Blueprint $table) {
+            $table->string('DepartemenId')->nullable()->after('UnitDepartemen');
+            $table->string('UnitId')->nullable()->after('UnitKerja');
+            $table->string('JabatanId')->nullable()->after('Jabatan');
+        });
+    }
+
+    public function down(): void
+    {
+        Schema::table('komplain_vendors', function (Blueprint $table) {
+            $table->dropColumn(['DepartemenId', 'UnitId', 'JabatanId']);
+        });
+    }
+};

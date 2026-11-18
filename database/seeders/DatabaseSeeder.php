@@ -28,6 +28,10 @@ class DatabaseSeeder extends Seeder
             MasterFormSeeder::class,
             UserSeeder::class,
             MasterVendorSeeder::class,
+            KomplainVendorSeeder::class,
+            MasterUnitSeeder::class,
+            JabatanTambahanSeeder::class,
+            ParameterKomplainSeeder::class,
 
         ]);
     }

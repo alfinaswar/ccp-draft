@@ -163,7 +163,8 @@
         }
 
         html body .main-wrapper .sidebar-menu ul ul li::before,
-        html body .main-wrapper .sidebar-menu ul ul li a::before {
+        html body .main-wrapper .sidebar-menu ul ul li a::before,
+        html body .main-wrapper .sidebar-menu ul ul li a::after {
             display: none !important;
             content: none !important;
         }
@@ -703,6 +704,10 @@
                                                 data-feather="thumbs-up"></i><span>Rekomendasi</span></a>
                                     </li>
                                 @endcan
+                                <li class="{{ Request::segment(1) == 'komplain-vendor' ? 'active' : '' }}">
+                                    <a href="{{ route('komplain.index') }}" class="fw-bold text-white"><i
+                                            data-feather="alert-triangle"></i><span>Komplain Vendor</span></a>
+                                </li>
                             </ul>
                         </li>
 
@@ -862,6 +867,12 @@
                                                             data-feather="list"></i><span>Master Jenis Pengajuan</span></a>
                                                 </li>
                                             @endcan
+                                            <li><a href="{{ route('unit.index') }}"
+                                                    class="fw-bold text-white {{ Request::segment(2) == 'unit' ? 'active' : '' }}"><i
+                                                        data-feather="git-branch"></i><span>Unit</span></a></li>
+                                            <li><a href="{{ route('parameter-komplain.index') }}"
+                                                    class="fw-bold text-white {{ Request::segment(2) == 'parameter-komplain' ? 'active' : '' }}"><i
+                                                        data-feather="check-square"></i><span>Parameter Komplain</span></a></li>
                                         </ul>
                                     </li>
                                 </ul>
@@ -911,6 +922,18 @@
     <script src="{{ asset('') }}assets/plugins/select2/js/select2.min.js"></script>
     <!-- Feather Icon JS -->
     <script src="{{ asset('') }}assets/js/feather.min.js"></script>
+    <script>
+        // Buang nama ikon feather yang tidak dikenal. Tanpa ini, satu nama salah
+        // membuat feather.replace() melempar error dan mematikan seluruh script.js
+        // (termasuk handler expand sidebar).
+        (function() {
+            if (!window.feather || !window.feather.icons) return;
+            document.querySelectorAll('[data-feather]').forEach(function(el) {
+                var nama = el.getAttribute('data-feather');
+                if (nama && !window.feather.icons[nama]) el.removeAttribute('data-feather');
+            });
+        })();
+    </script>
     <!-- Slimscroll JS -->
     <script src="{{ asset('') }}assets/js/jquery.slimscroll.min.js"></script>
     <script src="{{ asset('') }}assets/js/jquery.dataTables.min.js"></script>
