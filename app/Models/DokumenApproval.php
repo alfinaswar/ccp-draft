@@ -48,10 +48,22 @@ class DokumenApproval extends Model
         if (in_array($this->JenisFormId, [7, 11, 12, 13, 14, 15])) {
             return $this->getDokumenUsulanInvestasi;
         }
+        if (in_array($this->JenisFormId, [6])) {
+            return $this->getDokumenFS;
+        }
+        $komplainFormId = MasterForm::where('Nama', 'Komplain Vendor')->value('id');
+        if ($komplainFormId && (int) $this->JenisFormId === (int) $komplainFormId) {
+            return $this->getDokumenKomplainVendor;
+        }
         return null;
     }
     public function getDokumenFS()
     {
         return $this->belongsTo(FeasibilityStudy::class, 'DokumenId', 'id');
+    }
+
+    public function getDokumenKomplainVendor()
+    {
+        return $this->belongsTo(KomplainVendor::class, 'DokumenId', 'id');
     }
 }

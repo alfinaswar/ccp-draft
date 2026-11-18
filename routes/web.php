@@ -363,6 +363,7 @@ Route::group(['middleware' => ['auth']], function () {
     Route::prefix('komplain-vendor')->group(function () {
         Route::get('/', [KomplainVendorController::class, 'index'])->name('komplain.index');
         Route::get('/show/{id}', [KomplainVendorController::class, 'show'])->name('komplain.show');
+        Route::get('/cetak/{id}', [KomplainVendorController::class, 'cetak'])->name('komplain.cetak');
         Route::post('/approve/{id}', [KomplainVendorController::class, 'approve'])->name('komplain.approve');
         Route::post('/logistik-umum/{id}', [KomplainVendorController::class, 'logistikUmum'])->name('komplain.logistik-umum');
         Route::post('/tindakan-ccp/{id}', [KomplainVendorController::class, 'tindakanCcp'])->name('komplain.tindakan-ccp');

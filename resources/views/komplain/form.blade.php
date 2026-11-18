@@ -4,7 +4,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Formulir Evaluasi BMHP Umum</title>
+    <title>Form Komplain Vendor</title>
     <style>
         * {
             box-sizing: border-box;
@@ -14,26 +14,36 @@
             font-family: Arial, Helvetica, sans-serif;
             font-size: 14px;
             color: #111;
-            background: #f2f4f7;
+            background-color: #1a202c;
+            background-image: linear-gradient(rgba(15, 23, 42, 0.45), rgba(15, 23, 42, 0.55)), url("{{ asset('assets/img/rs-awal-bros-pekanbaru.jpeg') }}");
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            background-repeat: no-repeat;
             margin: 0;
-            padding: 24px 12px;
+            padding: 32px 14px;
             line-height: 1.5;
+            min-height: 100vh;
         }
 
         .sheet {
             max-width: 800px;
             margin: 0 auto;
-            background: #fff;
+            background: #ffffff;
             padding: 40px 48px 56px;
-            box-shadow: 0 1px 8px rgba(0, 0, 0, .12);
+            border-radius: 8px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.25);
         }
 
         .kop {
-            font-size: 26px;
-            font-weight: bold;
-            color: #d21f26;
-            letter-spacing: .5px;
             margin-bottom: 24px;
+        }
+
+        .kop img {
+            width: 220px;
+            height: auto;
+            max-width: 100%;
+            display: block;
         }
 
         h1 {
@@ -169,49 +179,197 @@
             border: 1px solid #555;
         }
 
-        .upload-box {
-            border: 1px dashed #888;
-            padding: 12px;
-            border-radius: 4px;
-            background: #fafafa;
+        .upload-section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .upload-section-title {
+            font-weight: bold;
+            color: #111;
+        }
+
+        .upload-counter {
+            font-size: 12px;
+            color: #495057;
+            background: #e9ecef;
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-weight: 600;
+        }
+
+        .upload-dropzone {
+            border: 2px dashed #b0bec5;
+            padding: 24px 16px;
+            border-radius: 8px;
+            background: #f8fafc;
+            text-align: center;
+            cursor: pointer;
+            transition: border-color .2s ease, background-color .2s ease;
+            user-select: none;
+        }
+
+        .upload-dropzone:hover,
+        .upload-dropzone.dragover {
+            border-color: #d21f26;
+            background: #fff5f5;
+        }
+
+        .upload-icon {
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .upload-text {
+            font-size: 14px;
+            color: #334155;
+            margin-bottom: 6px;
+        }
+
+        .upload-text .browse-link {
+            color: #d21f26;
+            font-weight: 600;
+            text-decoration: underline;
+            cursor: pointer;
         }
 
         .upload-hint {
             font-size: 12px;
-            color: #555;
-            margin-top: 4px;
+            color: #64748b;
+        }
+
+        .upload-alert {
+            margin-top: 10px;
+            padding: 9px 14px;
+            background: #fdecea;
+            border: 1px solid #f5c2c0;
+            color: #842029;
+            border-radius: 6px;
+            font-size: 12px;
+            line-height: 1.5;
+        }
+
+        .upload-alert ul {
+            margin: 4px 0 0;
+            padding-left: 20px;
         }
 
         .preview {
             display: flex;
             flex-wrap: wrap;
-            gap: 10px;
-            margin-top: 12px;
+            gap: 12px;
+            margin-top: 14px;
         }
 
         .preview .item {
-            width: 120px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            padding: 6px;
+            position: relative;
+            width: 130px;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            padding: 8px;
             background: #fff;
             text-align: center;
             font-size: 11px;
-            word-break: break-all;
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            box-sizing: border-box;
+            transition: transform .15s ease, box-shadow .15s ease;
+        }
+
+        .preview .item:hover {
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .preview .item .thumb-wrap {
+            width: 100%;
+            height: 80px;
+            border-radius: 4px;
+            background: #f1f5f9;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            margin-bottom: 6px;
         }
 
         .preview .item img {
             width: 100%;
-            height: 80px;
+            height: 100%;
             object-fit: cover;
             display: block;
-            margin-bottom: 4px;
         }
 
-        .preview .item .pdf {
-            font-size: 28px;
-            color: #c0392b;
-            line-height: 80px;
+        .preview .item .pdf-icon-wrap {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: #d21f26;
+        }
+
+        .preview .item .pdf-icon-wrap svg {
+            width: 32px;
+            height: 32px;
+        }
+
+        .preview .item .pdf-badge {
+            font-size: 10px;
+            font-weight: bold;
+            color: #fff;
+            background: #d21f26;
+            padding: 1px 6px;
+            border-radius: 3px;
+            margin-top: 3px;
+            letter-spacing: 0.5px;
+        }
+
+        .preview .item .file-name {
+            font-weight: 500;
+            color: #1e293b;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            width: 100%;
+            display: block;
+        }
+
+        .preview .item .file-size {
+            font-size: 10px;
+            color: #64748b;
+            margin-top: 2px;
+        }
+
+        .preview .item .btn-remove {
+            position: absolute;
+            top: -6px;
+            right: -6px;
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            background: #d21f26;
+            color: #fff;
+            border: 2px solid #fff;
+            font-size: 14px;
+            line-height: 1;
+            text-align: center;
+            cursor: pointer;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+            transition: background 0.15s ease, transform 0.15s ease;
+        }
+
+        .preview .item .btn-remove:hover {
+            background: #a51218;
+            transform: scale(1.1);
         }
 
         @media (max-width: 640px) {
@@ -237,8 +395,10 @@
 
 <body>
     <div class="sheet">
-        <div class="kop">RS AWAL BROS</div>
-        <h1>Formulir Evaluasi BMHP Umum</h1>
+        <div class="kop">
+            <img src="{{ asset('assets/img/logo/logoawalbros.png') }}" alt="RS Awal Bros">
+        </div>
+        <h1>Form Komplain Vendor</h1>
 
         @if ($errors->any())
             <div class="alert">
@@ -260,8 +420,8 @@
                     <select name="KodePerusahaan" id="KodePerusahaan" required>
                         <option value="">-- Pilih Rumah Sakit --</option>
                         @foreach ($perusahaan as $p)
-                            <option value="{{ $p->Kode }}"
-                                {{ old('KodePerusahaan') == $p->Kode ? 'selected' : '' }}>{{ $p->Nama }}</option>
+                            <option value="{{ $p->id }}"
+                                {{ (string) old('KodePerusahaan') === (string) $p->id ? 'selected' : '' }}>{{ $p->NamaLengkap ?? $p->Nama }}</option>
                         @endforeach
                     </select>
                 </div>
@@ -300,6 +460,7 @@
                         <option value="">-- Pilih Unit Kerja --</option>
                         @foreach ($unit as $u)
                             <option value="{{ $u->id }}" data-perusahaan="{{ $u->KodePerusahaan }}"
+                                data-perusahaan-id="{{ optional($perusahaan->firstWhere('Kode', $u->KodePerusahaan))->id }}"
                                 {{ old('UnitId') == $u->id ? 'selected' : '' }}>
                                 {{ $u->nama_unit }}</option>
                         @endforeach
@@ -357,22 +518,39 @@
                 <div class="hint">{{ $message }}</div>
             @enderror
 
-            <div style="margin-top:16px;">
-                <div class="label">&bull;&nbsp; Data Pendukung</div>
-                <div class="value">
-                    <div class="upload-box">
+            <div style="margin-top: 22px;">
+                <div class="upload-section-header">
+                    <div class="upload-section-title">&bull;&nbsp; Data Pendukung</div>
+                    <span id="lampiranCount" class="upload-counter">0 / 10 file</span>
+                </div>
+                <div>
+                    <div class="upload-dropzone" id="dropArea">
                         <input type="file" name="Lampiran[]" id="Lampiran" multiple
-                            accept=".jpg,.jpeg,.png,.webp,.pdf">
+                            accept=".jpg,.jpeg,.png,.webp,.pdf" style="display: none;">
+                        <div class="upload-icon">
+                            <svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="#d21f26" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                <polyline points="17 8 12 3 7 8"></polyline>
+                                <line x1="12" y1="3" x2="12" y2="15"></line>
+                            </svg>
+                        </div>
+                        <div class="upload-text">
+                            <strong>Tarik &amp; letakkan file di sini</strong>, atau <span class="browse-link">pilih dari perangkat</span>
+                        </div>
                         <div class="upload-hint">
-                            Bisa foto atau PDF, maksimal 5 file, tiap file maksimal 5 MB.
+                            Format: JPG, JPEG, PNG, WEBP, PDF &bull; Maksimal 10 file &bull; Ukuran di bawah 5 MB per file
                         </div>
                     </div>
+
+                    <div id="uploadErrorAlert" class="upload-alert" style="display: none;"></div>
+
                     @error('Lampiran')
                         <div class="hint">{{ $message }}</div>
                     @enderror
                     @error('Lampiran.*')
                         <div class="hint">{{ $message }}</div>
                     @enderror
+
                     <div class="preview" id="previewLampiran"></div>
                 </div>
             </div>
@@ -421,40 +599,220 @@
             removeButtons: 'Strike,Subscript,Superscript,CopyFormatting,Anchor,HorizontalRule,CreateDiv,Outdent,Indent,Blockquote,JustifyBlock,BidiLtr,BidiRtl,Language,Flash,Table,Image,Print,Preview,Save,NewPage,Templates,Form,Checkbox,Radio,TextField,Textarea,Select,Button,ImageButton,HiddenField,Source,About'
         });
 
-        // Preview file pendukung sebelum dikirim.
+        // Upload & preview data pendukung (maksimal 10 file, tiap file < 5 MB).
         (function() {
             var input = document.getElementById('Lampiran');
             var box = document.getElementById('previewLampiran');
-            if (!input || !box) return;
+            var dropArea = document.getElementById('dropArea');
+            var counter = document.getElementById('lampiranCount');
+            var alertBox = document.getElementById('uploadErrorAlert');
+            if (!input || !box || !dropArea) return;
 
-            input.addEventListener('change', function() {
+            var MAX_FILES = 10;
+            var MAX_SIZE = 5 * 1024 * 1024; // 5 MB
+            var ALLOWED_EXTS = ['jpg', 'jpeg', 'png', 'webp', 'pdf'];
+
+            var selectedFiles = [];
+
+            function formatSize(bytes) {
+                if (bytes < 1024) return bytes + ' B';
+                if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+                return (bytes / (1024 * 1024)).toFixed(2) + ' MB';
+            }
+
+            function showAlert(messages) {
+                if (!alertBox) return;
+                if (!messages || messages.length === 0) {
+                    alertBox.style.display = 'none';
+                    alertBox.innerHTML = '';
+                    return;
+                }
+                var html = '<strong>Peringatan File:</strong><ul>';
+                messages.forEach(function(msg) {
+                    html += '<li>' + msg + '</li>';
+                });
+                html += '</ul>';
+                alertBox.innerHTML = html;
+                alertBox.style.display = 'block';
+            }
+
+            function updateCounter() {
+                if (counter) {
+                    counter.textContent = selectedFiles.length + ' / ' + MAX_FILES + ' file';
+                }
+            }
+
+            function syncInputFiles() {
+                if (window.DataTransfer) {
+                    try {
+                        var dt = new DataTransfer();
+                        selectedFiles.forEach(function(f) {
+                            dt.items.add(f);
+                        });
+                        input.files = dt.files;
+                    } catch (e) {
+                        console.error('DataTransfer sync error:', e);
+                    }
+                }
+                updateCounter();
+                renderPreview();
+            }
+
+            function renderPreview() {
                 box.innerHTML = '';
 
-                Array.prototype.forEach.call(input.files, function(file) {
+                selectedFiles.forEach(function(file, index) {
                     var item = document.createElement('div');
                     item.className = 'item';
 
-                    if (file.type === 'application/pdf') {
-                        var ikon = document.createElement('div');
-                        ikon.className = 'pdf';
-                        ikon.textContent = 'PDF';
-                        item.appendChild(ikon);
+                    // Tombol hapus
+                    var btnRemove = document.createElement('button');
+                    btnRemove.type = 'button';
+                    btnRemove.className = 'btn-remove';
+                    btnRemove.innerHTML = '&times;';
+                    btnRemove.title = 'Hapus file ini';
+                    btnRemove.addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        selectedFiles.splice(index, 1);
+                        syncInputFiles();
+                    });
+                    item.appendChild(btnRemove);
+
+                    // Area thumbnail
+                    var thumbWrap = document.createElement('div');
+                    thumbWrap.className = 'thumb-wrap';
+
+                    var ext = file.name.split('.').pop().toLowerCase();
+                    if (file.type === 'application/pdf' || ext === 'pdf') {
+                        var pdfWrap = document.createElement('div');
+                        pdfWrap.className = 'pdf-icon-wrap';
+                        pdfWrap.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' +
+                            '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>' +
+                            '<polyline points="14 2 14 8 20 8"></polyline>' +
+                            '<line x1="16" y1="13" x2="8" y2="13"></line>' +
+                            '<line x1="16" y1="17" x2="8" y2="17"></line>' +
+                            '<polyline points="10 9 9 9 8 9"></polyline>' +
+                            '</svg><span class="pdf-badge">PDF</span>';
+                        thumbWrap.appendChild(pdfWrap);
                     } else {
                         var img = document.createElement('img');
-                        img.src = URL.createObjectURL(file);
+                        var objectUrl = URL.createObjectURL(file);
+                        img.src = objectUrl;
                         img.onload = function() {
-                            URL.revokeObjectURL(img.src);
+                            URL.revokeObjectURL(objectUrl);
                         };
-                        item.appendChild(img);
+                        thumbWrap.appendChild(img);
                     }
+                    item.appendChild(thumbWrap);
 
+                    // Nama file
                     var nama = document.createElement('div');
+                    nama.className = 'file-name';
                     nama.textContent = file.name;
+                    nama.title = file.name;
                     item.appendChild(nama);
+
+                    // Ukuran file
+                    var ukuran = document.createElement('div');
+                    ukuran.className = 'file-size';
+                    ukuran.textContent = formatSize(file.size);
+                    item.appendChild(ukuran);
 
                     box.appendChild(item);
                 });
+            }
+
+            function handleFiles(files) {
+                var errors = [];
+                var fileArray = Array.prototype.slice.call(files);
+
+                fileArray.forEach(function(file) {
+                    var ext = file.name.split('.').pop().toLowerCase();
+
+                    // Cek ekstensi
+                    if (ALLOWED_EXTS.indexOf(ext) === -1) {
+                        errors.push('File "' + file.name + '" memiliki format tidak didukung. Hanya JPG, PNG, WEBP, dan PDF yang diperbolehkan.');
+                        return;
+                    }
+
+                    // Cek ukuran (< 5 MB)
+                    if (file.size > MAX_SIZE) {
+                        errors.push('File "' + file.name + '" (' + formatSize(file.size) + ') melebihi batas maksimal 5 MB.');
+                        return;
+                    }
+
+                    // Cek duplikasi
+                    var isDuplicate = selectedFiles.some(function(existing) {
+                        return existing.name === file.name && existing.size === file.size && existing.lastModified === file.lastModified;
+                    });
+                    if (isDuplicate) {
+                        return;
+                    }
+
+                    // Cek kuota jumlah file (maksimal 10)
+                    if (selectedFiles.length >= MAX_FILES) {
+                        errors.push('Batas maksimal ' + MAX_FILES + ' file telah tercapai. File "' + file.name + '" tidak ditambahkan.');
+                        return;
+                    }
+
+                    selectedFiles.push(file);
+                });
+
+                showAlert(errors);
+                syncInputFiles();
+            }
+
+            // Dropzone klik
+            dropArea.addEventListener('click', function(e) {
+                if (e.target.closest('.btn-remove')) return;
+                input.click();
             });
+
+            // Input change
+            input.addEventListener('change', function() {
+                if (input.files && input.files.length > 0) {
+                    handleFiles(input.files);
+                }
+                // Reset input value supaya file yang sama bisa dipilih lagi jika sebelumnya dihapus
+                input.value = '';
+                // Kembalikan sync files ke input
+                if (window.DataTransfer) {
+                    try {
+                        var dt = new DataTransfer();
+                        selectedFiles.forEach(function(f) {
+                            dt.items.add(f);
+                        });
+                        input.files = dt.files;
+                    } catch (e) {}
+                }
+            });
+
+            // Drag and drop events
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(function(eventName) {
+                dropArea.addEventListener(eventName, function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                }, false);
+            });
+
+            ['dragenter', 'dragover'].forEach(function(eventName) {
+                dropArea.addEventListener(eventName, function() {
+                    dropArea.classList.add('dragover');
+                }, false);
+            });
+
+            ['dragleave', 'drop'].forEach(function(eventName) {
+                dropArea.addEventListener(eventName, function() {
+                    dropArea.classList.remove('dragover');
+                }, false);
+            });
+
+            dropArea.addEventListener('drop', function(e) {
+                var dt = e.dataTransfer;
+                if (dt && dt.files && dt.files.length > 0) {
+                    handleFiles(dt.files);
+                }
+            }, false);
         })();
 
         // CKEditor perlu menyimpan isi editor ke textarea sebelum submit.
@@ -490,7 +848,8 @@
 
                 var cocok = 0;
                 semua.forEach(function(opt) {
-                    if (opt.getAttribute('data-perusahaan') !== kode) return;
+                    var perusahaanId = opt.getAttribute('data-perusahaan-id');
+                    if (perusahaanId !== kode) return;
 
                     var salinan = opt.cloneNode(true);
                     salinan.selected = salinan.value === terpilih;

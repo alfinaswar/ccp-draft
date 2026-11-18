@@ -27,11 +27,17 @@ class KomplainVendor extends Model
         'Lampiran' => 'array',
         'LangkahAwal' => 'array',
         'TindakanCcp' => 'array',
+        'LampiranCcp' => 'array',
     ];
 
     public function getApproval()
     {
         return $this->hasMany(DokumenApproval::class, 'DokumenId', 'id')
             ->orderBy('Urutan', 'asc');
+    }
+
+    public function getPerusahaan()
+    {
+        return $this->belongsTo(MasterPerusahaan::class, 'KodePerusahaan', is_numeric($this->KodePerusahaan) ? 'id' : 'Kode');
     }
 }

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\NotifKomplainVendor;
 use App\Models\DokumenApproval;
 use App\Models\KomplainVendor;
 use App\Models\MasterApproval;
@@ -11,15 +12,54 @@ use App\Models\MasterParameterKomplain;
 use App\Models\MasterPerusahaan;
 use App\Models\MasterUnit;
 use App\Models\User;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Endroid\QrCode\QrCode;
 use Endroid\QrCode\Writer\PngWriter;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Yajra\DataTables\Facades\DataTables;
 
 class KomplainVendorController extends Controller
 {
+    private function tentukanStatus(?DokumenApproval $approvalBerikutnya, KomplainVendor $komplain): string
+    {
+        if ($approvalBerikutnya) {
+            $namaJabatan = strtolower($approvalBerikutnya->NamaJabatan ?? '');
+            $urutan = (int) $approvalBerikutnya->Urutan;
+
+            if (str_contains($namaJabatan, 'divisi') || str_contains($namaJabatan, 'kadiv') || $urutan === 2) {
+                return 'Menunggu TTD Kepala Divisi';
+            }
+
+            if ((str_contains($namaJabatan, 'group head') || str_contains($namaJabatan, 'gh'))
+                && !str_contains($namaJabatan, 'ccp')
+                || $urutan === 3) {
+                return 'Menunggu TTD Group Head';
+            }
+
+            if (str_contains($namaJabatan, 'logistik') || str_contains($namaJabatan, 'logum') || str_contains($namaJabatan, 'smi') || $urutan === 4) {
+                return 'Menunggu Tindak Lanjut Logistik Umum';
+            }
+
+            if (str_contains($namaJabatan, 'ccp') || $urutan >= 5) {
+                return 'Menunggu Tindakan CCP';
+            }
+        }
+
+        if (empty($komplain->LangkahAwal)) {
+            return 'Menunggu Tindak Lanjut Logistik Umum';
+        }
+
+        if (empty($komplain->TindakanCcp)) {
+            return 'Menunggu Tindakan CCP';
+        }
+
+        return 'Selesai';
+    }
+
     private function formId(): ?int
     {
         return MasterForm::where('Nama', 'Komplain Vendor')->value('id');
@@ -66,24 +106,70 @@ class KomplainVendorController extends Controller
             return;
         }
 
+        // Urutan 1 selalu Pelapor dan langsung Auto Approve
+        DokumenApproval::create([
+            'JenisUser' => 'Manual',
+            'JenisFormId' => $formId,
+            'DokumenId' => $komplain->id,
+            'PerusahaanId' => $komplain->KodePerusahaan,
+            'JabatanId' => $komplain->JabatanId,
+            'NamaJabatan' => 'Pelapor',
+            'DepartemenId' => null,
+            'UserId' => auth()->id(),
+            'Nama' => $komplain->NamaPelapor,
+            'Email' => auth()->user()?->email,
+            'Urutan' => 1,
+            'Status' => 'Approved',
+            'TanggalApprove' => now(),
+            'Catatan' => 'Auto approve saat pengajuan formulir komplain',
+            'Ttd' => auth()->user()?->tandatangan,
+            'ApprovalToken' => str_replace('-', '', (string) Str::uuid()),
+        ]);
+
+        $perusahaan = is_numeric($komplain->KodePerusahaan)
+            ? MasterPerusahaan::find($komplain->KodePerusahaan)
+            : MasterPerusahaan::where('Kode', $komplain->KodePerusahaan)->first();
+
+        $kodeRs = $perusahaan?->Kode;
+
         $setting = MasterApproval::where('JenisForm', $formId)
-            ->where('KodePerusahaan', $komplain->KodePerusahaan)
+            ->where(function ($q) use ($komplain, $kodeRs) {
+                $q->where('KodePerusahaan', (string) $komplain->KodePerusahaan);
+                if ($kodeRs) {
+                    $q->orWhere('KodePerusahaan', (string) $kodeRs);
+                }
+            })
             ->where('Aktif', 'Y')
             ->orderBy('Urutan')
             ->get();
 
         if ($setting->isEmpty()) {
             $setting = collect([
-                (object) ['Urutan' => 1, 'UserId' => User::role('Kadiv')->value('id')],
-                (object) ['Urutan' => 2, 'UserId' => User::role('Group Head')->value('id')],
+                (object) ['Urutan' => 2, 'UserId' => User::role('Kadiv')->value('id'), 'NamaJabatan' => 'Kepala Divisi', 'JabatanId' => null, 'DepartemenId' => null],
+                (object) ['Urutan' => 3, 'UserId' => User::role('Group Head')->value('id'), 'NamaJabatan' => 'Group Head', 'JabatanId' => null, 'DepartemenId' => null],
             ]);
+        } else {
+            $pertama = $setting->first();
+            $barisPertamaAdalahPelapor = (int) $pertama->Urutan === 1
+                && (empty($pertama->UserId) || stripos((string) ($pertama->NamaJabatan ?? ''), 'pelapor') !== false);
+
+            if ($barisPertamaAdalahPelapor) {
+                $setting = $setting->slice(1)->values();
+            } elseif ((int) $pertama->Urutan === 1) {
+                // Geser urutan Master Approval (+1) karena Urutan 1 sudah diisi Pelapor
+                $setting = $setting->map(function ($item) {
+                    $clone = clone $item;
+                    $clone->Urutan = (int) $item->Urutan + 1;
+                    return $clone;
+                });
+            }
         }
 
         foreach ($setting as $s) {
-            $user = User::find($s->UserId);
+            $user = $s->UserId ? User::find($s->UserId) : null;
 
             // shortcut: bila approver tidak ditemukan, baris dilewati sehingga tahap itu terlewati.
-            // Atur urutan Kepala Divisi dan Group Head di menu Master Approval.
+            // Atur urutan pejabat approver di menu Master Approval.
             if (!$user) {
                 continue;
             }
@@ -93,14 +179,43 @@ class KomplainVendorController extends Controller
                 'JenisFormId' => $formId,
                 'DokumenId' => $komplain->id,
                 'PerusahaanId' => $komplain->KodePerusahaan,
-                'JabatanId' => $user->jabatan,
-                'DepartemenId' => $user->departemen,
-                'UserId' => $s->UserId,
+                'JabatanId' => $s->JabatanId ?? $user->jabatan,
+                'NamaJabatan' => $s->NamaJabatan ?? null,
+                'DepartemenId' => $s->DepartemenId ?? $user->departemen,
+                'UserId' => $user->id,
                 'Nama' => $user->name,
                 'Email' => $user->email,
                 'Urutan' => $s->Urutan,
                 'Status' => 'Pending',
                 'ApprovalToken' => str_replace('-', '', (string) Str::uuid()),
+            ]);
+        }
+    }
+
+    private function kirimNotifikasiApproval(KomplainVendor $komplain, ?DokumenApproval $targetApproval): void
+    {
+        if (!$targetApproval) {
+            return;
+        }
+
+        $emailTujuan = $targetApproval->Email ?: $targetApproval->getUser?->email;
+        if (!$emailTujuan) {
+            return;
+        }
+
+        $daftarApproval = DokumenApproval::with('getUser', 'getJabatan')
+            ->where('JenisFormId', $this->formId())
+            ->where('DokumenId', $komplain->id)
+            ->orderBy('Urutan')
+            ->get();
+
+        try {
+            Mail::to($emailTujuan)->send(new NotifKomplainVendor($komplain, $targetApproval, $daftarApproval));
+        } catch (\Throwable $e) {
+            Log::error('Gagal mengirim email notifikasi komplain vendor: ' . $e->getMessage(), [
+                'komplain_id' => $komplain->id,
+                'approval_id' => $targetApproval->id,
+                'email' => $emailTujuan,
             ]);
         }
     }
@@ -123,7 +238,7 @@ class KomplainVendorController extends Controller
     {
         return view('komplain.form', [
             'parameterEvaluasi' => MasterParameterKomplain::daftar('ParameterEvaluasi'),
-            'perusahaan' => MasterPerusahaan::orderBy('Nama')->get(),
+            'perusahaan' => MasterPerusahaan::orderByRaw('COALESCE(NamaLengkap, Nama) ASC')->get(),
             'unit' => MasterUnit::where('Aktif', 'Y')->orderBy('nama_unit')->get(),
             'jabatan' => MasterJabatan::orderBy('Nama')->get(),
         ]);
@@ -134,15 +249,17 @@ class KomplainVendorController extends Controller
         $parameterEvaluasi = MasterParameterKomplain::daftar('ParameterEvaluasi');
 
         $request->validate([
-            'KodePerusahaan' => 'required|exists:master_perusahaans,Kode',
+            'KodePerusahaan' => 'required|exists:master_perusahaans,id',
             'Tanggal' => 'required|date',
             'NamaPelapor' => 'required|string|max:255',
             'JabatanId' => 'required|exists:master_jabatans,id',
             'UnitId' => [
                 'required',
                 Rule::exists('master_units', 'id')->where(function ($q) use ($request) {
+                    $perusahaan = MasterPerusahaan::find($request->KodePerusahaan);
+
                     $q->where('Aktif', 'Y')
-                        ->where('KodePerusahaan', $request->KodePerusahaan);
+                        ->where('KodePerusahaan', $perusahaan?->Kode);
                 }),
             ],
             'NamaBarang' => 'required|string|max:255',
@@ -152,7 +269,7 @@ class KomplainVendorController extends Controller
             'ParameterEvaluasi' => 'required|array|min:1',
             'ParameterEvaluasi.*' => ['string', Rule::in($parameterEvaluasi)],
             'UraianSingkat' => 'required|string',
-            'Lampiran' => 'nullable|array|max:5',
+            'Lampiran' => 'nullable|array|max:10',
             'Lampiran.*' => 'file|mimes:jpg,jpeg,png,webp,pdf|max:5120',
         ], [
             'KodePerusahaan.required' => 'Nama RS wajib dipilih.',
@@ -166,7 +283,7 @@ class KomplainVendorController extends Controller
             'Distributor.required' => 'Nama distributor/penyedia wajib diisi.',
             'ParameterEvaluasi.required' => 'Pilih minimal satu parameter evaluasi.',
             'UraianSingkat.required' => 'Uraian singkat wajib diisi.',
-            'Lampiran.max' => 'Maksimal 5 file pendukung.',
+            'Lampiran.max' => 'Maksimal 10 file pendukung.',
             'Lampiran.*.mimes' => 'File pendukung harus berupa foto (jpg, png, webp) atau PDF.',
             'Lampiran.*.max' => 'Ukuran tiap file maksimal 5 MB.',
         ]);
@@ -182,7 +299,7 @@ class KomplainVendorController extends Controller
             return back()->withInput()->withErrors(['ParameterLainnya' => 'Isi keterangan parameter "Lainnya".']);
         }
 
-        $perusahaan = MasterPerusahaan::where('Kode', $request->KodePerusahaan)->first();
+        $perusahaan = MasterPerusahaan::findOrFail($request->KodePerusahaan);
         $unit = MasterUnit::find($request->UnitId);
         $jabatan = MasterJabatan::find($request->JabatanId);
 
@@ -197,7 +314,7 @@ class KomplainVendorController extends Controller
             'Lampiran' => $this->simpanLampiran($request),
             'KodeKomplain' => $this->generateNomorKomplain(),
             'KodePerusahaan' => $perusahaan->Kode,
-            'NamaRS' => $perusahaan->Nama,
+            'NamaRS' => $perusahaan->NamaLengkap ?? $perusahaan->Nama,
             'UnitId' => $unit->id,
             'UnitKerja' => $unit->nama_unit,
             'JabatanId' => $jabatan->id,
@@ -207,6 +324,18 @@ class KomplainVendorController extends Controller
         ]);
 
         $this->buatApproval($komplain);
+
+        $approverBerikutnya = DokumenApproval::where('JenisFormId', $this->formId())
+            ->where('DokumenId', $komplain->id)
+            ->where('Status', 'Pending')
+            ->orderBy('Urutan')
+            ->first();
+
+        $komplain->update(['Status' => $this->tentukanStatus($approverBerikutnya, $komplain)]);
+
+        if ($approverBerikutnya) {
+            $this->kirimNotifikasiApproval($komplain, $approverBerikutnya);
+        }
 
         return redirect()->route('komplain.terima-kasih', $komplain->KodeKomplain);
     }
@@ -296,10 +425,55 @@ class KomplainVendorController extends Controller
                 MasterParameterKomplain::daftar('TindakanCcp'),
                 $komplain->TindakanCcp
             ),
-            'bisaApproval' => $this->boleh(['Kadiv', 'Group Head', 'GH CCP']),
+            'bisaApproval' => $this->boleh(['Kadiv', 'Group Head', 'GH CCP'])
+                || $approval->where('UserId', (string) auth()->id())->where('Status', 'Pending')->isNotEmpty(),
             'bisaLogum' => $this->boleh(['Logum', 'SMI']),
             'bisaCcp' => $this->boleh(['CCP', 'GH CCP']),
         ]);
+    }
+
+    public function cetak($id)
+    {
+        $komplain = KomplainVendor::findOrFail($this->decryptId($id));
+
+        $approval = DokumenApproval::with('getUser', 'getJabatan')
+            ->where('JenisFormId', $this->formId())
+            ->where('DokumenId', $komplain->id)
+            ->orderBy('Urutan')
+            ->get();
+
+        foreach ($approval as $item) {
+            if ($item->Status == 'Approved' && $item->ApprovalToken) {
+                $qr = QrCode::create(route('approval.validasi', $item->ApprovalToken))
+                    ->setSize(300)
+                    ->setMargin(10);
+
+                $item->qrCode = base64_encode((new PngWriter())->write($qr)->getString());
+            }
+        }
+
+        $pdf = Pdf::loadView('komplain.pdf', [
+            'komplain' => $komplain,
+            'approval' => $approval,
+            'parameterEvaluasi' => $this->gabungTersimpan(
+                MasterParameterKomplain::daftar('ParameterEvaluasi'),
+                $komplain->ParameterEvaluasi
+            ),
+            'dataPendukung' => $this->gabungTersimpan(
+                MasterParameterKomplain::daftar('DataPendukung'),
+                $komplain->DataPendukung
+            ),
+            'langkahAwalList' => $this->gabungTersimpan(
+                MasterParameterKomplain::daftar('LangkahAwal'),
+                $komplain->LangkahAwal
+            ),
+            'tindakanCcpList' => $this->gabungTersimpan(
+                MasterParameterKomplain::daftar('TindakanCcp'),
+                $komplain->TindakanCcp
+            ),
+        ])->setPaper('a4', 'portrait');
+
+        return $pdf->stream('Komplain-Vendor-' . $komplain->KodeKomplain . '.pdf');
     }
 
     public function approve(Request $request, $id)
@@ -327,6 +501,62 @@ class KomplainVendorController extends Controller
             return back()->with('error', 'Approval sebelumnya belum selesai.');
         }
 
+        // Jika tahap Logistik Umum / SMI (atau form mengirimkan LangkahAwal)
+        if ($request->has('LangkahAwal')) {
+            $request->validate([
+                'LangkahAwal' => 'required|array|min:1',
+                'LangkahAwal.*' => ['string', Rule::in(MasterParameterKomplain::daftar('LangkahAwal'))],
+            ], [
+                'LangkahAwal.required' => 'Langkah awal wajib dipilih minimal satu.',
+            ]);
+
+            if (in_array(MasterParameterKomplain::LAINNYA, $request->LangkahAwal, true)
+                && !$request->filled('LangkahAwalLainnya')) {
+                return back()->withInput()->withErrors(['LangkahAwalLainnya' => 'Isi keterangan langkah awal "Lainnya".']);
+            }
+
+            $komplain->update([
+                'LangkahAwal' => $request->LangkahAwal,
+                'LangkahAwalLainnya' => $request->LangkahAwalLainnya,
+                'LogistikUmumOleh' => auth()->user()->name,
+                'TanggalLogistikUmum' => now(),
+            ]);
+        }
+
+        // Jika tahap CCP (atau form mengirimkan TindakanCcp, KeteranganCcp, atau LampiranCcp)
+        if ($request->has('TindakanCcp') || $request->hasFile('LampiranCcp') || $request->filled('KeteranganCcp')) {
+            $request->validate([
+                'TindakanCcp' => 'required|array|min:1',
+                'TindakanCcp.*' => ['string', Rule::in(MasterParameterKomplain::daftar('TindakanCcp'))],
+                'KeteranganCcp' => 'nullable|string',
+                'LampiranCcp' => 'nullable|array|max:10',
+                'LampiranCcp.*' => 'file|mimes:jpg,jpeg,png,webp,pdf,doc,docx,xls,xlsx|max:10240',
+            ], [
+                'TindakanCcp.required' => 'Tindakan CCP wajib dipilih minimal satu.',
+                'LampiranCcp.max' => 'Maksimal 10 file pendukung investigasi CCP.',
+                'LampiranCcp.*.mimes' => 'Format file pendukung harus berupa gambar (jpg, png, webp) atau dokumen (pdf, doc, docx, xls, xlsx).',
+                'LampiranCcp.*.max' => 'Ukuran tiap file maksimal 10 MB.',
+            ]);
+
+            if (in_array(MasterParameterKomplain::LAINNYA, $request->TindakanCcp, true)
+                && !$request->filled('TindakanCcpLainnya')) {
+                return back()->withInput()->withErrors(['TindakanCcpLainnya' => 'Isi keterangan tindakan "Lainnya".']);
+            }
+
+            $lampiranCcpBaru = $this->simpanLampiranCcp($request);
+            $lampiranCcpLama = (array) ($komplain->LampiranCcp ?? []);
+            $lampiranCcpGabung = array_merge($lampiranCcpLama, $lampiranCcpBaru);
+
+            $komplain->update([
+                'TindakanCcp' => $request->TindakanCcp,
+                'TindakanCcpLainnya' => $request->TindakanCcpLainnya,
+                'KeteranganCcp' => $request->filled('KeteranganCcp') ? $this->bersihkanHtml($request->KeteranganCcp) : $komplain->KeteranganCcp,
+                'LampiranCcp' => !empty($lampiranCcpGabung) ? $lampiranCcpGabung : null,
+                'CcpOleh' => auth()->user()->name,
+                'TanggalCcp' => now(),
+            ]);
+        }
+
         $approval->update([
             'Status' => 'Approved',
             'TanggalApprove' => now(),
@@ -341,10 +571,12 @@ class KomplainVendorController extends Controller
             ->first();
 
         $komplain->update([
-            'Status' => !$berikutnya
-                ? 'Menunggu Tindak Lanjut Logistik Umum'
-                : ($berikutnya->Urutan == 1 ? 'Menunggu TTD Kepala Divisi' : 'Menunggu TTD Group Head'),
+            'Status' => $this->tentukanStatus($berikutnya, $komplain->fresh()),
         ]);
+
+        if ($berikutnya) {
+            $this->kirimNotifikasiApproval($komplain->fresh(), $berikutnya);
+        }
 
         $this->catat('Menandatangani komplain pada urutan ' . $approval->Urutan, $komplain);
 
@@ -383,8 +615,39 @@ class KomplainVendorController extends Controller
             'LangkahAwalLainnya' => $request->LangkahAwalLainnya,
             'LogistikUmumOleh' => auth()->user()->name,
             'TanggalLogistikUmum' => now(),
-            'Status' => 'Menunggu Tindakan CCP',
         ]);
+
+        // Jika Logistik Umum terdaftar di DokumenApproval, tandai Approved
+        $approvalLogum = DokumenApproval::where('JenisFormId', $this->formId())
+            ->where('DokumenId', $komplain->id)
+            ->where('Status', 'Pending')
+            ->where(function ($q) {
+                $q->where('UserId', auth()->id())
+                    ->orWhere('Urutan', 4);
+            })
+            ->first();
+
+        if ($approvalLogum) {
+            $approvalLogum->update([
+                'Status' => 'Approved',
+                'TanggalApprove' => now(),
+                'Ttd' => auth()->user()->tandatangan,
+            ]);
+        }
+
+        $berikutnya = DokumenApproval::where('JenisFormId', $this->formId())
+            ->where('DokumenId', $komplain->id)
+            ->where('Status', 'Pending')
+            ->orderBy('Urutan')
+            ->first();
+
+        $komplain->update([
+            'Status' => $this->tentukanStatus($berikutnya, $komplain->fresh()),
+        ]);
+
+        if ($berikutnya) {
+            $this->kirimNotifikasiApproval($komplain->fresh(), $berikutnya);
+        }
 
         $this->catat('Mengisi tindak lanjut logistik umum', $komplain);
 
@@ -409,8 +672,14 @@ class KomplainVendorController extends Controller
         $request->validate([
             'TindakanCcp' => 'required|array|min:1',
             'TindakanCcp.*' => ['string', Rule::in(MasterParameterKomplain::daftar('TindakanCcp'))],
+            'KeteranganCcp' => 'nullable|string',
+            'LampiranCcp' => 'nullable|array|max:10',
+            'LampiranCcp.*' => 'file|mimes:jpg,jpeg,png,webp,pdf,doc,docx,xls,xlsx|max:10240',
         ], [
             'TindakanCcp.required' => 'Tindakan CCP wajib dipilih minimal satu.',
+            'LampiranCcp.max' => 'Maksimal 10 file pendukung investigasi CCP.',
+            'LampiranCcp.*.mimes' => 'Format file pendukung harus berupa gambar (jpg, png, webp) atau dokumen (pdf, doc, docx, xls, xlsx).',
+            'LampiranCcp.*.max' => 'Ukuran tiap file maksimal 10 MB.',
         ]);
 
         if (in_array(MasterParameterKomplain::LAINNYA, $request->TindakanCcp, true)
@@ -418,17 +687,54 @@ class KomplainVendorController extends Controller
             return back()->withInput()->withErrors(['TindakanCcpLainnya' => 'Isi keterangan tindakan "Lainnya".']);
         }
 
+        $lampiranCcpBaru = $this->simpanLampiranCcp($request);
+        $lampiranCcpLama = (array) ($komplain->LampiranCcp ?? []);
+        $lampiranCcpGabung = array_merge($lampiranCcpLama, $lampiranCcpBaru);
+
         $komplain->update([
             'TindakanCcp' => $request->TindakanCcp,
             'TindakanCcpLainnya' => $request->TindakanCcpLainnya,
+            'KeteranganCcp' => $request->filled('KeteranganCcp') ? $this->bersihkanHtml($request->KeteranganCcp) : $komplain->KeteranganCcp,
+            'LampiranCcp' => !empty($lampiranCcpGabung) ? $lampiranCcpGabung : null,
             'CcpOleh' => auth()->user()->name,
             'TanggalCcp' => now(),
-            'Status' => 'Selesai',
         ]);
+
+        // Jika CCP terdaftar di DokumenApproval, tandai Approved
+        $approvalCcp = DokumenApproval::where('JenisFormId', $this->formId())
+            ->where('DokumenId', $komplain->id)
+            ->where('Status', 'Pending')
+            ->where(function ($q) {
+                $q->where('UserId', auth()->id())
+                    ->orWhereIn('Urutan', [5, 6]);
+            })
+            ->first();
+
+        if ($approvalCcp) {
+            $approvalCcp->update([
+                'Status' => 'Approved',
+                'TanggalApprove' => now(),
+                'Ttd' => auth()->user()->tandatangan,
+            ]);
+        }
+
+        $berikutnya = DokumenApproval::where('JenisFormId', $this->formId())
+            ->where('DokumenId', $komplain->id)
+            ->where('Status', 'Pending')
+            ->orderBy('Urutan')
+            ->first();
+
+        $komplain->update([
+            'Status' => $this->tentukanStatus($berikutnya, $komplain->fresh()),
+        ]);
+
+        if ($berikutnya) {
+            $this->kirimNotifikasiApproval($komplain->fresh(), $berikutnya);
+        }
 
         $this->catat('Mengisi tindak lanjut CCP', $komplain);
 
-        return back()->with('success', 'Tindakan CCP tersimpan. Laporan selesai.');
+        return back()->with('success', 'Tindakan CCP tersimpan.');
     }
 
     private function decryptId($id): int
@@ -461,6 +767,27 @@ class KomplainVendorController extends Controller
 
         foreach ($request->file('Lampiran', []) as $file) {
             $path = $file->store('komplain-vendor/lampiran', 'public');
+
+            $hasil[] = [
+                'path' => $path,
+                'nama' => $file->getClientOriginalName(),
+                'tipe' => $file->getMimeType(),
+                'ukuran' => $file->getSize(),
+            ];
+        }
+
+        return $hasil;
+    }
+
+    /**
+     * @return array<int, array{path: string, nama: string, tipe: string, ukuran: int}>
+     */
+    private function simpanLampiranCcp(Request $request): array
+    {
+        $hasil = [];
+
+        foreach ($request->file('LampiranCcp', []) as $file) {
+            $path = $file->store('komplain-vendor/ccp', 'public');
 
             $hasil[] = [
                 'path' => $path,

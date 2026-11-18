@@ -413,6 +413,21 @@
                 </div>
             </div>
         </div>
+        <div class="col-md-4">
+            <div class="card stat-card primary shadow-sm h-100">
+                <div class="card-body p-4">
+                    <div style="display:flex;align-items:center">
+                        <div class="stat-icon me-3" style="background: rgba(210, 31, 38, 0.1); color: #d21f26;">
+                            <i class="fa fa-exclamation-triangle"></i>
+                        </div>
+                        <div>
+                            <div class="stat-label">Komplain Vendor</div>
+                            <div class="stat-value">{{ $stats['komplain'] ?? 0 }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <div class="row">
